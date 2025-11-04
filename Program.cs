@@ -16,6 +16,8 @@ app.UseDefaultFiles(); // procura index.html
 app.UseStaticFiles();  // permite servir arquivos de wwwroot
 
 app.MapGet("/api/clientes", async (AppDbContext db) =>
-    await db.Clientes.ToListAsync());
+    await db.Clientes
+        .Where(c => c.Deletado == null || c.Deletado == false)
+        .ToListAsync());
 
 app.Run();
