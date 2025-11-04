@@ -1,0 +1,42 @@
+# Build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Logs
+*.log
+
+# Publicações
+publish/
+out/
+
+# Arquivos gerados
+*.db
+*.sqlite
+*.sqlite3
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# User secrets / settings locais
+appsettings.Development.json
+
+# NUGET
+*.nupkg
+packages/
+.nuget/
+
+# ASP.NET scaffolding
+ScaffoldingReadMe.txt
