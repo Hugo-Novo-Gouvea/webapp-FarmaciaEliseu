@@ -1,18 +1,26 @@
-/* layout base da app */
+/* =========================================================
+   1. LAYOUT BASE
+   ========================================================= */
 .app-body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* fundo moderno */
 .app-body-gradient {
   background: radial-gradient(circle at top, #0f172a 0, #0f172a 10%, #0f172a 0%) fixed,
               linear-gradient(160deg, #0f172a 0%, #1f2937 45%, #e2e8f0 100%);
   background-attachment: fixed;
 }
 
-/* topo */
+.app-main {
+  flex: 1;
+  padding: 2.8rem 0 2rem 0;
+}
+
+/* =========================================================
+   2. CABEÇALHO
+   ========================================================= */
 .app-header {
   background: rgba(15, 23, 42, 0.6);
   color: #fff;
@@ -34,13 +42,9 @@
   opacity: 0.7;
 }
 
-/* área do meio */
-.app-main {
-  flex: 1;
-  padding: 2.8rem 0 2rem 0;
-}
-
-/* card do menu principal */
+/* =========================================================
+   3. CARD DO MENU PRINCIPAL (index)
+   ========================================================= */
 .menu-card {
   background: #fff;
   border-radius: 1rem;
@@ -54,8 +58,9 @@
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-/* -------- MENU TILES (botões modernos) -------- */
-
+/* =========================================================
+   4. MENU TILES (index)
+   ========================================================= */
 .menu-tile {
   display: flex;
   gap: 0.75rem;
@@ -105,15 +110,15 @@
   color: #94a3b8;
 }
 
-/* cores de destaque pros ícones */
 .icon-green { background: rgba(16, 185, 129, 0.12); }
 .icon-purple { background: rgba(139, 92, 246, 0.12); }
-.icon-blue { background: rgba(59, 130, 246, 0.12); }
+.icon-blue   { background: rgba(59, 130, 246, 0.12); }
 .icon-orange { background: rgba(251, 146, 60, 0.12); }
-.icon-pink { background: rgba(244, 63, 94, 0.12); }
+.icon-pink   { background: rgba(244, 63, 94, 0.12); }
 
-/* -------- TABELA MODERNA (mantive) -------- */
-
+/* =========================================================
+   5. TABELA MODERNA
+   ========================================================= */
 .table-shell {
   background: #fff;
   border-radius: 0.75rem;
@@ -169,7 +174,7 @@
   padding-right: 1rem;
 }
 
-/* badges de status */
+/* badgezinhas */
 .badge-soft-success {
   background: rgba(22, 163, 74, 0.1);
   color: #166534;
@@ -188,13 +193,260 @@
   font-weight: 500;
 }
 
-/* limite de altura pra tabela não explodir a tela */
 .app-table-wrapper {
   max-height: 60vh;
   overflow-y: auto;
 }
 
-/* responsivo */
+/* esconder colunas que não são pro usuário */
+.col-hidden {
+  display: none;
+}
+
+/* linha selecionada */
+.table-modern tr.selected {
+  background: #e0ecff !important;
+  outline: 1px solid rgba(59, 130, 246, 0.5);
+  outline-offset: -1px;
+}
+
+/* =========================================================
+   6. MODAL (visualizar / editar / novo)
+   ========================================================= */
+.app-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 999;
+}
+
+.app-modal-backdrop.show {
+  display: flex;
+}
+
+.app-modal {
+  background: #fff;
+  border-radius: 0.75rem;
+  width: min(540px, 100%);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  overflow: hidden;
+}
+
+.app-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.app-modal-body {
+  padding: 1rem 1rem 1.25rem 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.app-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #475569;
+}
+
+/* detalhes (visualizar) */
+.app-modal-dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.app-modal-dl dt {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #94a3b8;
+  margin-bottom: 0.15rem;
+}
+
+.app-modal-dl dd {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+/* formulário dentro do modal */
+.edit-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 0.9rem;
+}
+
+.edit-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+.edit-form-grid input,
+.edit-form-grid select {
+  font-size: 0.75rem;
+}
+
+/* botões do modal */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* quando os botões estão dentro de um form em grid (editar/novo), ocupa a linha inteira */
+.edit-form-grid .modal-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+.btn-modern {
+  border-radius: 0.55rem;
+  font-size: 0.7rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-modern.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+
+.btn-modern.primary {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.btn-modern:hover {
+  filter: brightness(0.98);
+}
+
+/* =========================================================
+   7. BARRA DE AÇÕES (CRUD)
+   ========================================================= */
+.action-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background: rgba(15, 23, 42, 0.15);
+  backdrop-filter: blur(4px);
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  height: 2.1rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 7.5rem;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.action-btn.primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.action-btn.secondary {
+  background: rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #e2e8f0;
+}
+
+.action-btn.danger {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #fee2e2;
+}
+
+.action-btn.success {
+  background: rgba(22, 163, 74, 1);
+  border: 1px solid rgba(22, 163, 74, 1);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.25);
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   8. BARRA DE BUSCA LISTA
+   ========================================================= */
+.list-filter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background: rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  backdrop-filter: blur(4px);
+  flex-wrap: wrap;
+}
+
+.list-filter-field,
+.list-filter-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.list-filter label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #e2e8f0;
+}
+
+.list-filter select,
+.list-filter input {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.4rem;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.45rem;
+  min-width: 180px;
+}
+
+.list-filter input::placeholder {
+  color: rgba(226, 232, 240, 0.45);
+}
+
+/* =========================================================
+   9. RESPONSIVO
+   ========================================================= */
 @media (max-width: 576px) {
   .menu-card {
     padding: 1.25rem;
@@ -211,5 +463,21 @@
   }
   .menu-tile-title {
     font-size: 0.85rem;
+  }
+  .action-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .app-modal-dl,
+  .edit-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .list-filter {
+    flex-direction: column;
+  }
+  .list-filter select,
+  .list-filter input {
+    width: 100%;
+    min-width: 0;
   }
 }

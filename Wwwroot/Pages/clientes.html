@@ -21,41 +21,222 @@
     <div class="container">
       <div class="mb-3 text-light">
         <h2 class="h5 mb-1">Lista de clientes</h2>
-        <p class="text-light text-opacity-75 mb-0"></p>
+        <p class="text-light text-opacity-75 mb-0">Dados vindos do SQL Server Express.</p>
+      </div>
+
+      <!-- BARRA DE AÇÕES -->
+      <div class="action-bar">
+        <button id="btn-view" class="action-btn primary" disabled>👁️ Visualizar</button>
+        <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
+        <button id="btn-new" class="action-btn success" disabled>➕ Novo</button>
+        <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
+      </div>
+
+      <!-- BARRA DE BUSCA (versão mais clean) -->
+      <div class="list-filter">
+        <div class="list-filter-field">
+          <label for="filter-column">Procurar por</label>
+          <select id="filter-column">
+            <option value="nome">Nome</option>
+            <option value="endereco">Endereço</option>
+            <option value="telefone">Telefone</option>
+            <option value="celular">Celular</option>
+          </select>
+        </div>
+        <div class="list-filter-input">
+          <label for="filter-text">Texto</label>
+          <input id="filter-text" type="text" placeholder="digite para filtrar..." />
+        </div>
       </div>
 
       <div class="table-shell">
         <div class="table-responsive app-table-wrapper">
+          <!-- tirei o 'table-sticky' daqui -->
           <table class="table-modern" id="tb-clientes">
             <thead>
               <tr>
-                <th>ID</th>
+                <!-- ID e Deletado ficam ocultos no front -->
+                <th class="col-hidden">ID</th>
                 <th>Nome</th>
                 <th>Endereço</th>
-                <th>RG</th>
-                <th>CPF</th>
                 <th>Telefone</th>
                 <th>Celular</th>
-                <th>Data Nasc.</th>
-                <th>Cód. Fichário</th>
-                <th>Data Cadastro</th>
-                <th>Último Registro</th>
-                <th>Deletado</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colspan="12" class="text-center text-muted">Carregando...</td>
+                <td colspan="5" class="text-center text-muted">Carregando...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
+
+    <!-- MODAL DE DETALHES -->
+    <div class="app-modal-backdrop" id="cliente-modal-backdrop">
+      <div class="app-modal">
+        <div class="app-modal-header">
+          <h2 class="h6 mb-0" id="modal-title">Detalhes do cliente</h2>
+          <button type="button" class="app-modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="app-modal-body">
+          <dl class="app-modal-dl">
+            <div><dt>Nome</dt><dd id="m-nome"></dd></div>
+            <div><dt>Endereço</dt><dd id="m-endereco"></dd></div>
+            <div><dt>RG</dt><dd id="m-rg"></dd></div>
+            <div><dt>CPF</dt><dd id="m-cpf"></dd></div>
+            <div><dt>Telefone</dt><dd id="m-telefone"></dd></div>
+            <div><dt>Celular</dt><dd id="m-celular"></dd></div>
+            <div><dt>Data Nasc.</dt><dd id="m-data-nasc"></dd></div>
+            <div><dt>Cód. Fichário</dt><dd id="m-cod-fichario"></dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <!-- FIM MODAL -->
+
+    <!-- MODAL DE EDIÇÃO (agora com NOME) -->
+    <div class="app-modal-backdrop" id="cliente-edit-backdrop">
+      <div class="app-modal">
+        <div class="app-modal-header">
+          <h2 class="h6 mb-0">Editar cliente</h2>
+          <button type="button" class="app-modal-close" id="edit-close-btn">&times;</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="edit-form" class="edit-form-grid">
+            <input type="hidden" id="e-id" />
+
+            <label>
+              <span>Nome *</span>
+              <input type="text" id="e-nome" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Logradouro</span>
+              <input type="text" id="e-logradouro" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Número</span>
+              <input type="text" id="e-numero" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Bairro</span>
+              <input type="text" id="e-bairro" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>RG</span>
+              <input type="text" id="e-rg" class="form-control form-control-sm mask-rg" maxlength="12" />
+            </label>
+
+            <label>
+              <span>CPF</span>
+              <input type="text" id="e-cpf" class="form-control form-control-sm mask-cpf" maxlength="14" />
+            </label>
+
+            <label>
+              <span>Telefone</span>
+              <input type="text" id="e-telefone" class="form-control form-control-sm mask-phone" maxlength="14" />
+            </label>
+
+            <label>
+              <span>Celular</span>
+              <input type="text" id="e-celular" class="form-control form-control-sm mask-phone" maxlength="15" />
+            </label>
+
+            <label>
+              <span>Data Nasc.</span>
+              <input type="date" id="e-data-nasc" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Cód. Fichário</span>
+              <input type="number" id="e-cod-fichario" class="form-control form-control-sm" />
+            </label>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-modern secondary" id="edit-cancel-btn">Cancelar</button>
+              <button type="submit" class="btn-modern primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- FIM MODAL DE EDIÇÃO -->
+
+    <!-- MODAL DE NOVO CLIENTE -->
+    <div class="app-modal-backdrop" id="cliente-new-backdrop">
+      <div class="app-modal">
+        <div class="app-modal-header">
+          <h2 class="h6 mb-0">Novo cliente</h2>
+          <button type="button" class="app-modal-close" id="new-close-btn">&times;</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="new-form" class="edit-form-grid">
+            <label>
+              <span>Nome *</span>
+              <input type="text" id="n-nome" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Logradouro</span>
+              <input type="text" id="n-logradouro" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Número</span>
+              <input type="text" id="n-numero" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Bairro</span>
+              <input type="text" id="n-bairro" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>RG</span>
+              <input type="text" id="n-rg" class="form-control form-control-sm mask-rg" maxlength="12" />
+            </label>
+
+            <label>
+              <span>CPF</span>
+              <input type="text" id="n-cpf" class="form-control form-control-sm mask-cpf" maxlength="14" />
+            </label>
+
+            <label>
+              <span>Telefone</span>
+              <input type="text" id="n-telefone" class="form-control form-control-sm mask-phone" maxlength="14" />
+            </label>
+
+            <label>
+              <span>Celular</span>
+              <input type="text" id="n-celular" class="form-control form-control-sm mask-phone" maxlength="15" />
+            </label>
+
+            <label>
+              <span>Data Nasc.</span>
+              <input type="date" id="n-data-nasc" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Cód. Fichário</span>
+              <input type="number" id="n-cod-fichario" class="form-control form-control-sm" />
+            </label>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-modern secondary" id="new-cancel-btn">Cancelar</button>
+              <button type="submit" class="btn-modern primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- FIM MODAL DE NOVO CLIENTE -->
   </main>
 
-  <!-- JS separado -->
   <script src="/js/clientes.js"></script>
 </body>
 </html>
