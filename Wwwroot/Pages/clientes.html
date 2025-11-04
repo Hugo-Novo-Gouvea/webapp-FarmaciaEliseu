@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Clientes - Farmácia Eliseu</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body class="app-body app-body-gradient">
+  <!-- cabeçalho -->
+  <header class="app-header app-header-blur">
+    <div class="container d-flex justify-content-between align-items-center py-2">
+      <a href="/" class="btn btn-sm btn-outline-light">← Menu</a>
+      <h1 class="app-title mb-0">Clientes</h1>
+      <span class="app-subtitle d-none d-sm-inline"></span>
+    </div>
+  </header>
+
+  <!-- conteúdo -->
+  <main class="app-main">
+    <div class="container">
+      <div class="mb-3 text-light">
+        <h2 class="h5 mb-1">Lista de clientes</h2>
+        <p class="text-light text-opacity-75 mb-0"></p>
+      </div>
+
+      <div class="table-shell">
+        <div class="table-responsive app-table-wrapper">
+          <table class="table-modern" id="tb-clientes">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Endereço</th>
+                <th>RG</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Celular</th>
+                <th>Data Nasc.</th>
+                <th>Cód. Fichário</th>
+                <th>Data Cadastro</th>
+                <th>Último Registro</th>
+                <th>Deletado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="12" class="text-center text-muted">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- JS separado -->
+  <script src="/js/clientes.js"></script>
+</body>
+</html>

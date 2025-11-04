@@ -2,49 +2,77 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <title>Web App – Farmácia Eliseu</title>
+    <title>Menu principal - Farmácia Eliseu</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <style>
-      body {
-        background: #f1f5f9;
-      }
-      .app-header {
-        background: #0f172a;
-      }
-    </style>
+    <link rel="stylesheet" href="/css/custom.css">
   </head>
-  <body>
-    <nav class="navbar navbar-dark app-header">
-      <div class="container">
-        <span class="navbar-brand mb-0 h1">Farmácia Eliseu</span>
+  <body class="app-body app-body-gradient">
+    <!-- CABEÇALHO -->
+    <header class="app-header app-header-blur">
+      <div class="container d-flex align-items-center py-2">
+        <h1 class="app-title mb-0">Farmácia Eliseu</h1>
       </div>
-    </nav>
+    </header>
 
-    <div class="container py-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-6">
-          <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-              <h1 class="h4 mb-2">Web App local</h1>
-              <p class="text-muted mb-4">
-                Exemplo de menu inicial do sistema rodando em ASP.NET + SQL Server local.
-              </p>
-              <div class="d-grid gap-2">
-                <a class="btn btn-primary btn-lg" href="clientes.html">
-                  📇 Clientes
-                </a>
-              </div>
+    <!-- CONTEÚDO -->
+    <main class="app-main">
+      <div class="container d-flex justify-content-center">
+        <div class="menu-card menu-card-floating">
+          <h2 class="h5 mb-2">Menu principal</h2>
+          <p class="text-muted mb-4">Escolha uma área do sistema.</p>
+
+          <div class="row g-3">
+            <div class="col-12 col-sm-6 col-md-4">
+              <a href="/pages/clientes.html" class="menu-tile">
+                <div class="menu-tile-icon icon-green">📇</div>
+                <div class="menu-tile-body">
+                  <h3 class="menu-tile-title">Clientes</h3>
+                  <p class="menu-tile-text">cadastro, dados, contato</p>
+                </div>
+              </a>
             </div>
-            <div class="card-footer bg-white text-muted small">
-              Rodando localmente · sem internet
+            <div class="col-12 col-sm-6 col-md-4">
+              <a href="/pages/clientes.html" class="menu-tile">
+                <div class="menu-tile-icon icon-purple">💊</div>
+                <div class="menu-tile-body">
+                  <h3 class="menu-tile-title">Produtos</h3>
+                  <p class="menu-tile-text">estoque e itens</p>
+                </div>
+              </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <a href="/pages/clientes.html" class="menu-tile">
+                <div class="menu-tile-icon icon-blue">🧾</div>
+                <div class="menu-tile-body">
+                  <h3 class="menu-tile-title">Funcionários</h3>
+                  <p class="menu-tile-text">controle interno</p>
+                </div>
+              </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <a href="/pages/clientes.html" class="menu-tile">
+                <div class="menu-tile-icon icon-orange">⚙️</div>
+                <div class="menu-tile-body">
+                  <h3 class="menu-tile-title">Contas a pagar</h3>
+                  <p class="menu-tile-text">despesas, vencimentos</p>
+                </div>
+              </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <a href="/pages/clientes.html" class="menu-tile">
+                <div class="menu-tile-icon icon-pink">📦</div>
+                <div class="menu-tile-body">
+                  <h3 class="menu-tile-title">Vender</h3>
+                  <p class="menu-tile-text">atendimento rápido</p>
+                </div>
+              </a>
             </div>
           </div>
+
+          <p class="text-muted small mt-4 mb-0">v1.0 · Sistema WebApp</p>
         </div>
       </div>
-    </div>
+    </main>
 
-    <footer class="text-center text-muted py-3 small">
-      WebAppEstudo · exemplo de arquitetura híbrida
-    </footer>
   </body>
 </html>
