@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Vendas - Farmácia Eliseu</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body class="app-body app-body-gradient">
+  <main class="app-main">
+    <div class="container">
+      <div class="list-shell" id="vendas-shell">
+        <!-- título -->
+        <div class="mb-3">
+          <h2 class="h5 mb-1">Vendas</h2>
+          <p class="text-muted" style="font-size:.7rem;">registro de venda e inclusão de itens</p>
+        </div>
+
+        <!-- barra de ações -->
+        <div class="action-bar">
+          <button id="btn-sell" class="action-btn success" disabled>✅ Realizar venda</button>
+        </div>
+
+        <!-- linha do menu (sem busca) -->
+        <div class="list-filter">
+          <div class="list-filter-action">
+            <a href="/" class="btn-modern small">◀ Menu</a>
+          </div>
+        </div>
+
+        <!-- LINHA 1: tipo de venda / tipo de cliente -->
+        <div class="list-filter">
+          <div class="list-filter-field">
+            <label for="tipo-venda">Tipo de venda *</label>
+            <select id="tipo-venda">
+              <option value="">Selecione o tipo</option>
+              <option value="marcar">Marcar</option>
+              <option value="dinheiro">Dinheiro</option>
+            </select>
+          </div>
+          <div class="list-filter-field">
+            <label for="tipo-cliente">Tipo de cliente *</label>
+            <select id="tipo-cliente">
+              <option value="">Selecione o tipo</option>
+              <option value="registrado">Registrado</option>
+              <option value="avulso">Avulso</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LINHA 2: cliente REGISTRADO -->
+        <div class="list-filter" id="cliente-registrado-block">
+          <div class="list-filter-field" style="min-width:280px;">
+            <label for="cliente-registrado">Cliente *</label>
+            <select id="cliente-registrado">
+              <option value="">Selecione o cliente...</option>
+            </select>
+          </div>
+          <div class="list-filter-input">
+            <label for="cliente-pesquisa">Pesquisa</label>
+            <input id="cliente-pesquisa" type="text" placeholder="filtrar cliente..." />
+          </div>
+        </div>
+
+        <!-- LINHA 2 alternativa: cliente AVULSO -->
+        <div class="list-filter" id="cliente-avulso-block" style="display:none;">
+          <div class="list-filter-input" style="min-width:280px;">
+            <label for="cliente-avulso">Cliente *</label>
+            <input id="cliente-avulso" type="text" placeholder="nome do cliente avulso..." />
+          </div>
+        </div>
+
+        <!-- LINHA 3: vendedor -->
+        <div class="list-filter">
+          <div class="list-filter-field">
+            <label for="vendedor">Vendedor *</label>
+            <select id="vendedor">
+              <option value="">Selecione o vendedor</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LINHA 4: produto + qtd + desconto + botão -->
+        <div class="list-filter vendas-itens-row">
+          <div class="list-filter-input vendas-produto">
+            <label for="produto">Código de barras / descrição *</label>
+            <input id="produto" type="text" placeholder="leia o código ou digite a descrição..." />
+          </div>
+          <div class="list-filter-input vendas-qtd">
+            <label for="quantidade">Quantidade</label>
+            <input id="quantidade" type="number" min="1" value="1" />
+          </div>
+          <div class="list-filter-input vendas-desc">
+            <label for="desconto">Desconto</label>
+            <input id="desconto" type="number" min="0" step="0.01" value="0" />
+          </div>
+          <div class="list-filter-action vendas-add">
+            <button id="btn-add-item" class="action-btn primary">Adicionar</button>
+          </div>
+        </div>
+
+        <!-- tabela de itens -->
+        <div class="table-shell">
+          <div class="table-responsive app-table-wrapper">
+            <table class="table-modern" id="tb-itens-venda">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Qtd</th>
+                  <th>Valor</th>
+                  <th>Desconto</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="text-center text-muted">Nenhum item adicionado...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</body>
+</html>

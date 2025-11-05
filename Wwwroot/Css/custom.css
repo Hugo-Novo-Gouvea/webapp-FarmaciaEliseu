@@ -637,10 +637,66 @@
   background: #f1f5f9;
 }
 
+/* ===== Ajustes específicos da tela de vendas ===== */
+.vendas-itens-row {
+  /* já é flex por causa de .list-filter, mas vamos garantir a linha */
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+}
+
+/* campo grande (código / descrição) reduzido pra ~50% */
+.vendas-itens-row .vendas-produto {
+  flex: 1 1 320px;
+}
+
+/* os campos pequenos não podem herdar min-width:180px */
+.vendas-itens-row .vendas-qtd,
+.vendas-itens-row .vendas-desc {
+  flex: 0 0 90px;
+}
+
+.vendas-itens-row .vendas-qtd input,
+.vendas-itens-row .vendas-desc input {
+  min-width: 0; /* sobrescreve o min-width global de 180px */
+}
+
+/* botão não precisa ter 180px aqui */
+.vendas-itens-row .vendas-add {
+  flex: 0 0 auto;
+}
+
+.vendas-itens-row .vendas-add .action-btn {
+  min-width: 105px;
+}
+
+.vendas-itens-row {
+  flex-wrap: nowrap;
+}
+
 /* =========================================================
    10. RESPONSIVO
    ========================================================= */
-@media (max-width: 576px) {
+/* telas médias: deixa quebrar em 2 linhas bonitinhas */
+@media (max-width: 980px) {
+  .vendas-itens-row {
+    flex-wrap: wrap;
+  }
+
+  .vendas-itens-row .vendas-produto {
+    flex: 1 1 100%;
+  }
+
+  .vendas-itens-row .vendas-qtd,
+  .vendas-itens-row .vendas-desc {
+    flex: 0 0 120px;
+  }
+
+  .vendas-itens-row .vendas-add {
+    flex: 0 0 auto;
+  }
+}
+
+  @media (max-width: 576px) {
   .menu-card {
     padding: 1.25rem;
   }
@@ -677,4 +733,32 @@
   .table-footer {
     justify-content: center;
   }
+  .vendas-itens-row {
+    flex-wrap: wrap;
+  }
+  .vendas-itens-row .vendas-produto {
+    flex: 1 1 100%;
+  }
+  .vendas-itens-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vendas-itens-row .vendas-produto,
+  .vendas-itens-row .vendas-qtd,
+  .vendas-itens-row .vendas-desc {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .vendas-itens-row .vendas-qtd input,
+  .vendas-itens-row .vendas-desc input {
+    min-width: 0;
+  }
+
+  .vendas-itens-row .vendas-add {
+    width: auto;
+  }
 }
+
+
