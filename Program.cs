@@ -295,4 +295,156 @@ app.MapDelete("/api/produtos/{id:int}", async (int id, AppDbContext db) =>
     return Results.NoContent();
 });
 
+/* ===================== FUNCIONARIOS ===================== */
+
+// LISTAR (com paginação e filtro)
+app.MapGet("/api/funcionarios", async (
+    AppDbContext db,
+    int page = 1,
+    int pageSize = 50,
+    string? column = null,
+    string? search = null
+) =>
+{
+    if (page < 1) page = 1;
+    if (pageSize < 1) pageSize = 50;
+
+    var query = db.Funcionarios
+        .Where(f => (f.Deletado == null || f.Deletado == false) && f.FuncionariosId != 1)
+        .AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(search))
+    {
+        search = search.Trim();
+        // único campo pesquisável por enquanto: nome
+        query = query.Where(f => f.Nome != null && f.Nome.Contains(search));
+    }
+
+    var total = await query.CountAsync();
+
+    var itens = await query
+        .OrderBy(f => f.Nome)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    return Results.Ok(new
+    {
+        total,
+        page,
+        pageSize,
+        items = itens
+    });
+});
+
+// PEGAR UM
+app.MapGet("/api/funcionarios/{id:int}", async (int id, AppDbContext db) =>
+{
+    var funcionario = await db.Funcionarios.FindAsync(id);
+    return funcionario is not null ? Results.Ok(funcionario) : Results.NotFound();
+});
+
+// CRIAR
+app.MapPost("/api/funcionarios", async (Funcionario dto, AppDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.Nome))
+        return Results.BadRequest("Nome é obrigatório.");
+
+    var agora = DateTime.Now;
+
+    var funcionario = new Funcionario
+    {
+        Nome = dto.Nome.Trim(),
+        Deletado = false,
+        DataCadastro = agora,
+        DataUltimoRegistro = agora
+    };
+
+    db.Funcionarios.Add(funcionario);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/api/funcionarios/{funcionario.FuncionariosId}", funcionario);
+});
+
+// ATUALIZAR
+app.MapPut("/api/funcionarios/{id:int}", async (int id, AppDbContext db, Funcionario dto) =>
+{
+    var funcionario = await db.Funcionarios.FindAsync(id);
+    if (funcionario is null)
+        return Results.NotFound();
+
+    if (string.IsNullOrWhiteSpace(dto.Nome))
+        return Results.BadRequest("Nome é obrigatório.");
+
+    funcionario.Nome = dto.Nome.Trim();
+    funcionario.DataUltimoRegistro = DateTime.Now;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+// DELETAR (soft)
+app.MapDelete("/api/funcionarios/{id:int}", async (int id, AppDbContext db) =>
+{
+    var funcionario = await db.Funcionarios.FindAsync(id);
+    if (funcionario is null)
+        return Results.NotFound();
+
+    funcionario.Deletado = true;
+    funcionario.DataUltimoRegistro = DateTime.Now;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+/* ===================== CONTAS A PAGAR ===================== */
+
+// lista de clientes (id, nome) não deletados, para o dropdown
+app.MapGet("/api/contas/clientes", async (AppDbContext db) =>
+{
+    var clientes = await db.Clientes
+        .Where(c => (c.Deletado == null || c.Deletado == false) && c.ClientesId != 1)
+        .OrderBy(c => c.Nome)
+        .Select(c => new { c.ClientesId, c.Nome })
+        .ToListAsync();
+    return Results.Ok(clientes);
+});
+
+// movimentos em aberto por cliente (deletado = 0)
+app.MapGet("/api/contas/movimentos", async (AppDbContext db, int clienteId) =>
+{
+    if (clienteId <= 0) return Results.BadRequest("clienteId inválido.");
+
+    var movimentos = await db.Movimentos
+        .Where(m => (m.Deletado == null || m.Deletado == false) && m.ClientesId == clienteId)
+        .OrderBy(m => m.DataVenda)
+        .ToListAsync();
+
+    return Results.Ok(movimentos);
+});
+
+// marcar como pagos (soft delete): deletado = 1
+app.MapPut("/api/contas/movimentos/pagar", async (AppDbContext db, IdsPayload payload) =>
+{
+    if (payload?.ids == null || payload.ids.Count == 0)
+        return Results.BadRequest("Lista de IDs vazia.");
+
+    var agora = DateTime.Now;
+    var itens = await db.Movimentos
+        .Where(m => payload.ids.Contains(m.MovimentosId))
+        .ToListAsync();
+
+    if (itens.Count == 0) return Results.NotFound();
+
+    foreach (var m in itens)
+    {
+        m.Deletado = true;
+        m.DataPagamento = agora;
+        m.DataUltimoRegistro = agora;
+    }
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
 app.Run();

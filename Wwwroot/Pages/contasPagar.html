@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Contas a pagar - Farmácia Eliseu</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body class="app-body app-body-gradient">
+  <main class="app-main">
+    <div class="container">
+      <div class="list-shell" id="contas-pagar-shell">
+        <!-- título -->
+        <div class="mb-3">
+          <h2 class="h5 mb-1">Contas a pagar</h2>
+          <p class="text-muted" style="font-size: .7rem;">lista de contas vinculadas ao cliente</p>
+        </div>
+
+        <!-- barra de ações: só o botão verde -->
+        <div class="action-bar">
+          <button id="btn-pay" class="action-btn success" disabled>✅ Marcar como pago</button>
+        </div>
+
+        <!-- barra de filtro / busca -->
+        <div class="list-filter">
+          <!-- voltar pro menu -->
+          <div class="list-filter-action">
+            <a href="/" class="btn-modern small">◀ Menu</a>
+          </div>
+
+          <!-- select de clientes (populado via API) -->
+          <div class="list-filter-field">
+            <label for="filter-person">Cliente</label>
+            <select id="filter-person">
+              <option value="">Selecione um cliente</option>
+            </select>
+          </div>
+
+          <!-- input de busca por nome do cliente (filtra o select) -->
+          <div class="list-filter-input">
+            <label for="filter-text">Pesquisar</label>
+            <input id="filter-text" type="text" placeholder="digite o nome..." />
+          </div>
+        </div>
+
+        <!-- tabela de contas -->
+        <div class="table-shell">
+          <div class="table-responsive app-table-wrapper">
+            <table class="table-modern" id="tb-contas-pagar">
+              <thead>
+                <tr>
+                  <th style="width:32px;"><input type="checkbox" id="select-all" /></th>
+                  <th>Produto/Descrição</th>
+                  <th>Quantidade</th>
+                  <th>Data venda</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Selecione um cliente para carregar os movimentos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-pager">
+            <div class="table-pager-info" id="contas-pg-info">Mostrando 0-0 de 0</div>
+            <div class="table-pager-group">
+              <button class="pager-btn is-disabled" id="contas-pg-prev">
+                <span>◀</span><span>Anterior</span>
+              </button>
+              <button class="pager-btn is-disabled" id="contas-pg-next">
+                <span>Próxima</span><span>▶</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/js/contasPagar.js"></script>
+</body>
+</html>

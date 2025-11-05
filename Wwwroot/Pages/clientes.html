@@ -10,7 +10,6 @@
   <main class="app-main">
     <div class="container">
       <!-- topo da página -->
-      
 
       <!-- bloco principal -->
       <div class="list-shell">
@@ -18,10 +17,10 @@
         <div class="mb-3">
           <h2 class="h5 mb-1">Lista de clientes</h2>
         </div>
-        
+
         <!-- barra de ações -->
         <div class="action-bar">
-          <button id="btn-view" class="action-btn primary" disabled>👁️ Visualizar</button>
+          <button id="btn-view" class="action-btn primary" disabled>🔍 Visualizar</button>
           <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
           <button id="btn-new" class="action-btn success" disabled>➕ Novo</button>
           <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
@@ -68,11 +67,16 @@
               </tbody>
             </table>
           </div>
-          <!-- paginação -->
-          <div class="table-footer">
-            <button id="clientes-pg-prev" class="pager-btn is-disabled">◀ Voltar</button>
-            <span id="clientes-pg-info" class="pager-info">Mostrando 0-0 de 0</span>
-            <button id="clientes-pg-next" class="pager-btn">Avançar ▶</button>
+          <div class="table-pager">
+            <div class="table-pager-info" id="clientes-pg-info">Mostrando 0-0 de 0</div>
+            <div class="table-pager-group">
+              <button class="pager-btn is-disabled" id="clientes-pg-prev">
+                <span>◀</span><span>Anterior</span>
+              </button>
+              <button class="pager-btn is-disabled" id="clientes-pg-next">
+                <span>Próxima</span><span>▶</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

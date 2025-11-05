@@ -607,6 +607,15 @@
   min-width: 180px;
 }
 
+/* Contas a Pagar: manter select 2x largura do input */
+#contas-pagar-shell #filter-text {
+  width: 220px;
+}
+#contas-pagar-shell #filter-person {
+  width: 440px;
+  min-width: 440px;
+}
+
 .list-filter input::placeholder {
   color: rgba(82, 97, 111, 0.35);
 }
