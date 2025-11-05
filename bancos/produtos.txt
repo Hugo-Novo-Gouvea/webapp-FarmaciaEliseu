@@ -1,0 +1,16 @@
+Tabela: dbo.produtos
+-------------------------------------------------
+produtosID        int               PK, NOT NULL
+descricao         nvarchar(200)     NOT NULL
+unidadeMedida     nvarchar(200)     NULL
+precoCompra       decimal(19,4)     NULL
+precoVenda        decimal(19,4)     NOT NULL
+localizacao       nvarchar(200)     NULL
+laboratorio       nvarchar(200)     NULL
+principio         nvarchar(200)     NULL
+generico          nvarchar(3)       NOT NULL
+codigoProduto     nvarchar(9)       NULL
+codigoBarras      nvarchar(50)      NULL
+dataCadastro      datetime2(0)      NULL
+dataUltimoRegistro datetime2(0)     NULL
+deletado          bit               NULL

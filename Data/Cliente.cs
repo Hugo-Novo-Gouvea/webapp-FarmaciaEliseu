@@ -21,11 +21,11 @@ namespace WebAppEstudo.Data
         public string? Endereco { get; set; }
 
         [Column("rg")]
-        [MaxLength(30)]
+        [MaxLength(50)]
         public string? Rg { get; set; }
 
         [Column("cpf")]
-        [MaxLength(30)]
+        [MaxLength(50)]
         public string? Cpf { get; set; }
 
         [Column("telefone")]

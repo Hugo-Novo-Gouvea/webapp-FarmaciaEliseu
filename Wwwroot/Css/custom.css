@@ -1,4 +1,32 @@
 /* =========================================================
+   0. VARIÁVEIS DE TEMA (60 / 30 / 10)
+   ========================================================= */
+:root {
+  /* 60% – fundo / ambiente */
+  --color-60: #a0ded6;
+
+  /* 30% – superfícies / cards / áreas de trabalho */
+  --color-30: #ffffff;
+
+  /* 10% – destaque (botão principal, estado importante) */
+  --color-10: #1fa37a;
+
+  /* neutros e textos */
+  --color-border: rgba(15, 23, 42, 0.04);
+  --color-border-soft: rgba(148, 163, 184, 0.25);
+  --color-border-softer: rgba(148, 163, 184, 0.14);
+  --color-text: #1f2933;
+  --color-text-muted: #52616f;
+  --color-heading: #0f172a;
+
+  /* estados e superfícies auxiliares */
+  --color-danger: #b91c1c;
+  --color-danger-soft: rgba(248, 113, 113, 0.35);
+  --color-primary: #2563eb;
+  --color-surface-alt: #f8fafc;
+}
+
+/* =========================================================
    1. LAYOUT BASE
    ========================================================= */
 .app-body {
@@ -8,8 +36,7 @@
 }
 
 .app-body-gradient {
-  background: radial-gradient(circle at top, #0f172a 0, #0f172a 10%, #0f172a 0%) fixed,
-              linear-gradient(160deg, #0f172a 0%, #1f2937 45%, #e2e8f0 100%);
+  background: linear-gradient(180deg, var(--color-60) 0%, #ffffff 35%, #eef2f5 100%);
   background-attachment: fixed;
 }
 
@@ -19,34 +46,36 @@
 }
 
 /* =========================================================
-   2. CABEÇALHO
+   2. CABEÇALHO (se usar)
    ========================================================= */
 .app-header {
-  background: rgba(15, 23, 42, 0.6);
-  color: #fff;
+  background: var(--color-30);
+  color: var(--color-text);
   margin-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .app-header-blur {
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: none;
 }
 
 .app-title {
   font-size: 1rem;
   font-weight: 600;
+  color: var(--color-heading);
 }
 
 .app-subtitle {
   font-size: 0.7rem;
   opacity: 0.7;
+  color: var(--color-text-muted);
 }
 
 /* =========================================================
    3. CARD DO MENU PRINCIPAL (index)
    ========================================================= */
 .menu-card {
-  background: #fff;
+  background: var(--color-30);
   border-radius: 1rem;
   padding: 2rem;
   width: 100%;
@@ -54,8 +83,8 @@
 }
 
 .menu-card-floating {
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 /* =========================================================
@@ -65,18 +94,18 @@
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.04);
+  background: var(--color-30);
+  border: 1px solid rgba(15, 23, 42, 0.03);
   border-radius: 0.9rem;
   padding: 0.7rem 0.9rem;
   text-decoration: none;
   transition: all 0.12s ease-out;
   min-height: 3.5rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.01);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
 }
 
 .menu-tile:hover {
-  border-color: rgba(59, 130, 246, 0.4);
+  border-color: rgba(59, 130, 246, 0.28);
   transform: translateY(-2px);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
   background: #f8fafc;
@@ -90,7 +119,7 @@
   align-items: center;
   justify-content: center;
   font-size: 1.35rem;
-  background: #0f172a0f;
+  background: #e2e8f0;
 }
 
 .menu-tile-body {
@@ -100,7 +129,7 @@
 .menu-tile-title {
   font-size: 0.9rem;
   margin: 0;
-  color: #0f172a;
+  color: var(--color-heading);
   font-weight: 600;
 }
 
@@ -117,13 +146,24 @@
 .icon-pink   { background: rgba(244, 63, 94, 0.12); }
 
 /* =========================================================
-   5. TABELA MODERNA
+   5. CONTAINER DE LISTA (páginas de CRUD)
+   ========================================================= */
+.list-shell {
+  background: var(--color-30);
+  border: 1px solid rgba(15, 23, 42, 0.03);
+  border-radius: 0.9rem;
+  padding: 1.25rem 1.25rem 1rem;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.02);
+  margin-bottom: 1.5rem;
+}
+
+/* =========================================================
+   6. TABELA MODERNA
    ========================================================= */
 .table-shell {
-  background: #fff;
+  background: var(--color-30);
   border-radius: 0.75rem;
-  border: 1px solid rgba(15, 23, 42, 0.05);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(15, 23, 42, 0.02);
   overflow: hidden;
 }
 
@@ -131,12 +171,12 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: #fff;
+  background: var(--color-30);
   font-size: 0.825rem;
 }
 
 .table-modern thead {
-  background: #f8fafc;
+  background: #edf1f5;
 }
 
 .table-modern th,
@@ -149,7 +189,7 @@
 
 .table-modern th {
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-heading);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -174,7 +214,18 @@
   padding-right: 1rem;
 }
 
-/* badgezinhas */
+/* thead grudado */
+.app-table-wrapper .table-modern thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(237, 241, 245, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 6px 12px -6px rgba(15, 23, 42, 0.08);
+}
+
 .badge-soft-success {
   background: rgba(22, 163, 74, 0.1);
   color: #166534;
@@ -198,20 +249,131 @@
   overflow-y: auto;
 }
 
-/* esconder colunas que não são pro usuário */
 .col-hidden {
   display: none;
 }
 
-/* linha selecionada */
 .table-modern tr.selected {
   background: #e0ecff !important;
-  outline: 1px solid rgba(59, 130, 246, 0.5);
+  outline: 1px solid rgba(59, 130, 246, 0.4);
   outline-offset: -1px;
 }
 
+/* rodapé da tabela / paginação */
+.table-footer {
+  background: var(--color-30);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem 0.45rem 0.75rem;
+}
+
+.table-footer .pager-info {
+  font-size: 0.65rem;
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.02);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
+}
+
+#clientes-pg-info {
+  order: -1;
+  margin-right: auto;
+}
+
+/* paginação (mesma cara do botão do filtro) */
+.table-shell .table-footer .pager-btn,
+.table-footer .pager-btn,
+.table-footer button.pager-btn {
+  background: #fff !important;
+  border: 1px solid rgba(148, 163, 184, 0.35) !important;
+  color: var(--color-text) !important;
+  border-radius: 9999px !important;
+  height: 30px !important;
+  padding: 0 0.85rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  font-size: 0.7rem !important;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.12s ease-out;
+}
+
+.table-shell .table-footer .pager-btn:hover:not(.is-disabled),
+.table-footer .pager-btn:hover:not(.is-disabled) {
+  background: #f8fafc !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.table-shell .table-footer .pager-btn.is-disabled,
+.table-footer .pager-btn.is-disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+.table-shell .table-footer .pager-btn.is-active,
+.table-footer .pager-btn.is-active {
+  background: var(--color-10) !important;
+  border-color: var(--color-10) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(31, 163, 122, 0.2) !important;
+}
+
+/* paginação usada em produtos */
+.table-pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.75rem 0.6rem 0.75rem;
+  background: var(--color-30);
+}
+
+.table-pager-info {
+  font-size: 0.65rem;
+  color: var(--color-text);
+  background: var(--color-30);
+  border: 1px solid rgba(15, 23, 42, 0.02);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.table-pager-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.table-pager .pager-btn {
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text);
+  transition: all 120ms ease-out;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.03);
+}
+
+.table-pager .pager-btn:hover:not(.is-disabled) {
+  background: var(--color-surface-alt);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.table-pager .pager-btn.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* =========================================================
-   6. MODAL (visualizar / editar / novo)
+   7. MODAL
    ========================================================= */
 .app-modal-backdrop {
   position: fixed;
@@ -229,7 +391,7 @@
 }
 
 .app-modal {
-  background: #fff;
+  background: var(--color-30);
   border-radius: 0.75rem;
   width: min(540px, 100%);
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
@@ -260,7 +422,6 @@
   color: #475569;
 }
 
-/* detalhes (visualizar) */
 .app-modal-dl {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -278,11 +439,10 @@
 .app-modal-dl dd {
   margin: 0;
   font-size: 0.8rem;
-  color: #0f172a;
+  color: var(--color-text);
   word-break: break-word;
 }
 
-/* formulário dentro do modal */
 .edit-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -302,18 +462,11 @@
   font-size: 0.75rem;
 }
 
-/* botões do modal */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1rem;
-}
-
-/* quando os botões estão dentro de um form em grid (editar/novo), ocupa a linha inteira */
-.edit-form-grid .modal-actions {
-  grid-column: 1 / -1;
-  justify-content: flex-end;
 }
 
 .btn-modern {
@@ -326,33 +479,35 @@
 
 .btn-modern.secondary {
   background: #e2e8f0;
-  color: #0f172a;
+  color: var(--color-text);
   border-color: #e2e8f0;
 }
 
 .btn-modern.primary {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #fff;
-  border-color: #2563eb;
+  border-color: #1d4ed8;
 }
 
-.btn-modern:hover {
-  filter: brightness(0.98);
+/* botão pequeno */
+.btn-modern.small {
+  font-size: 0.68rem;
+  padding: 0.25rem 0.6rem;
+  line-height: 1.1;
 }
 
 /* =========================================================
-   7. BARRA DE AÇÕES (CRUD)
+   8. BARRA DE AÇÕES
    ========================================================= */
 .action-bar {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   margin-bottom: 1rem;
-  background: rgba(15, 23, 42, 0.15);
-  backdrop-filter: blur(4px);
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: transparent;
+  border: none;
+  padding: 0;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .action-btn {
@@ -367,32 +522,27 @@
   white-space: nowrap;
   min-width: 7.5rem;
   justify-content: center;
-  border: 1px solid transparent;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: var(--color-30);
+  color: var(--color-text);
 }
 
 .action-btn.primary {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #fff;
-}
-
-.action-btn.secondary {
-  background: rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  color: #e2e8f0;
-}
-
-.action-btn.danger {
-  background: rgba(248, 113, 113, 0.08);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  color: #fee2e2;
+  background: var(--color-30);
+  color: var(--color-text);
 }
 
 .action-btn.success {
-  background: rgba(22, 163, 74, 1);
-  border: 1px solid rgba(22, 163, 74, 1);
+  background: var(--color-10);
+  border-color: var(--color-10);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
+}
+
+.action-btn.danger {
+  background: var(--color-30);
+  color: var(--color-danger);
+  border-color: var(--color-danger-soft);
 }
 
 .action-btn:disabled {
@@ -401,18 +551,35 @@
 }
 
 /* =========================================================
-   8. BARRA DE BUSCA LISTA
+   9. BARRA DE BUSCA
    ========================================================= */
 .list-filter {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
-  background: rgba(15, 23, 42, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-softer);
   border-radius: 0.75rem;
   padding: 0.6rem 0.8rem;
-  backdrop-filter: blur(4px);
   flex-wrap: wrap;
+  align-items: flex-end; /* <-- cola todo mundo na mesma linha embaixo */
+}
+
+/* o botão que você marcou na seta */
+.list-filter > .list-filter-action > a.btn-modern.small {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center;
+  gap: 0.35rem;
+  background: #fff !important;
+  border: 1px solid rgba(148, 163, 184, 0.35) !important;
+  color: var(--color-text) !important;
+  border-radius: 0.55rem !important;
+  font-size: 0.68rem !important;
+  padding: 0 1rem !important;
+  line-height: 1.1 !important;
+  height: 38px !important; /* mesma altura dos inputs/select do bootstrap */
+  text-decoration: none !important;
 }
 
 .list-filter-field,
@@ -426,26 +593,43 @@
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: #e2e8f0;
+  color: var(--color-text-muted);
 }
 
 .list-filter select,
 .list-filter input {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: var(--color-30);
+  border: 1px solid rgba(148, 163, 184, 0.45);
   border-radius: 0.4rem;
-  color: #fff;
+  color: var(--color-text);
   font-size: 0.75rem;
   padding: 0.35rem 0.45rem;
   min-width: 180px;
 }
 
 .list-filter input::placeholder {
-  color: rgba(226, 232, 240, 0.45);
+  color: rgba(82, 97, 111, 0.35);
+}
+
+/* botão pastilha reutilizável */
+.btn-chip {
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.68rem;
+  color: var(--color-text);
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.btn-chip:hover {
+  background: #f1f5f9;
 }
 
 /* =========================================================
-   9. RESPONSIVO
+   10. RESPONSIVO
    ========================================================= */
 @media (max-width: 576px) {
   .menu-card {
@@ -474,10 +658,14 @@
   }
   .list-filter {
     flex-direction: column;
+    align-items: stretch;
   }
   .list-filter select,
   .list-filter input {
     width: 100%;
     min-width: 0;
+  }
+  .table-footer {
+    justify-content: center;
   }
 }

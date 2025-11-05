@@ -1,0 +1,23 @@
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorVenda            decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL

@@ -1,0 +1,7 @@
+Tabela: dbo.funcionarios
+-------------------------------------------------
+funcionariosID      int             PK, NOT NULL
+nome                nvarchar(200)   NOT NULL
+dataCadastro        datetime2(0)    NOT NULL
+dataUltimoRegistro  datetime2(0)    NOT NULL
+deletado            bit             NOT NULL

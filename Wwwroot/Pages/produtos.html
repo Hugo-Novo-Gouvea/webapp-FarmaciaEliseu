@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Produtos - Farmácia Eliseu</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body class="app-body app-body-gradient">
+
+  <main class="app-main">
+    <div class="container">
+
+      <div class="list-shell">
+
+        <div class="mb-3">
+          <h2 class="h5 mb-1">Lista de produtos</h2>
+        </div>
+        
+        <div class="action-bar">
+          <button id="btn-view" class="action-btn primary" disabled>👁️ Visualizar</button>
+          <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
+          <button id="btn-new" class="action-btn success" disabled>➕ Novo</button>
+          <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
+        </div>
+
+        <div class="list-filter">
+          <div class="list-filter-action">
+            <a href="/" class="btn-modern secondary small">◀ Menu</a>
+          </div>
+          <div class="list-filter-field">
+            <label for="filter-column">Procurar por</label>
+            <select id="filter-column">
+              <option value="descricao">Descrição</option>
+              <option value="codigoBarras">Código de Barras</option>
+              <option value="generico">Genérico</option>
+            </select>
+          </div>
+          <div class="list-filter-input">
+            <label for="filter-text">Texto</label>
+            <input id="filter-text" type="text" placeholder="digite para filtrar..." />
+          </div>
+        </div>
+
+        <div class="table-shell">
+          <div class="table-responsive app-table-wrapper">
+            <table class="table-modern" id="tb-produtos">
+              <thead>
+                <tr>
+                  <th>Código de Barras</th>
+                  <th>Descrição</th>
+                  <th>Preço Compra</th>
+                  <th>Preço Venda</th>
+                  <th>Genérico</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Carregando...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-pager">
+            <div class="table-pager-info" id="produtos-pg-info">Mostrando 0-0 de 0</div>
+            <div class="table-pager-group">
+              <button class="pager-btn is-disabled" id="produtos-pg-prev">
+                <span>◀</span><span>Anterior</span>
+              </button>
+              <button class="pager-btn is-disabled" id="produtos-pg-next">
+                <span>Próxima</span><span>▶</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DETALHES -->
+    <div class="app-modal-backdrop" id="produto-modal-backdrop">
+      <div class="app-modal">
+        <div class="app-modal-header">
+          <h2 class="h6 mb-0" id="modal-title">Detalhes do produto</h2>
+          <button type="button" class="app-modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="app-modal-body">
+          <dl class="app-modal-dl">
+            <div><dt>Código de Barras</dt><dd id="m-codigoBarras"></dd></div>
+            <div><dt>Descrição</dt><dd id="m-descricao"></dd></div>
+            <div><dt>Unidade de Medida</dt><dd id="m-unidadeMedida"></dd></div>
+            <div><dt>Preço de Compra</dt><dd id="m-precoCompra"></dd></div>
+            <div><dt>Preço de Venda</dt><dd id="m-precoVenda"></dd></div>
+            <div><dt>Localização</dt><dd id="m-localizacao"></dd></div>
+            <div><dt>Laboratório</dt><dd id="m-laboratorio"></dd></div>
+            <div><dt>Princípio</dt><dd id="m-principio"></dd></div>
+            <div><dt>Genérico</dt><dd id="m-generico"></dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div class="app-modal-backdrop" id="produto-edit-backdrop">
+      <div class="app-modal">
+        <div class="app-modal-header">
+          <h2 class="h6 mb-0">Editar produto</h2>
+          <button type="button" class="app-modal-close" id="edit-close-btn">&times;</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="edit-form" class="edit-form-grid">
+            <input type="hidden" id="e-id" />
+
+            <label>
+              <span>Código de Barras *</span>
+              <input type="text" id="e-codigoBarras" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Descrição *</span>
+              <input type="text" id="e-descricao" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Unidade de Medida</span>
+              <input type="text" id="e-unidadeMedida" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Preço de Compra *</span>
+              <input type="number" step="0.01" id="e-precoCompra" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Preço de Venda *</span>
+              <input type="number" step="0.01" id="e-precoVenda" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Localização</span>
+              <input type="text" id="e-localizacao" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Laboratório</span>
+              <input type="text" id="e-laboratorio" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Princípio</span>
+              <input type="text" id="e-principio" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Genérico *</span>
+              <input type="text" id="e-generico" class="form-control form-control-sm" required />
+            </label>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-modern secondary" id="edit-cancel-btn">Cancelar</button>
+              <button type="submit" class="btn-modern primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL NOVO -->
+    <div class="app-modal-backdrop" id="produto-new-backdrop">
+      <div class="app-modal">
+        <div class="app-modal-header">
+          <h2 class="h6 mb-0">Novo produto</h2>
+          <button type="button" class="app-modal-close" id="new-close-btn">&times;</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="new-form" class="edit-form-grid">
+            <label>
+              <span>Código de Barras *</span>
+              <input type="text" id="n-codigoBarras" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Descrição *</span>
+              <input type="text" id="n-descricao" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Unidade de Medida</span>
+              <input type="text" id="n-unidadeMedida" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Preço de Compra *</span>
+              <input type="number" step="0.01" id="n-precoCompra" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Preço de Venda *</span>
+              <input type="number" step="0.01" id="n-precoVenda" class="form-control form-control-sm" required />
+            </label>
+
+            <label>
+              <span>Localização</span>
+              <input type="text" id="n-localizacao" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Laboratório</span>
+              <input type="text" id="n-laboratorio" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Princípio</span>
+              <input type="text" id="n-principio" class="form-control form-control-sm" />
+            </label>
+
+            <label>
+              <span>Genérico *</span>
+              <input type="text" id="n-generico" class="form-control form-control-sm" required />
+            </label>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-modern secondary" id="new-cancel-btn">Cancelar</button>
+              <button type="submit" class="btn-modern primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/produto.js"></script>
+</body>
+</html>

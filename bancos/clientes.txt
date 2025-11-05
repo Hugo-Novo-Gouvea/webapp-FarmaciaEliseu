@@ -1,0 +1,14 @@
+Tabela: dbo.clientes
+-------------------------------------------------
+clientesID        int              PK, NOT NULL
+nome              nvarchar(200)    NOT NULL
+endereco          nvarchar(200)    NULL
+rg                nvarchar(30)     NULL
+cpf               nvarchar(30)     NULL
+telefone          nvarchar(50)     NULL
+celular           nvarchar(50)     NULL
+dataNascimento    date             NULL
+codigoFichario    int              NULL
+dataCadastro      datetime2(0)     NULL
+dataUltimoRegistro datetime2(0)    NULL
+deletado          bit              NULL
