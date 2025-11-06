@@ -37,7 +37,7 @@ async function carregarProdutos() {
 
 /* ========== FILTRO POR COLUNA (local) ========== */
 function aplicarFiltroProdutos() {
-  const col = document.getElementById('filter-column')?.value || 'descricao';
+  const col = document.getElementById('filter-column')?.value || 'codigoBarras';
   let txt = (document.getElementById('filter-text')?.value || '').trim().toLowerCase();
 
   // normaliza busca para cada coluna
@@ -65,8 +65,6 @@ function pegarValorColunaProduto(p, col) {
   switch (col) {
     case 'codigoBarras':
       return s(p.codigoBarras).replace(/\D+/g, '');
-    case 'generico':
-      return s(p.generico);
     case 'descricao':
     default:
       // remove sequências numéricas longas (ex.: código de barras embutido)
@@ -99,13 +97,13 @@ function renderTabela() {
       id: c.produtosId ?? c.produtosID ?? c.id ?? '',
       descricao: c.descricao ?? '',
       unidadeMedida: c.unidadeMedida ?? '',
-      precoCompra: c.precoCompra ?? '',
-      precoVenda: c.precoVenda ?? '',
+      precoCompra: c.precoCompra ?? 0,
+      precoVenda: c.precoVenda ?? 0,
       localizacao: c.localizacao ?? '',
       laboratorio: c.laboratorio ?? '',
       principio: c.principio ?? '',
       generico: c.generico ?? '',
-      codigoProduto: c.codigoProduto ?? '',
+      codigoProduto: (c.codigoProduto ?? c.CodigoProduto ?? ''),
       codigoBarras: c.codigoBarras ?? '',
       deletadoBool: !!c.deletado
     };
@@ -113,8 +111,8 @@ function renderTabela() {
     tr.innerHTML = `
       <td>${produtoData.codigoBarras}</td>
       <td>${produtoData.descricao}</td>
-      <td>${produtoData.precoCompra}</td>
-      <td>${produtoData.precoVenda}</td>
+      <td>${formatMoedaBR(produtoData.precoCompra)}</td>
+      <td>${formatMoedaBR(produtoData.precoVenda)}</td>
       <td>${produtoData.generico}</td>
     `;
 
@@ -200,10 +198,12 @@ document.getElementById('btn-view')?.addEventListener('click', () => {
   if (!b) return;
 
   document.getElementById('m-codigoBarras').textContent = produtoSelecionado.codigoBarras || '';
+  const mCodigoProduto = document.getElementById('m-codigoProduto');
+  if (mCodigoProduto) mCodigoProduto.textContent = produtoSelecionado.codigoProduto || '';
   document.getElementById('m-descricao').textContent = produtoSelecionado.descricao || '';
   document.getElementById('m-unidadeMedida').textContent = produtoSelecionado.unidadeMedida || '';
-  document.getElementById('m-precoCompra').textContent = produtoSelecionado.precoCompra || '';
-  document.getElementById('m-precoVenda').textContent = produtoSelecionado.precoVenda || '';
+  document.getElementById('m-precoCompra').textContent = formatMoedaBR(produtoSelecionado.precoCompra);
+  document.getElementById('m-precoVenda').textContent = formatMoedaBR(produtoSelecionado.precoVenda);
   document.getElementById('m-localizacao').textContent = produtoSelecionado.localizacao || '';
   document.getElementById('m-laboratorio').textContent = produtoSelecionado.laboratorio || '';
   document.getElementById('m-principio').textContent = produtoSelecionado.principio || '';
@@ -231,6 +231,8 @@ document.getElementById('btn-edit')?.addEventListener('click', () => {
   document.getElementById('e-laboratorio').value = produtoSelecionado.laboratorio || '';
   document.getElementById('e-principio').value = produtoSelecionado.principio || '';
   document.getElementById('e-generico').value = produtoSelecionado.generico || '';
+  const eCodigoProduto = document.getElementById('e-codigoProduto');
+  if (eCodigoProduto) eCodigoProduto.value = produtoSelecionado.codigoProduto || '';
 
   b.classList.add('show');
   document.getElementById('edit-close-btn').onclick = () => b.classList.remove('show');
@@ -251,17 +253,33 @@ document.getElementById('edit-form')?.addEventListener('submit', async (e) => {
 
   const id = document.getElementById('e-id').value;
 
+  const somenteNumeros = (v) => (v || '').toString().replace(/\D+/g, '');
+  const rawCodigoBarras = document.getElementById('e-codigoBarras').value.trim();
+  const rawUnidadeMedida = document.getElementById('e-unidadeMedida').value.trim();
+  const rawLocalizacao = document.getElementById('e-localizacao').value.trim();
+  const rawLaboratorio = document.getElementById('e-laboratorio').value.trim();
+  const rawPrincipio = document.getElementById('e-principio').value.trim();
+  const rawCodigoProduto = document.getElementById('e-codigoProduto')?.value.trim() || '';
+  const selGenerico = document.getElementById('e-generico').value;
+
+  if (!(selGenerico === 'SIM' || selGenerico === 'NAO')) {
+    alert('Selecione "SIM" ou "NAO" no campo Genérico.');
+    document.getElementById('e-generico').focus();
+    return;
+  }
+
   const payload = {
     produtosId: parseInt(id, 10),
-    codigoBarras: document.getElementById('e-codigoBarras').value.trim(),
-    descricao: document.getElementById('e-descricao').value.trim(),
-    unidadeMedida: document.getElementById('e-unidadeMedida').value,
+    codigoBarras: somenteNumeros(rawCodigoBarras),
+    descricao: document.getElementById('e-descricao').value.trim().toUpperCase(),
+    unidadeMedida: somenteNumeros(rawUnidadeMedida) || '0',
     precoCompra: parseFloat(document.getElementById('e-precoCompra').value),
     precoVenda: parseFloat(document.getElementById('e-precoVenda').value),
-    localizacao: document.getElementById('e-localizacao').value,
-    laboratorio: document.getElementById('e-laboratorio').value,
-    principio: document.getElementById('e-principio').value,
-    generico: document.getElementById('e-generico').value.trim(),
+    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NÃO INFORMADO'),
+    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NÃO INFORMADO'),
+    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NÃO INFORMADO'),
+    generico: selGenerico,
+    codigoProduto: rawCodigoProduto || '000000000',
     deletado: false
   };
 
@@ -294,6 +312,8 @@ document.getElementById('btn-new')?.addEventListener('click', () => {
   document.getElementById('n-laboratorio').value = '';
   document.getElementById('n-principio').value = '';
   document.getElementById('n-generico').value = '';
+  const nCodigoProduto = document.getElementById('n-codigoProduto');
+  if (nCodigoProduto) nCodigoProduto.value = '';
 
   b.classList.add('show');
   document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
@@ -311,16 +331,33 @@ document.getElementById('new-form')?.addEventListener('submit', async (e) => {
     return;
   }
 
+  const somenteNumeros = (v) => (v || '').toString().replace(/\D+/g, '');
+
+  const rawCodigoBarras = document.getElementById('n-codigoBarras').value.trim();
+  const rawUnidadeMedida = document.getElementById('n-unidadeMedida').value.trim();
+  const rawLocalizacao = document.getElementById('n-localizacao').value.trim();
+  const rawLaboratorio = document.getElementById('n-laboratorio').value.trim();
+  const rawPrincipio = document.getElementById('n-principio').value.trim();
+  const rawCodigoProduto = document.getElementById('n-codigoProduto')?.value.trim() || '';
+  const selGenerico = document.getElementById('n-generico').value;
+
+  if (!(selGenerico === 'SIM' || selGenerico === 'NAO')) {
+    alert('Selecione "SIM" ou "NAO" no campo Genérico.');
+    document.getElementById('n-generico').focus();
+    return;
+  }
+
   const payload = {
-    codigoBarras: document.getElementById('n-codigoBarras').value.trim(),
-    descricao: document.getElementById('n-descricao').value.trim(),
-    unidadeMedida: document.getElementById('n-unidadeMedida').value,
+    codigoBarras: somenteNumeros(rawCodigoBarras),
+    descricao: document.getElementById('n-descricao').value.trim().toUpperCase(),
+    unidadeMedida: somenteNumeros(rawUnidadeMedida) || '0',
     precoCompra: parseFloat(document.getElementById('n-precoCompra').value),
     precoVenda: parseFloat(document.getElementById('n-precoVenda').value),
-    localizacao: document.getElementById('n-localizacao').value,
-    laboratorio: document.getElementById('n-laboratorio').value,
-    principio: document.getElementById('n-principio').value,
-    generico: document.getElementById('n-generico').value.trim(),
+    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NÃO INFORMADO'),
+    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NÃO INFORMADO'),
+    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NÃO INFORMADO'),
+    generico: selGenerico,
+    codigoProduto: rawCodigoProduto || '000000000',
     deletado: false
   };
 
@@ -385,9 +422,26 @@ function validarCamposProduto(prefixo) {
   if (!elPrecoVenda.value.trim()) {
     return { ok: false, msg: 'Preço de venda é obrigatório.', el: elPrecoVenda };
   }
-  if (!elGenerico.value.trim()) {
-    return { ok: false, msg: 'Campo "genérico" é obrigatório.', el: elGenerico };
+  if (!(elGenerico.value === 'SIM' || elGenerico.value === 'NAO')) {
+    return { ok: false, msg: 'Selecione "SIM" ou "NAO" no campo genérico.', el: elGenerico };
   }
 
   return { ok: true };
+}
+
+// Restrições de digitação: apenas números para código de barras e unidade de medida
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (!t || !t.id) return;
+  if (t.id === 'n-codigoBarras' || t.id === 'e-codigoBarras' || t.id === 'n-unidadeMedida' || t.id === 'e-unidadeMedida') {
+    const pos = t.selectionStart;
+    t.value = (t.value || '').replace(/\D+/g, '');
+    try { t.setSelectionRange(pos, pos); } catch {}
+  }
+});
+
+// Util: formata número em pt-BR com 2 casas (00,00)
+function formatMoedaBR(valor) {
+  const n = Number(valor ?? 0);
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

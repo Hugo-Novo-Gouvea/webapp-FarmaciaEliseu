@@ -147,6 +147,7 @@ async function carregarMovimentosCliente(clienteId) {
   const resp = await fetch(`/api/contas/movimentos?clienteId=${clienteId}`);
   if (!resp.ok) {
     limparTabelaContas('Erro ao carregar movimentos');
+    atualizarTotalContas(0);
     return;
   }
   const data = await resp.json();
@@ -154,6 +155,7 @@ async function carregarMovimentosCliente(clienteId) {
   contasPgAtual = 1;
   renderTabelaContas();
   atualizarPaginacaoContas();
+  atualizarTotalContas();
 }
 
 function limparTabelaContas(msg) {
@@ -170,6 +172,7 @@ function renderTabelaContas() {
   if (!movimentosCliente || movimentosCliente.length === 0) {
     limparTabelaContas('Nenhum movimento em aberto.');
     togglePayButton(true);
+    atualizarTotalContas(0);
     return;
   }
 
@@ -209,6 +212,7 @@ function renderTabelaContas() {
   });
 
   togglePayButton(!haSelecionados());
+  atualizarTotalContas();
 }
 
 function atualizarPaginacaoContas() {
@@ -253,4 +257,23 @@ function haSelecionados() {
 function togglePayButton(disabled) {
   const btn = document.getElementById('btn-pay');
   if (btn) btn.disabled = disabled;
+}
+
+// ===== Totalizador =====
+function extrairValorMovimento(m) {
+  const v = m.valorVenda ?? m.precoTotalDiaVenda ?? m.ValorVenda ?? m.PrecoTotalDiaVenda ?? 0;
+  const num = typeof v === 'number' ? v : parseFloat(v || 0);
+  return isNaN(num) ? 0 : num;
+}
+
+function atualizarTotalContas(forceValor) {
+  const el = document.getElementById('contas-total-info');
+  if (!el) return;
+  let total = 0;
+  if (typeof forceValor === 'number') {
+    total = forceValor;
+  } else {
+    total = (movimentosCliente || []).reduce((acc, m) => acc + extrairValorMovimento(m), 0);
+  }
+  el.textContent = 'Total: ' + total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }

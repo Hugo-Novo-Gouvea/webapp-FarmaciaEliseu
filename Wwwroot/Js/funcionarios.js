@@ -210,7 +210,7 @@ document.getElementById('edit-form')?.addEventListener('submit', async (e) => {
 
   const payload = {
     funcionariosId: parseInt(id, 10),
-    nome: nome,
+    nome: nome.toUpperCase(),
     deletado: false
   };
 
@@ -270,7 +270,7 @@ document.getElementById('new-form')?.addEventListener('submit', async (e) => {
   }
 
   const payload = {
-    nome: nome,
+    nome: nome.toUpperCase(),
     deletado: false
   };
 

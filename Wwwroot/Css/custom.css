@@ -607,6 +607,26 @@
   min-width: 180px;
 }
 
+/* bloco de totalizador à direita da barra */
+.list-filter-total {
+  /* fica ao lado do campo de pesquisa, em linha */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.list-filter-total label {
+  /* evita quebra e melhora legibilidade do rótulo */
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+.list-filter-total .table-pager-info {
+  white-space: nowrap;
+}
+
 /* Contas a Pagar: manter select 2x largura do input */
 #contas-pagar-shell #filter-text {
   width: 220px;
@@ -614,6 +634,23 @@
 #contas-pagar-shell #filter-person {
   width: 440px;
   min-width: 440px;
+}
+
+/* Vendas: cliente registrado com largura fixa (evita "pular") */
+#vendas-shell #cliente-pesquisa {
+  width: 220px;
+}
+#vendas-shell #cliente-registrado {
+  width: 440px;
+  min-width: 440px;
+  max-width: 440px;
+}
+/* trava também o bloco (wrapper) para não oscilar no flex */
+#vendas-shell #cliente-registrado-block .list-filter-field {
+  flex: 0 0 440px;
+  width: 440px;
+  min-width: 440px;
+  max-width: 440px;
 }
 
 .list-filter input::placeholder {

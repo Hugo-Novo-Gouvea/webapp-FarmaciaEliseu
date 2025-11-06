@@ -1,3 +1,4 @@
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebAppEstudo.Data;
 
@@ -30,46 +31,37 @@ app.MapGet("/api/clientes", async (
         .Where(c => (c.Deletado == null || c.Deletado == false) && c.ClientesId != 1)
         .AsQueryable();
 
-    // filtro (nome, cpf etc.)
     if (!string.IsNullOrWhiteSpace(search))
     {
-      search = search.Trim();
-      switch (column)
-      {
-        case "cpf":
-          query = query.Where(c => c.Cpf != null && c.Cpf.Contains(search));
-          break;
-        case "telefone":
-          query = query.Where(c => c.Telefone != null && c.Telefone.Contains(search));
-          break;
-        case "celular":
-          query = query.Where(c => c.Celular != null && c.Celular.Contains(search));
-          break;
-        case "endereco":
-          query = query.Where(c => c.Endereco != null && c.Endereco.Contains(search));
-          break;
-        default:
-          // nome (padrão)
-          query = query.Where(c => c.Nome != null && c.Nome.Contains(search));
-          break;
-      }
+        search = search.Trim();
+        switch (column)
+        {
+            case "cpf":
+                query = query.Where(c => c.Cpf != null && c.Cpf.Contains(search));
+                break;
+            case "telefone":
+                query = query.Where(c => c.Telefone != null && c.Telefone.Contains(search));
+                break;
+            case "celular":
+                query = query.Where(c => c.Celular != null && c.Celular.Contains(search));
+                break;
+            case "endereco":
+                query = query.Where(c => c.Endereco != null && c.Endereco.Contains(search));
+                break;
+            default:
+                query = query.Where(c => c.Nome != null && c.Nome.Contains(search));
+                break;
+        }
     }
 
     var total = await query.CountAsync();
-
     var itens = await query
         .OrderBy(c => c.Nome)
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
         .ToListAsync();
 
-    return Results.Ok(new
-    {
-        total,
-        page,
-        pageSize,
-        items = itens
-    });
+    return Results.Ok(new { total, page, pageSize, items = itens });
 });
 
 // PEGAR UM
@@ -86,16 +78,66 @@ app.MapPut("/api/clientes/{id:int}", async (int id, AppDbContext db, Cliente dto
     if (cliente is null)
         return Results.NotFound();
 
-    cliente.Nome = dto.Nome;
-    cliente.Endereco = string.IsNullOrWhiteSpace(dto.Endereco)
-        ? "Não informado, 000, Não informado"
-        : dto.Endereco;
-    cliente.Rg = dto.Rg;
-    cliente.Cpf = dto.Cpf;
-    cliente.Telefone = dto.Telefone;
-    cliente.Celular = dto.Celular;
+    var nome = (dto.Nome ?? "").Trim();
+    if (string.IsNullOrWhiteSpace(nome))
+        return Results.BadRequest("Nome é obrigatório.");
+    cliente.Nome = nome.ToUpper();
+
+    string enderecoFinal;
+    if (string.IsNullOrWhiteSpace(dto.Endereco))
+    {
+        enderecoFinal = "NÃO INFORMADO, 000, NÃO INFORMADO";
+    }
+    else
+    {
+        var partes = dto.Endereco.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var log = (partes.Length > 0 ? partes[0] : null);
+        var num = (partes.Length > 1 ? partes[1] : null);
+        var bai = (partes.Length > 2 ? partes[2] : null);
+        log = string.IsNullOrWhiteSpace(log) ? "NÃO INFORMADO" : log.ToUpper();
+        num = string.IsNullOrWhiteSpace(num) ? "000" : num.ToUpper();
+        bai = string.IsNullOrWhiteSpace(bai) ? "NÃO INFORMADO" : bai.ToUpper();
+        enderecoFinal = $"{log}, {num}, {bai}";
+    }
+    cliente.Endereco = enderecoFinal;
+
+    cliente.Rg = string.IsNullOrWhiteSpace(dto.Rg) ? "00.000.000-0" : dto.Rg;
+    cliente.Cpf = string.IsNullOrWhiteSpace(dto.Cpf) ? "000.000.000-00" : dto.Cpf;
+    cliente.Telefone = string.IsNullOrWhiteSpace(dto.Telefone) ? "(00)0000-0000" : dto.Telefone;
+    cliente.Celular = string.IsNullOrWhiteSpace(dto.Celular) ? "(00)00000-0000" : dto.Celular;
     cliente.CodigoFichario = dto.CodigoFichario ?? 0;
     cliente.DataNascimento = dto.DataNascimento ?? DateTime.Today;
+    cliente.DataUltimoRegistro = DateTime.Now;
+
+    // Propaga a atualização do nome para os movimentos relacionados (independente de 'deletado')
+    var movimentosDoCliente = await db.Movimentos
+        .Where(m => m.ClientesId == cliente.ClientesId)
+        .ToListAsync();
+    if (movimentosDoCliente.Count > 0)
+    {
+        var agora = DateTime.Now;
+        foreach (var m in movimentosDoCliente)
+        {
+            m.ClientesNome = cliente.Nome; // já está em MAIÚSCULAS
+            m.DataUltimoRegistro = agora;
+        }
+    }
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+// DELETAR (soft delete)
+app.MapDelete("/api/clientes/{id:int}", async (int id, AppDbContext db) =>
+{
+    var cliente = await db.Clientes.FindAsync(id);
+    if (cliente is null)
+        return Results.NotFound();
+
+    if (cliente.ClientesId == 1)
+        return Results.BadRequest("Cliente padrão não pode ser excluído.");
+
+    cliente.Deletado = true;
     cliente.DataUltimoRegistro = DateTime.Now;
 
     await db.SaveChangesAsync();
@@ -105,21 +147,37 @@ app.MapPut("/api/clientes/{id:int}", async (int id, AppDbContext db, Cliente dto
 // CRIAR
 app.MapPost("/api/clientes", async (Cliente dto, AppDbContext db) =>
 {
-    if (string.IsNullOrWhiteSpace(dto.Nome))
+    var nome = (dto.Nome ?? "").Trim();
+    if (string.IsNullOrWhiteSpace(nome))
         return Results.BadRequest("Nome é obrigatório.");
 
     var agora = DateTime.Now;
 
+    string enderecoFinal;
+    if (string.IsNullOrWhiteSpace(dto.Endereco))
+    {
+        enderecoFinal = "NÃO INFORMADO, 000, NÃO INFORMADO";
+    }
+    else
+    {
+        var partes = dto.Endereco.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var log = (partes.Length > 0 ? partes[0] : null);
+        var num = (partes.Length > 1 ? partes[1] : null);
+        var bai = (partes.Length > 2 ? partes[2] : null);
+        log = string.IsNullOrWhiteSpace(log) ? "NÃO INFORMADO" : log.ToUpper();
+        num = string.IsNullOrWhiteSpace(num) ? "000" : num.ToUpper();
+        bai = string.IsNullOrWhiteSpace(bai) ? "NÃO INFORMADO" : bai.ToUpper();
+        enderecoFinal = $"{log}, {num}, {bai}";
+    }
+
     var cliente = new Cliente
     {
-        Nome = dto.Nome,
-        Endereco = string.IsNullOrWhiteSpace(dto.Endereco)
-            ? "Não informado, 000, Não informado"
-            : dto.Endereco,
-        Rg = dto.Rg,
-        Cpf = dto.Cpf,
-        Telefone = dto.Telefone,
-        Celular = dto.Celular,
+        Nome = nome.ToUpper(),
+        Endereco = enderecoFinal,
+        Rg = string.IsNullOrWhiteSpace(dto.Rg) ? "00.000.000-0" : dto.Rg,
+        Cpf = string.IsNullOrWhiteSpace(dto.Cpf) ? "000.000.000-00" : dto.Cpf,
+        Telefone = string.IsNullOrWhiteSpace(dto.Telefone) ? "(00)0000-0000" : dto.Telefone,
+        Celular = string.IsNullOrWhiteSpace(dto.Celular) ? "(00)00000-0000" : dto.Celular,
         DataNascimento = dto.DataNascimento ?? DateTime.Today,
         CodigoFichario = dto.CodigoFichario ?? 0,
         Deletado = false,
@@ -131,26 +189,9 @@ app.MapPost("/api/clientes", async (Cliente dto, AppDbContext db) =>
     await db.SaveChangesAsync();
 
     return Results.Created($"/api/clientes/{cliente.ClientesId}", cliente);
-});
+});/* ===================== PRODUTOS ===================== */
 
-// DELETAR (soft)
-app.MapDelete("/api/clientes/{id:int}", async (int id, AppDbContext db) =>
-{
-    var cliente = await db.Clientes.FindAsync(id);
-    if (cliente is null)
-        return Results.NotFound();
-
-    cliente.Deletado = true;
-    cliente.DataUltimoRegistro = DateTime.Now;
-
-    await db.SaveChangesAsync();
-    return Results.NoContent();
-});
-
-
-/* ===================== PRODUTOS ===================== */
-
-// LISTAR (com paginação e filtro)
+// LISTAR (com paginaÃ§Ã£o e filtro)
 app.MapGet("/api/produtos", async (
     AppDbContext db,
     int page = 1,
@@ -178,7 +219,7 @@ app.MapGet("/api/produtos", async (
                 query = query.Where(p => p.Generico != null && p.Generico.Contains(search));
                 break;
             default:
-                // descrição padrão
+                // descriÃ§Ã£o padrÃ£o
                 query = query.Where(p => p.Descricao != null && p.Descricao.Contains(search));
                 break;
         }
@@ -215,27 +256,42 @@ app.MapPost("/api/produtos", async (Produto dto, AppDbContext db) =>
         return Results.BadRequest("Código de barras é obrigatório.");
     if (string.IsNullOrWhiteSpace(dto.Descricao))
         return Results.BadRequest("Descrição é obrigatória.");
-    if (dto.PrecoCompra <= 0)
-        return Results.BadRequest("Preço de compra é obrigatório.");
-    if (dto.PrecoVenda <= 0)
-        return Results.BadRequest("Preço de venda é obrigatório.");
+    if (dto.PrecoCompra < 0)
+        return Results.BadRequest("Preço de compra não pode ser negativo.");
+    if (dto.PrecoVenda < 0)
+        return Results.BadRequest("Preço de venda não pode ser negativo.");
     if (string.IsNullOrWhiteSpace(dto.Generico))
         return Results.BadRequest("Campo 'Genérico' é obrigatório.");
+
+    string SomenteNumeros(string? v)
+        => string.Concat((v ?? "").Where(char.IsDigit));
+
+    var codigoBarras = SomenteNumeros(dto.CodigoBarras);
+    var unidadeMedida = SomenteNumeros(dto.UnidadeMedida);
+
+    var descricao = dto.Descricao.Trim().ToUpper();
+    var localizacao = string.IsNullOrWhiteSpace(dto.Localizacao) ? "NÃO INFORMADO" : dto.Localizacao.Trim().ToUpper();
+    var laboratorio = string.IsNullOrWhiteSpace(dto.Laboratorio) ? "NÃO INFORMADO" : dto.Laboratorio.Trim().ToUpper();
+    var principio = string.IsNullOrWhiteSpace(dto.Principio) ? "NÃO INFORMADO" : dto.Principio.Trim().ToUpper();
+    var generico = (dto.Generico ?? "").Trim().ToUpper();
+    if (generico != "SIM" && generico != "NAO")
+        return Results.BadRequest("Campo 'Genérico' deve ser SIM ou NAO.");
+    var codigoProduto = string.IsNullOrWhiteSpace(dto.CodigoProduto) ? "000000000" : dto.CodigoProduto.Trim();
 
     var agora = DateTime.Now;
 
     var produto = new Produto
     {
-        CodigoBarras = dto.CodigoBarras.Trim(),
-        Descricao = dto.Descricao.Trim(),
-        UnidadeMedida = dto.UnidadeMedida,
+        CodigoBarras = codigoBarras,
+        Descricao = descricao,
+        UnidadeMedida = string.IsNullOrEmpty(unidadeMedida) ? "0" : unidadeMedida,
         PrecoCompra = dto.PrecoCompra,
         PrecoVenda = dto.PrecoVenda,
-        Localizacao = dto.Localizacao,
-        Laboratorio = dto.Laboratorio,
-        Principio = dto.Principio,
-        Generico = dto.Generico,
-        CodigoProduto = dto.CodigoProduto,
+        Localizacao = localizacao,
+        Laboratorio = laboratorio,
+        Principio = principio,
+        Generico = generico,
+        CodigoProduto = codigoProduto,
         Deletado = false,
         DataCadastro = agora,
         DataUltimoRegistro = agora
@@ -258,24 +314,72 @@ app.MapPut("/api/produtos/{id:int}", async (int id, AppDbContext db, Produto dto
         return Results.BadRequest("Código de barras é obrigatório.");
     if (string.IsNullOrWhiteSpace(dto.Descricao))
         return Results.BadRequest("Descrição é obrigatória.");
-    if (dto.PrecoCompra <= 0)
-        return Results.BadRequest("Preço de compra é obrigatório.");
-    if (dto.PrecoVenda <= 0)
-        return Results.BadRequest("Preço de venda é obrigatório.");
+    if (dto.PrecoCompra < 0)
+        return Results.BadRequest("Preço de compra não pode ser negativo.");
+    if (dto.PrecoVenda < 0)
+        return Results.BadRequest("Preço de venda não pode ser negativo.");
     if (string.IsNullOrWhiteSpace(dto.Generico))
         return Results.BadRequest("Campo 'Genérico' é obrigatório.");
 
-    produto.CodigoBarras = dto.CodigoBarras.Trim();
-    produto.Descricao = dto.Descricao.Trim();
-    produto.UnidadeMedida = dto.UnidadeMedida;
+    string SomenteNumeros(string? v)
+        => string.Concat((v ?? "").Where(char.IsDigit));
+
+    var codigoBarras = SomenteNumeros(dto.CodigoBarras);
+    var unidadeMedida = SomenteNumeros(dto.UnidadeMedida);
+
+    var descricao = dto.Descricao.Trim().ToUpper();
+    var localizacao = string.IsNullOrWhiteSpace(dto.Localizacao) ? "NÃO INFORMADO" : dto.Localizacao.Trim().ToUpper();
+    var laboratorio = string.IsNullOrWhiteSpace(dto.Laboratorio) ? "NÃO INFORMADO" : dto.Laboratorio.Trim().ToUpper();
+    var principio = string.IsNullOrWhiteSpace(dto.Principio) ? "NÃO INFORMADO" : dto.Principio.Trim().ToUpper();
+    var generico = (dto.Generico ?? "").Trim().ToUpper();
+    if (generico != "SIM" && generico != "NAO")
+        return Results.BadRequest("Campo 'Genérico' deve ser SIM ou NAO.");
+    var codigoProduto = string.IsNullOrWhiteSpace(dto.CodigoProduto) ? "000000000" : dto.CodigoProduto.Trim();
+
+    // Captura valores antigos para verificar mudanças e propagar para movimentos
+    var descricaoAntiga = produto.Descricao;
+    var precoVendaAntigo = produto.PrecoVenda;
+
+    produto.CodigoBarras = codigoBarras;
+    produto.Descricao = descricao;
+    produto.UnidadeMedida = string.IsNullOrEmpty(unidadeMedida) ? "0" : unidadeMedida;
     produto.PrecoCompra = dto.PrecoCompra;
     produto.PrecoVenda = dto.PrecoVenda;
-    produto.Localizacao = dto.Localizacao;
-    produto.Laboratorio = dto.Laboratorio;
-    produto.Principio = dto.Principio;
-    produto.Generico = dto.Generico;
-    produto.CodigoProduto = dto.CodigoProduto;
+    produto.Localizacao = localizacao;
+    produto.Laboratorio = laboratorio;
+    produto.Principio = principio;
+    produto.Generico = generico;
+    produto.CodigoProduto = codigoProduto;
     produto.DataUltimoRegistro = DateTime.Now;
+
+    // Caso a descrição ou o preço de venda mudem, propaga para os movimentos do produto
+    var descricaoMudou = !string.Equals(descricaoAntiga, descricao, StringComparison.Ordinal);
+    var precoMudou = precoVendaAntigo != dto.PrecoVenda;
+    if (descricaoMudou || precoMudou)
+    {
+        var agora = DateTime.Now;
+        var movimentosDoProduto = await db.Movimentos
+            .Where(m => m.ProdutosId == produto.ProdutosId)
+            .ToListAsync();
+
+        if (movimentosDoProduto.Count > 0)
+        {
+            foreach (var m in movimentosDoProduto)
+            {
+                if (descricaoMudou)
+                {
+                    m.ProdutosDescricao = produto.Descricao; // já está em MAIÚSCULAS
+                    m.DataUltimoRegistro = agora;
+                }
+                if (precoMudou)
+                {
+                    m.PrecoUnitarioAtual = produto.PrecoVenda;
+                    m.PrecoTotalAtual = m.PrecoUnitarioAtual * m.Quantidade;
+                    m.DataUltimoRegistro = agora;
+                }
+            }
+        }
+    }
 
     await db.SaveChangesAsync();
     return Results.NoContent();
@@ -297,7 +401,7 @@ app.MapDelete("/api/produtos/{id:int}", async (int id, AppDbContext db) =>
 
 /* ===================== FUNCIONARIOS ===================== */
 
-// LISTAR (com paginação e filtro)
+// LISTAR (com paginaÃ§Ã£o e filtro)
 app.MapGet("/api/funcionarios", async (
     AppDbContext db,
     int page = 1,
@@ -316,7 +420,7 @@ app.MapGet("/api/funcionarios", async (
     if (!string.IsNullOrWhiteSpace(search))
     {
         search = search.Trim();
-        // único campo pesquisável por enquanto: nome
+        // Ãºnico campo pesquisÃ¡vel por enquanto: nome
         query = query.Where(f => f.Nome != null && f.Nome.Contains(search));
     }
 
@@ -354,7 +458,7 @@ app.MapPost("/api/funcionarios", async (Funcionario dto, AppDbContext db) =>
 
     var funcionario = new Funcionario
     {
-        Nome = dto.Nome.Trim(),
+        Nome = dto.Nome.Trim().ToUpper(),
         Deletado = false,
         DataCadastro = agora,
         DataUltimoRegistro = agora
@@ -376,7 +480,7 @@ app.MapPut("/api/funcionarios/{id:int}", async (int id, AppDbContext db, Funcion
     if (string.IsNullOrWhiteSpace(dto.Nome))
         return Results.BadRequest("Nome é obrigatório.");
 
-    funcionario.Nome = dto.Nome.Trim();
+    funcionario.Nome = dto.Nome.Trim().ToUpper();
     funcionario.DataUltimoRegistro = DateTime.Now;
 
     await db.SaveChangesAsync();
@@ -399,7 +503,7 @@ app.MapDelete("/api/funcionarios/{id:int}", async (int id, AppDbContext db) =>
 
 /* ===================== CONTAS A PAGAR ===================== */
 
-// lista de clientes (id, nome) não deletados, para o dropdown
+// lista de clientes (id, nome) nÃ£o deletados, para o dropdown
 app.MapGet("/api/contas/clientes", async (AppDbContext db) =>
 {
     var clientes = await db.Clientes
@@ -413,7 +517,7 @@ app.MapGet("/api/contas/clientes", async (AppDbContext db) =>
 // movimentos em aberto por cliente (deletado = 0)
 app.MapGet("/api/contas/movimentos", async (AppDbContext db, int clienteId) =>
 {
-    if (clienteId <= 0) return Results.BadRequest("clienteId inválido.");
+    if (clienteId <= 0) return Results.BadRequest("clienteId invÃ¡lido.");
 
     var movimentos = await db.Movimentos
         .Where(m => (m.Deletado == null || m.Deletado == false) && m.ClientesId == clienteId)
@@ -447,4 +551,101 @@ app.MapPut("/api/contas/movimentos/pagar", async (AppDbContext db, IdsPayload pa
     return Results.NoContent();
 });
 
+/* ===================== VENDAS ===================== */
+// Registrar venda (insere itens na tabela de movimentos)
+app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
+{
+    var agora = DateTime.Now;
+
+    // validação básica
+    var tipoVenda = (payload.TipoVenda ?? "").Trim().ToLower();
+    if (tipoVenda != "marcar" && tipoVenda != "dinheiro")
+        return Results.BadRequest("Tipo de venda inválido.");
+
+    var tipoCliente = (payload.TipoCliente ?? "").Trim().ToLower();
+    if (tipoCliente != "registrado" && tipoCliente != "avulso")
+        return Results.BadRequest("Tipo de cliente inválido.");
+
+    if (payload.Itens == null || payload.Itens.Count == 0)
+        return Results.BadRequest("Lista de itens vazia.");
+
+    // vendedor
+    var vendedor = await db.Funcionarios.FindAsync(payload.VendedorId);
+    if (vendedor is null)
+        return Results.BadRequest("Vendedor inválido.");
+
+    // cliente (registrado ou avulso)
+    int clienteId;
+    string clienteNome;
+    if (tipoCliente == "registrado")
+    {
+        if (payload.ClienteId is null)
+            return Results.BadRequest("Cliente é obrigatório para cliente registrado.");
+        var cliente = await db.Clientes.FindAsync(payload.ClienteId.Value);
+        if (cliente is null)
+            return Results.BadRequest("Cliente não encontrado.");
+        clienteId = cliente.ClientesId;
+        clienteNome = cliente.Nome;
+    }
+    else // avulso
+    {
+        var nome = (payload.ClienteNome ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(nome))
+            return Results.BadRequest("Nome do cliente é obrigatório para venda avulsa.");
+        clienteId = 1; // padrão
+        clienteNome = nome.ToUpper();
+    }
+
+    var gravados = new List<Movimento>();
+    var isDinheiro = tipoVenda == "dinheiro";
+
+    foreach (var it in payload.Itens)
+    {
+        if (it.quantidade <= 0)
+            return Results.BadRequest("Quantidade inválida em um dos itens.");
+        var produto = await db.Produtos.FindAsync(it.produtoId);
+        if (produto is null)
+            return Results.BadRequest($"Produto {it.produtoId} não encontrado.");
+
+        var precoUnit = produto.PrecoVenda;
+        var qtd = it.quantidade;
+        var desconto = it.desconto < 0 ? 0 : it.desconto;
+        var total = (precoUnit * qtd) - desconto;
+        if (total < 0) total = 0;
+
+        var valorPago = isDinheiro ? total : 0m;
+        DateTime? dataPagamento = isDinheiro ? agora : null;
+
+        var mov = new Movimento
+        {
+            ProdutosId = produto.ProdutosId,
+            ProdutosDescricao = produto.Descricao,
+            ProdutosCodigoProduto = string.IsNullOrWhiteSpace(produto.CodigoProduto) ? "000000000" : produto.CodigoProduto,
+            ClientesId = clienteId,
+            ClientesNome = clienteNome,
+            FuncionariosId = vendedor.FuncionariosId,
+            FuncionariosNome = vendedor.Nome,
+            Quantidade = qtd,
+            PrecoUnitarioDiaVenda = precoUnit,
+            PrecoTotalDiaVenda = precoUnit * qtd,
+            PrecoUnitarioAtual = produto.PrecoVenda,
+            PrecoTotalAtual = produto.PrecoVenda * qtd,
+            ValorVenda = total,
+            ValorPago = valorPago,
+            Desconto = desconto,
+            DataVenda = agora,
+            DataPagamento = dataPagamento,
+            DataCadastro = agora,
+            DataUltimoRegistro = agora,
+            Deletado = isDinheiro
+        };
+
+        db.Movimentos.Add(mov);
+        gravados.Add(mov);
+    }
+
+    await db.SaveChangesAsync();
+
+    return Results.Created("/api/vendas", new { itens = gravados.Count });
+});
 app.Run();

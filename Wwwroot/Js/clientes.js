@@ -6,7 +6,7 @@ let clienteSelecionado = null;
 let todosClientes = [];
 let clientesFiltrados = [];
 
-// paginação no front
+// paginaÃ§Ã£o no front
 let clientesPaginaAtual = 1;
 const clientesPageSize = 50;
 
@@ -15,7 +15,7 @@ carregarClientes();
 
 /* ========== CARREGAR TODOS ========== */
 async function carregarClientes() {
-  // busca todos os clientes (pede uma página grande)
+  // busca todos os clientes (pede uma pÃ¡gina grande)
   const resp = await fetch('/api/clientes?pageSize=100000');
   const tbody = document.querySelector('#tb-clientes tbody');
 
@@ -33,7 +33,7 @@ async function carregarClientes() {
   todosClientes = items;
   // aplica filtro atual
   aplicarFiltro();
-  // botão novo pode
+  // botÃ£o novo pode
   document.getElementById('btn-new').disabled = false;
 }
 
@@ -59,16 +59,14 @@ function aplicarFiltro() {
 function pegarValorColuna(c, col) {
   switch (col) {
     case 'endereco': return c.endereco || '';
-    case 'telefone': return c.telefone || '';
+    case 'codigoFichario': return (c.codigoFichario ?? '').toString();
     case 'celular': return c.celular || '';
-    case 'cpf': return c.cpf || '';
-    case 'rg': return c.rg || '';
     case 'nome':
     default: return c.nome || '';
   }
 }
 
-/* ========== RENDER TABELA (COM PAGINAÇÃO LOCAL) ========== */
+/* ========== RENDER TABELA (COM PAGINAÃ‡ÃƒO LOCAL) ========== */
 function renderTabela() {
   const tbody = document.querySelector('#tb-clientes tbody');
   if (!tbody) return;
@@ -100,14 +98,16 @@ function renderTabela() {
       celular: c.celular ?? '',
       dataNascimentoIso: c.dataNascimento || '',
       codigoFichario: c.codigoFichario ?? '',
+      dataCadastroIso: c.dataCadastro || c.DataCadastro || '',
+      ultimoRegistroIso: c.dataUltimoRegistro || c.DataUltimoRegistro || '',
       deletadoBool: !!c.deletado
     };
 
     tr.innerHTML = `
       <td>${clienteData.nome}</td>
       <td>${clienteData.endereco}</td>
-      <td>${clienteData.telefone}</td>
       <td>${clienteData.celular}</td>
+      <td>${clienteData.codigoFichario}</td>
     `;
 
     tr.addEventListener('click', () => {
@@ -122,12 +122,12 @@ function renderTabela() {
     tbody.appendChild(tr);
   });
 
-  // se não clicar, fica desabilitado
+  // se nÃ£o clicar, fica desabilitado
   clienteSelecionado = null;
   toggleBotoes(true);
 }
 
-/* ========== BOTÕES VISUALIZAR/EDITAR/EXCLUIR ========== */
+/* ========== BOTÃ•ES VISUALIZAR/EDITAR/EXCLUIR ========== */
 function toggleBotoes(disabled) {
   ['btn-view', 'btn-edit', 'btn-delete'].forEach(id => {
     const el = document.getElementById(id);
@@ -135,7 +135,7 @@ function toggleBotoes(disabled) {
   });
 }
 
-/* ========== PAGINAÇÃO (VOLTA / AVANÇA) ========== */
+/* ========== PAGINAÃ‡ÃƒO (VOLTA / AVANÃ‡A) ========== */
 function atualizarPaginacaoClientes() {
   const info = document.getElementById('clientes-pg-info');
   const btnPrev = document.getElementById('clientes-pg-prev');
@@ -151,7 +151,7 @@ function atualizarPaginacaoClientes() {
     if (total === 0) {
       info.textContent = 'Nenhum registro';
     } else {
-      info.textContent = `Mostrando ${inicio}-${fim} de ${total} (pág. ${clientesPaginaAtual} de ${totalPaginas})`;
+      info.textContent = `Mostrando ${inicio}-${fim} de ${total} (pÃ¡g. ${clientesPaginaAtual} de ${totalPaginas})`;
     }
   }
 
@@ -212,7 +212,13 @@ function abrirModalCliente(c) {
   document.getElementById('m-data-nasc').textContent = c.dataNascimentoIso
     ? new Date(c.dataNascimentoIso).toLocaleDateString()
     : '';
-  document.getElementById('m-cod-fichario').textContent = c.codigoFichario || '';
+  document.getElementById('m-cod-fichario').textContent = (c.codigoFichario ?? '');
+  document.getElementById('m-data-cadastro').textContent = c.dataCadastroIso
+    ? new Date(c.dataCadastroIso).toLocaleString()
+    : '';
+  document.getElementById('m-ultimo-registro').textContent = c.ultimoRegistroIso
+    ? new Date(c.ultimoRegistroIso).toLocaleString()
+    : '';
 
   backdrop.classList.add('show');
 
@@ -226,7 +232,7 @@ document.getElementById('btn-edit')?.addEventListener('click', () => {
 
   const editBackdrop = document.getElementById('cliente-edit-backdrop');
 
-  // quebra endereço em 3
+  // quebra endereÃ§o em 3
   const partes = (clienteSelecionado.endereco || '').split(',').map(p => p.trim());
   const logradouro = partes[0] || '';
   const numero = partes[1] || '';
@@ -404,13 +410,13 @@ document.getElementById('new-form')?.addEventListener('submit', async (e) => {
 
 /* ========== UTIL ========== */
 function montarEndereco(log, num, bairro) {
-  const l = log && log.trim() ? log.trim() : 'Não Informado';
+  const l = log && log.trim() ? log.trim() : 'NÃ£o Informado';
   const n = num && num.trim() ? num.trim() : '000';
-  const b = bairro && bairro.trim() ? bairro.trim() : 'Não Informado';
+  const b = bairro && bairro.trim() ? bairro.trim() : 'NÃ£o Informado';
   return `${l}, ${n}, ${b}`;
 }
 
-/* ========== MÁSCARAS (limitam tamanho) ========== */
+/* ========== MÃSCARAS (limitam tamanho) ========== */
 function apenasNumeros(str) {
   return str.replace(/\D/g, '');
 }

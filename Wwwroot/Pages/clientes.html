@@ -9,16 +9,12 @@
 <body class="app-body app-body-gradient">
   <main class="app-main">
     <div class="container">
-      <!-- topo da página -->
-
-      <!-- bloco principal -->
       <div class="list-shell">
 
         <div class="mb-3">
           <h2 class="h5 mb-1">Lista de clientes</h2>
         </div>
 
-        <!-- barra de ações -->
         <div class="action-bar">
           <button id="btn-view" class="action-btn primary" disabled>🔍 Visualizar</button>
           <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
@@ -26,20 +22,16 @@
           <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
         </div>
 
-        <!-- barra de filtro -->
         <div class="list-filter">
           <div class="list-filter-action">
-            <a href="/" class="btn-modern small">◀ Menu</a>
+            <a href="/" class="btn-modern small">⬅️ Menu</a>
           </div>
           <div class="list-filter-field">
             <label for="filter-column">Coluna</label>
             <select id="filter-column">
               <option value="nome">Nome</option>
               <option value="endereco">Endereço</option>
-              <option value="telefone">Telefone</option>
-              <option value="celular">Celular</option>
-              <option value="cpf">CPF</option>
-              <option value="rg">RG</option>
+              <option value="codigoFichario">Código Fichário</option>
             </select>
           </div>
           <div class="list-filter-input">
@@ -48,7 +40,6 @@
           </div>
         </div>
 
-        <!-- tabela -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-clientes">
@@ -56,8 +47,8 @@
                 <tr>
                   <th>Nome</th>
                   <th>Endereço</th>
-                  <th>Telefone</th>
                   <th>Celular</th>
+                  <th>Cód. Fichário</th>
                 </tr>
               </thead>
               <tbody>
@@ -70,19 +61,14 @@
           <div class="table-pager">
             <div class="table-pager-info" id="clientes-pg-info">Mostrando 0-0 de 0</div>
             <div class="table-pager-group">
-              <button class="pager-btn is-disabled" id="clientes-pg-prev">
-                <span>◀</span><span>Anterior</span>
-              </button>
-              <button class="pager-btn is-disabled" id="clientes-pg-next">
-                <span>Próxima</span><span>▶</span>
-              </button>
+              <button class="pager-btn is-disabled" id="clientes-pg-prev"><span>⬅️</span><span>Anterior</span></button>
+              <button class="pager-btn is-disabled" id="clientes-pg-next"><span>Próxima</span><span>➡️</span></button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- MODAL DE DETALHES -->
     <div class="app-modal-backdrop" id="cliente-modal-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
@@ -91,45 +77,21 @@
         </div>
         <div class="app-modal-body">
           <dl class="app-modal-dl">
-            <div>
-              <dt>Nome</dt>
-              <dd id="m-nome"></dd>
-            </div>
-            <div>
-              <dt>Endereço</dt>
-              <dd id="m-endereco"></dd>
-            </div>
-            <div>
-              <dt>RG</dt>
-              <dd id="m-rg"></dd>
-            </div>
-            <div>
-              <dt>CPF</dt>
-              <dd id="m-cpf"></dd>
-            </div>
-            <div>
-              <dt>Telefone</dt>
-              <dd id="m-telefone"></dd>
-            </div>
-            <div>
-              <dt>Celular</dt>
-              <dd id="m-celular"></dd>
-            </div>
-            <div>
-              <dt>Data Nasc.</dt>
-              <dd id="m-data-nasc"></dd>
-            </div>
-            <div>
-              <dt>Cód. Fichário</dt>
-              <dd id="m-cod-fichario"></dd>
-            </div>
+            <div><dt>Nome</dt><dd id="m-nome"></dd></div>
+            <div><dt>Endereço</dt><dd id="m-endereco"></dd></div>
+            <div><dt>RG</dt><dd id="m-rg"></dd></div>
+            <div><dt>CPF</dt><dd id="m-cpf"></dd></div>
+            <div><dt>Telefone</dt><dd id="m-telefone"></dd></div>
+            <div><dt>Celular</dt><dd id="m-celular"></dd></div>
+            <div><dt>Data Nasc.</dt><dd id="m-data-nasc"></dd></div>
+            <div><dt>Cód. Fichário</dt><dd id="m-cod-fichario"></dd></div>
+            <div><dt>Data do Cadastro</dt><dd id="m-data-cadastro"></dd></div>
+            <div><dt>Último Registro</dt><dd id="m-ultimo-registro"></dd></div>
           </dl>
         </div>
       </div>
     </div>
-    <!-- FIM MODAL DETALHES -->
 
-    <!-- MODAL DE EDIÇÃO -->
     <div class="app-modal-backdrop" id="cliente-edit-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
@@ -198,9 +160,7 @@
         </div>
       </div>
     </div>
-    <!-- FIM MODAL DE EDIÇÃO -->
 
-    <!-- MODAL DE NOVO CLIENTE -->
     <div class="app-modal-backdrop" id="cliente-new-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
@@ -267,10 +227,8 @@
         </div>
       </div>
     </div>
-    <!-- FIM MODAL DE NOVO CLIENTE -->
   </main>
 
-  <!-- JS -->
   <script src="/js/clientes.js"></script>
 </body>
 </html>

@@ -31,9 +31,8 @@
           <div class="list-filter-field">
             <label for="filter-column">Procurar por</label>
             <select id="filter-column">
+              <option value="codigoBarras" selected>Código de Barras</option>
               <option value="descricao">Descrição</option>
-              <option value="codigoBarras">Código de Barras</option>
-              <option value="generico">Genérico</option>
             </select>
           </div>
           <div class="list-filter-input">
@@ -86,6 +85,7 @@
         <div class="app-modal-body">
           <dl class="app-modal-dl">
             <div><dt>Código de Barras</dt><dd id="m-codigoBarras"></dd></div>
+            <div><dt>Código do Produto</dt><dd id="m-codigoProduto"></dd></div>
             <div><dt>Descrição</dt><dd id="m-descricao"></dd></div>
             <div><dt>Unidade de Medida</dt><dd id="m-unidadeMedida"></dd></div>
             <div><dt>Preço de Compra</dt><dd id="m-precoCompra"></dd></div>
@@ -152,7 +152,16 @@
 
             <label>
               <span>Genérico *</span>
-              <input type="text" id="e-generico" class="form-control form-control-sm" required />
+              <select id="e-generico" class="form-control form-control-sm" required>
+                <option value="">Selecione um tipo</option>
+                <option value="SIM">SIM</option>
+                <option value="NAO">NAO</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Código do Produto</span>
+              <input type="text" id="e-codigoProduto" class="form-control form-control-sm" />
             </label>
 
             <div class="modal-actions">
@@ -215,7 +224,16 @@
 
             <label>
               <span>Genérico *</span>
-              <input type="text" id="n-generico" class="form-control form-control-sm" required />
+              <select id="n-generico" class="form-control form-control-sm" required>
+                <option value="">Selecione um tipo</option>
+                <option value="SIM">SIM</option>
+                <option value="NAO">NAO</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Código do Produto</span>
+              <input type="text" id="n-codigoProduto" class="form-control form-control-sm" />
             </label>
 
             <div class="modal-actions">
