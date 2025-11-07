@@ -410,9 +410,17 @@ document.getElementById('new-form')?.addEventListener('submit', async (e) => {
 
 /* ========== UTIL ========== */
 function montarEndereco(log, num, bairro) {
-  const l = log && log.trim() ? log.trim() : 'NÃ£o Informado';
+  const l = log && log.trim() ? log.trim() : 'Não Informado';
   const n = num && num.trim() ? num.trim() : '000';
-  const b = bairro && bairro.trim() ? bairro.trim() : 'NÃ£o Informado';
+  const b = bairro && bairro.trim() ? bairro.trim() : 'Não Informado';
+  return `${l}, ${n}, ${b}`;
+}
+
+// Redefinição para garantir UTF-8 correto nos padrões
+function montarEndereco(log, num, bairro) {
+  const l = log && log.trim() ? log.trim() : 'NÃO INFORMADO';
+  const n = num && num.trim() ? num.trim() : '000';
+  const b = bairro && bairro.trim() ? bairro.trim() : 'NÃO INFORMADO';
   return `${l}, ${n}, ${b}`;
 }
 

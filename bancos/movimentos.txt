@@ -17,7 +17,8 @@ valorVenda            decimal(19,4)    NOT NULL
 valorPago             decimal(19,4)    NOT NULL
 desconto              decimal(19,4)    NOT NULL
 DataVenda             datetime2(0)     NOT NULL
-DataPagamento         datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
 dataCadastro          datetime2(0)     NOT NULL
 dataUltimoRegistro    datetime2(0)     NOT NULL
 deletado              bit              NOT NULL

@@ -8,7 +8,11 @@ namespace WebAppEstudo.Data
         int produtoId,
         int quantidade,
         decimal desconto
-    );
+    )
+    {
+        public string? descricao { get; init; }
+        public decimal? precoUnit { get; init; }
+    }
 
     public class VendaPayload
     {

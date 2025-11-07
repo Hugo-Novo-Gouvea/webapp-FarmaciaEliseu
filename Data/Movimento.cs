@@ -11,6 +11,9 @@ namespace WebAppEstudo.Data
         [Column("movimentosID")]
         public int MovimentosId { get; set; }
 
+        [Column("codigoMovimento")]
+        public int CodigoMovimento { get; set; }
+
         [Column("produtosID")]
         public int ProdutosId { get; set; }
 
@@ -55,9 +58,6 @@ namespace WebAppEstudo.Data
         [Column("precoTotalAtual", TypeName = "decimal(19,4)")]
         public decimal PrecoTotalAtual { get; set; }
 
-        [Column("valorVenda", TypeName = "decimal(19,4)")]
-        public decimal ValorVenda { get; set; }
-
         [Column("valorPago", TypeName = "decimal(19,4)")]
         public decimal ValorPago { get; set; }
 
@@ -80,4 +80,3 @@ namespace WebAppEstudo.Data
         public bool? Deletado { get; set; }
     }
 }
-
