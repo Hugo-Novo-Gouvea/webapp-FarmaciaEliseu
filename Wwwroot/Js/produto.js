@@ -105,6 +105,8 @@ function renderTabela() {
       generico: c.generico ?? '',
       codigoProduto: (c.codigoProduto ?? c.CodigoProduto ?? ''),
       codigoBarras: c.codigoBarras ?? '',
+      dataCadastroIso: c.dataCadastro || c.DataCadastro || '',
+      dataUltimoRegistroIso: c.dataUltimoRegistro || c.DataUltimoRegistro || '',
       deletadoBool: !!c.deletado
     };
 
@@ -198,8 +200,10 @@ document.getElementById('btn-view')?.addEventListener('click', () => {
   if (!b) return;
 
   document.getElementById('m-codigoBarras').textContent = produtoSelecionado.codigoBarras || '';
+
   const mCodigoProduto = document.getElementById('m-codigoProduto');
   if (mCodigoProduto) mCodigoProduto.textContent = produtoSelecionado.codigoProduto || '';
+
   document.getElementById('m-descricao').textContent = produtoSelecionado.descricao || '';
   document.getElementById('m-unidadeMedida').textContent = produtoSelecionado.unidadeMedida || '';
   document.getElementById('m-precoCompra').textContent = formatMoedaBR(produtoSelecionado.precoCompra);
@@ -208,6 +212,20 @@ document.getElementById('btn-view')?.addEventListener('click', () => {
   document.getElementById('m-laboratorio').textContent = produtoSelecionado.laboratorio || '';
   document.getElementById('m-principio').textContent = produtoSelecionado.principio || '';
   document.getElementById('m-generico').textContent = produtoSelecionado.generico || '';
+
+  const mDataCadastro = document.getElementById('m-dataCadastro');
+  if (mDataCadastro) {
+    mDataCadastro.textContent = produtoSelecionado.dataCadastroIso
+      ? new Date(produtoSelecionado.dataCadastroIso).toLocaleString()
+      : '';
+  }
+
+  const mDataUltimo = document.getElementById('m-dataUltimoRegistro');
+  if (mDataUltimo) {
+    mDataUltimo.textContent = produtoSelecionado.dataUltimoRegistroIso
+      ? new Date(produtoSelecionado.dataUltimoRegistroIso).toLocaleString()
+      : '';
+  }
 
   b.classList.add('show');
   const closeBtn = document.getElementById('modal-close-btn');
@@ -275,9 +293,9 @@ document.getElementById('edit-form')?.addEventListener('submit', async (e) => {
     unidadeMedida: somenteNumeros(rawUnidadeMedida) || '0',
     precoCompra: parseFloat(document.getElementById('e-precoCompra').value),
     precoVenda: parseFloat(document.getElementById('e-precoVenda').value),
-    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NÃO INFORMADO'),
-    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NÃO INFORMADO'),
-    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NÃO INFORMADO'),
+    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NAO INFORMADO'),
+    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NAO INFORMADO'),
+    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NAO INFORMADO'),
     generico: selGenerico,
     codigoProduto: rawCodigoProduto || '000000000',
     deletado: false
@@ -353,9 +371,9 @@ document.getElementById('new-form')?.addEventListener('submit', async (e) => {
     unidadeMedida: somenteNumeros(rawUnidadeMedida) || '0',
     precoCompra: parseFloat(document.getElementById('n-precoCompra').value),
     precoVenda: parseFloat(document.getElementById('n-precoVenda').value),
-    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NÃO INFORMADO'),
-    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NÃO INFORMADO'),
-    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NÃO INFORMADO'),
+    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NAO INFORMADO'),
+    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NAO INFORMADO'),
+    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NAO INFORMADO'),
     generico: selGenerico,
     codigoProduto: rawCodigoProduto || '000000000',
     deletado: false

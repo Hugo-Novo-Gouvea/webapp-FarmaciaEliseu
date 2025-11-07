@@ -15,8 +15,8 @@ carregarClientes();
 
 /* ========== CARREGAR TODOS ========== */
 async function carregarClientes() {
-  // busca todos os clientes (pede uma pÃ¡gina grande)
-  const resp = await fetch('/api/clientes?pageSize=100000');
+  
+  const resp = await fetch('/api/clientes?pageSize=2500');
   const tbody = document.querySelector('#tb-clientes tbody');
 
   if (!resp.ok) {
@@ -408,19 +408,12 @@ document.getElementById('new-form')?.addEventListener('submit', async (e) => {
   }
 });
 
-/* ========== UTIL ========== */
-function montarEndereco(log, num, bairro) {
-  const l = log && log.trim() ? log.trim() : 'Não Informado';
-  const n = num && num.trim() ? num.trim() : '000';
-  const b = bairro && bairro.trim() ? bairro.trim() : 'Não Informado';
-  return `${l}, ${n}, ${b}`;
-}
 
-// Redefinição para garantir UTF-8 correto nos padrões
+// ========== UTIL ==========
 function montarEndereco(log, num, bairro) {
-  const l = log && log.trim() ? log.trim() : 'NÃO INFORMADO';
-  const n = num && num.trim() ? num.trim() : '000';
-  const b = bairro && bairro.trim() ? bairro.trim() : 'NÃO INFORMADO';
+  const l = log && log.trim() ? log.trim().toUpperCase() : 'NAO INFORMADO';
+  const n = num && num.trim() ? num.trim().toUpperCase() : '000';
+  const b = bairro && bairro.trim() ? bairro.trim().toUpperCase() : 'NAO INFORMADO';
   return `${l}, ${n}, ${b}`;
 }
 

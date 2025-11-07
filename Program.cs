@@ -1,30 +1,37 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using WebAppEstudo.Data;
 using WebAppEstudo.Printing;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// conexão principal (aqui ainda está fixa no appsettings)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// =========================
+// 1. MONTA A CONNECTION STRING (lê o que o TI salvou)
+// =========================
+var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
+var dbConfigPath = Path.Combine(AppContext.BaseDirectory, "dbconfig.json");
+string finalConnectionString = defaultConn;
+
+var cfgFromFile = DbConfig.Load(dbConfigPath);
+if (cfgFromFile is not null && !string.IsNullOrWhiteSpace(cfgFromFile.server) && !string.IsNullOrWhiteSpace(cfgFromFile.database))
+{
+    finalConnectionString = BuildConnectionString(cfgFromFile);
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(finalConnectionString));
 
 var app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-/* ===================== CONFIG DB (NOVO) ===================== */
-/* isso aqui só salva/pega um json com as configs do PC */
-
+// ===================================================
+// 2. ENDPOINTS DE CONFIGURAÇÃO (TI usa isso)
+// ===================================================
 app.MapGet("/api/config/db", () =>
 {
-    var cfg = DbConfig.Load();
+    var cfg = DbConfig.Load(dbConfigPath) ?? new DbConfig();
     return Results.Ok(cfg);
 });
 
@@ -32,13 +39,15 @@ app.MapPost("/api/config/db", async (HttpContext http) =>
 {
     var cfg = await JsonSerializer.DeserializeAsync<DbConfig>(http.Request.Body);
     if (cfg is null) return Results.BadRequest("Config inválida.");
-    DbConfig.Save(cfg);
-    return Results.Ok();
+
+    DbConfig.Save(cfg, dbConfigPath);
+
+    return Results.Ok(new { message = "Configurações de banco salvas. Reinicie o app pra aplicar." });
 });
 
-/* ===================== CLIENTES ===================== */
-
-// LISTAR (com paginação e filtro)
+// ===================================================
+// 3. CLIENTES
+// ===================================================
 app.MapGet("/api/clientes", async (
     AppDbContext db,
     int page = 1,
@@ -93,6 +102,76 @@ app.MapGet("/api/clientes/{id:int}", async (int id, AppDbContext db) =>
     return cliente is not null ? Results.Ok(cliente) : Results.NotFound();
 });
 
+app.MapPut("/api/clientes/{id:int}", async (int id, AppDbContext db, Cliente dto) =>
+{
+    var cliente = await db.Clientes.FindAsync(id);
+    if (cliente is null)
+        return Results.NotFound();
+
+    var nome = (dto.Nome ?? "").Trim();
+    if (string.IsNullOrWhiteSpace(nome))
+        return Results.BadRequest("Nome é obrigatório.");
+    cliente.Nome = nome.ToUpper();
+
+    string enderecoFinal;
+    if (string.IsNullOrWhiteSpace(dto.Endereco))
+    {
+        enderecoFinal = "NAO INFORMADO, 000, NAO INFORMADO";
+    }
+    else
+    {
+        var partes = dto.Endereco.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var log = (partes.Length > 0 ? partes[0] : null);
+        var num = (partes.Length > 1 ? partes[1] : null);
+        var bai = (partes.Length > 2 ? partes[2] : null);
+        log = string.IsNullOrWhiteSpace(log) ? "NAO INFORMADO" : log.ToUpper();
+        num = string.IsNullOrWhiteSpace(num) ? "000" : num.ToUpper();
+        bai = string.IsNullOrWhiteSpace(bai) ? "NAO INFORMADO" : bai.ToUpper();
+        enderecoFinal = $"{log}, {num}, {bai}";
+    }
+    cliente.Endereco = enderecoFinal;
+
+    cliente.Rg = string.IsNullOrWhiteSpace(dto.Rg) ? "00.000.000-0" : dto.Rg;
+    cliente.Cpf = string.IsNullOrWhiteSpace(dto.Cpf) ? "000.000.000-00" : dto.Cpf;
+    cliente.Telefone = string.IsNullOrWhiteSpace(dto.Telefone) ? "(00)0000-0000" : dto.Telefone;
+    cliente.Celular = string.IsNullOrWhiteSpace(dto.Celular) ? "(00)00000-0000" : dto.Celular;
+    cliente.CodigoFichario = dto.CodigoFichario ?? 0;
+    cliente.DataNascimento = dto.DataNascimento ?? DateTime.Today;
+    cliente.DataUltimoRegistro = DateTime.Now;
+
+    var movimentosDoCliente = await db.Movimentos
+        .Where(m => m.ClientesId == cliente.ClientesId)
+        .ToListAsync();
+    if (movimentosDoCliente.Count > 0)
+    {
+        var agora = DateTime.Now;
+        foreach (var m in movimentosDoCliente)
+        {
+            m.ClientesNome = cliente.Nome;
+            m.DataUltimoRegistro = agora;
+        }
+    }
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/clientes/{id:int}", async (int id, AppDbContext db) =>
+{
+    var cliente = await db.Clientes.FindAsync(id);
+    if (cliente is null)
+        return Results.NotFound();
+
+    if (cliente.ClientesId == 1)
+        return Results.BadRequest("Cliente padrão não pode ser excluído.");
+
+    cliente.Deletado = true;
+    cliente.DataUltimoRegistro = DateTime.Now;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
 app.MapPost("/api/clientes", async (Cliente dto, AppDbContext db) =>
 {
     var nome = (dto.Nome ?? "").Trim();
@@ -104,7 +183,7 @@ app.MapPost("/api/clientes", async (Cliente dto, AppDbContext db) =>
     string enderecoFinal;
     if (string.IsNullOrWhiteSpace(dto.Endereco))
     {
-        enderecoFinal = "NÃO INFORMADO, 000, NÃO INFORMADO";
+        enderecoFinal = "NAO INFORMADO, 000, NAO INFORMADO";
     }
     else
     {
@@ -112,9 +191,9 @@ app.MapPost("/api/clientes", async (Cliente dto, AppDbContext db) =>
         var log = (partes.Length > 0 ? partes[0] : null);
         var num = (partes.Length > 1 ? partes[1] : null);
         var bai = (partes.Length > 2 ? partes[2] : null);
-        log = string.IsNullOrWhiteSpace(log) ? "NÃO INFORMADO" : log.ToUpper();
+        log = string.IsNullOrWhiteSpace(log) ? "NAO INFORMADO" : log.ToUpper();
         num = string.IsNullOrWhiteSpace(num) ? "000" : num.ToUpper();
-        bai = string.IsNullOrWhiteSpace(bai) ? "NÃO INFORMADO" : bai.ToUpper();
+        bai = string.IsNullOrWhiteSpace(bai) ? "NAO INFORMADO" : bai.ToUpper();
         enderecoFinal = $"{log}, {num}, {bai}";
     }
 
@@ -139,78 +218,9 @@ app.MapPost("/api/clientes", async (Cliente dto, AppDbContext db) =>
     return Results.Created($"/api/clientes/{cliente.ClientesId}", cliente);
 });
 
-app.MapPut("/api/clientes/{id:int}", async (int id, AppDbContext db, Cliente dto) =>
-{
-    var cliente = await db.Clientes.FindAsync(id);
-    if (cliente is null)
-        return Results.NotFound();
-
-    var nome = (dto.Nome ?? "").Trim();
-    if (string.IsNullOrWhiteSpace(nome))
-        return Results.BadRequest("Nome é obrigatório.");
-
-    string enderecoFinal;
-    if (string.IsNullOrWhiteSpace(dto.Endereco))
-    {
-        enderecoFinal = "NÃO INFORMADO, 000, NÃO INFORMADO";
-    }
-    else
-    {
-        var partes = dto.Endereco.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var log = (partes.Length > 0 ? partes[0] : null);
-        var num = (partes.Length > 1 ? partes[1] : null);
-        var bai = (partes.Length > 2 ? partes[2] : null);
-        log = string.IsNullOrWhiteSpace(log) ? "NÃO INFORMADO" : log.ToUpper();
-        num = string.IsNullOrWhiteSpace(num) ? "000" : num.ToUpper();
-        bai = string.IsNullOrWhiteSpace(bai) ? "NÃO INFORMADO" : bai.ToUpper();
-        enderecoFinal = $"{log}, {num}, {bai}";
-    }
-
-    cliente.Nome = nome.ToUpper();
-    cliente.Endereco = enderecoFinal;
-    cliente.Rg = string.IsNullOrWhiteSpace(dto.Rg) ? "00.000.000-0" : dto.Rg;
-    cliente.Cpf = string.IsNullOrWhiteSpace(dto.Cpf) ? "000.000.000-00" : dto.Cpf;
-    cliente.Telefone = string.IsNullOrWhiteSpace(dto.Telefone) ? "(00)0000-0000" : dto.Telefone;
-    cliente.Celular = string.IsNullOrWhiteSpace(dto.Celular) ? "(00)00000-0000" : dto.Celular;
-    cliente.CodigoFichario = dto.CodigoFichario ?? 0;
-    cliente.DataNascimento = dto.DataNascimento ?? DateTime.Today;
-    cliente.DataUltimoRegistro = DateTime.Now;
-
-    var movimentosDoCliente = await db.Movimentos
-        .Where(m => m.ClientesId == cliente.ClientesId)
-        .ToListAsync();
-    if (movimentosDoCliente.Count > 0)
-    {
-        var agora2 = DateTime.Now;
-        foreach (var m in movimentosDoCliente)
-        {
-            m.ClientesNome = cliente.Nome;
-            m.DataUltimoRegistro = agora2;
-        }
-    }
-
-    await db.SaveChangesAsync();
-    return Results.NoContent();
-});
-
-app.MapDelete("/api/clientes/{id:int}", async (int id, AppDbContext db) =>
-{
-    var cliente = await db.Clientes.FindAsync(id);
-    if (cliente is null)
-        return Results.NotFound();
-
-    if (cliente.ClientesId == 1)
-        return Results.BadRequest("Cliente padrão não pode ser excluído.");
-
-    cliente.Deletado = true;
-    cliente.DataUltimoRegistro = DateTime.Now;
-
-    await db.SaveChangesAsync();
-    return Results.NoContent();
-});
-
-/* ===================== PRODUTOS ===================== */
-
+// ===================================================
+// 4. PRODUTOS
+// ===================================================
 app.MapGet("/api/produtos", async (
     AppDbContext db,
     int page = 1,
@@ -286,9 +296,9 @@ app.MapPost("/api/produtos", async (Produto dto, AppDbContext db) =>
     var unidadeMedida = SomenteNumeros(dto.UnidadeMedida);
 
     var descricao = dto.Descricao.Trim().ToUpper();
-    var localizacao = string.IsNullOrWhiteSpace(dto.Localizacao) ? "NÃO INFORMADO" : dto.Localizacao.Trim().ToUpper();
-    var laboratorio = string.IsNullOrWhiteSpace(dto.Laboratorio) ? "NÃO INFORMADO" : dto.Laboratorio.Trim().ToUpper();
-    var principio = string.IsNullOrWhiteSpace(dto.Principio) ? "NÃO INFORMADO" : dto.Principio.Trim().ToUpper();
+    var localizacao = string.IsNullOrWhiteSpace(dto.Localizacao) ? "NAO INFORMADO" : dto.Localizacao.Trim().ToUpper();
+    var laboratorio = string.IsNullOrWhiteSpace(dto.Laboratorio) ? "NAO INFORMADO" : dto.Laboratorio.Trim().ToUpper();
+    var principio = string.IsNullOrWhiteSpace(dto.Principio) ? "NAO INFORMADO" : dto.Principio.Trim().ToUpper();
     var generico = (dto.Generico ?? "").Trim().ToUpper();
     if (generico != "SIM" && generico != "NAO")
         return Results.BadRequest("Campo 'Genérico' deve ser SIM ou NAO.");
@@ -343,9 +353,9 @@ app.MapPut("/api/produtos/{id:int}", async (int id, AppDbContext db, Produto dto
     var unidadeMedida = SomenteNumeros(dto.UnidadeMedida);
 
     var descricao = dto.Descricao.Trim().ToUpper();
-    var localizacao = string.IsNullOrWhiteSpace(dto.Localizacao) ? "NÃO INFORMADO" : dto.Localizacao.Trim().ToUpper();
-    var laboratorio = string.IsNullOrWhiteSpace(dto.Laboratorio) ? "NÃO INFORMADO" : dto.Laboratorio.Trim().ToUpper();
-    var principio = string.IsNullOrWhiteSpace(dto.Principio) ? "NÃO INFORMADO" : dto.Principio.Trim().ToUpper();
+    var localizacao = string.IsNullOrWhiteSpace(dto.Localizacao) ? "NAO INFORMADO" : dto.Localizacao.Trim().ToUpper();
+    var laboratorio = string.IsNullOrWhiteSpace(dto.Laboratorio) ? "NAO INFORMADO" : dto.Laboratorio.Trim().ToUpper();
+    var principio = string.IsNullOrWhiteSpace(dto.Principio) ? "NAO INFORMADO" : dto.Principio.Trim().ToUpper();
     var generico = (dto.Generico ?? "").Trim().ToUpper();
     if (generico != "SIM" && generico != "NAO")
         return Results.BadRequest("Campo 'Genérico' deve ser SIM ou NAO.");
@@ -370,7 +380,7 @@ app.MapPut("/api/produtos/{id:int}", async (int id, AppDbContext db, Produto dto
     var precoMudou = precoVendaAntigo != dto.PrecoVenda;
     if (descricaoMudou || precoMudou)
     {
-        var agora2 = DateTime.Now;
+        var agora = DateTime.Now;
         var movimentosDoProduto = await db.Movimentos
             .Where(m => m.ProdutosId == produto.ProdutosId)
             .ToListAsync();
@@ -382,13 +392,13 @@ app.MapPut("/api/produtos/{id:int}", async (int id, AppDbContext db, Produto dto
                 if (descricaoMudou)
                 {
                     m.ProdutosDescricao = produto.Descricao;
-                    m.DataUltimoRegistro = agora2;
+                    m.DataUltimoRegistro = agora;
                 }
                 if (precoMudou)
                 {
                     m.PrecoUnitarioAtual = produto.PrecoVenda;
                     m.PrecoTotalAtual = m.PrecoUnitarioAtual * m.Quantidade;
-                    m.DataUltimoRegistro = agora2;
+                    m.DataUltimoRegistro = agora;
                 }
             }
         }
@@ -411,8 +421,9 @@ app.MapDelete("/api/produtos/{id:int}", async (int id, AppDbContext db) =>
     return Results.NoContent();
 });
 
-/* ===================== FUNCIONÁRIOS ===================== */
-
+// ===================================================
+// 5. FUNCIONÁRIOS
+// ===================================================
 app.MapGet("/api/funcionarios", async (
     AppDbContext db,
     int page = 1,
@@ -507,8 +518,9 @@ app.MapDelete("/api/funcionarios/{id:int}", async (int id, AppDbContext db) =>
     return Results.NoContent();
 });
 
-/* ===================== CONTAS A PAGAR ===================== */
-
+// ===================================================
+// 6. CONTAS A PAGAR
+// ===================================================
 app.MapGet("/api/contas/clientes", async (AppDbContext db) =>
 {
     var clientes = await db.Clientes
@@ -554,8 +566,9 @@ app.MapPut("/api/contas/movimentos/pagar", async (AppDbContext db, IdsPayload pa
     return Results.NoContent();
 });
 
-/* ===================== VENDAS ===================== */
-
+// ===================================================
+// 7. VENDAS (gerando codigoMovimento INT)
+// ===================================================
 app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 {
     var agora = DateTime.Now;
@@ -577,6 +590,7 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 
     int clienteId;
     string clienteNome;
+    string? codigoFichario = null;
 
     if (tipoCliente == "registrado")
     {
@@ -587,18 +601,20 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
             return Results.BadRequest("Cliente não encontrado.");
         clienteId = cliente.ClientesId;
         clienteNome = cliente.Nome;
+        codigoFichario = cliente.CodigoFichario?.ToString();
     }
     else
     {
         var nome = (payload.ClienteNome ?? "").Trim();
         if (string.IsNullOrWhiteSpace(nome))
             return Results.BadRequest("Nome do cliente é obrigatório para venda avulsa.");
-        clienteId = 1;
+        clienteId = 1; 
         clienteNome = nome.ToUpper();
     }
 
-    var ultimoCodigo = await db.Movimentos.MaxAsync(m => (int?)m.CodigoMovimento) ?? 0;
-    var codigoMovimento = ultimoCodigo + 1;
+    // >>> AQUI: codigoMovimento INT <<<
+    var maxCodigo = await db.Movimentos.MaxAsync(m => (int?)m.CodigoMovimento) ?? 0;
+    var codigoMovimento = maxCodigo + 1;
 
     var gravados = new List<Movimento>();
     var isDinheiro = tipoVenda == "dinheiro";
@@ -614,8 +630,7 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
         var precoUnit = produto.PrecoVenda;
         var qtd = it.quantidade;
         var desconto = it.desconto < 0 ? 0 : it.desconto;
-        var totalBruto = precoUnit * qtd;
-        var total = totalBruto - desconto;
+        var total = (precoUnit * qtd) - desconto;
         if (total < 0) total = 0;
 
         var valorPago = isDinheiro ? total : 0m;
@@ -633,7 +648,7 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
             FuncionariosNome = vendedor.Nome,
             Quantidade = qtd,
             PrecoUnitarioDiaVenda = precoUnit,
-            PrecoTotalDiaVenda = totalBruto,
+            PrecoTotalDiaVenda = precoUnit * qtd,
             PrecoUnitarioAtual = produto.PrecoVenda,
             PrecoTotalAtual = produto.PrecoVenda * qtd,
             ValorPago = valorPago,
@@ -651,152 +666,99 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 
     await db.SaveChangesAsync();
 
-    return Results.Created("/api/vendas", new { itens = gravados.Count, codigoMovimento });
-});
-
-// impressão separada
-app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload) =>
-{
-    var agora = DateTime.Now;
-
-    var tipoVenda = (payload.TipoVenda ?? "").Trim().ToLower();
-    var tipoCliente = (payload.TipoCliente ?? "").Trim().ToLower();
-
-    var vendedor = await db.Funcionarios.FindAsync(payload.VendedorId);
-    string vendedorNome = vendedor?.Nome ?? "ATENDENTE";
-
-    string clienteNome;
-    string? codigoFichario = null;
-
-    if (tipoCliente == "registrado" && payload.ClienteId is not null)
-    {
-        var cliente = await db.Clientes.FindAsync(payload.ClienteId.Value);
-        if (cliente is not null)
-        {
-            clienteNome = cliente.Nome;
-            if (cliente.CodigoFichario > 0)
-                codigoFichario = cliente.CodigoFichario.ToString();
-        }
-        else
-        {
-            clienteNome = "CLIENTE";
-        }
-    }
-    else
-    {
-        clienteNome = string.IsNullOrWhiteSpace(payload.ClienteNome)
-            ? "CLIENTE"
-            : payload.ClienteNome.ToUpper();
-    }
-
-    var itensCupom = new List<ReceiptPrinter.Item>();
-    decimal totalDesconto = 0m;
-    decimal totalFinal = 0m;
-
-    if (payload.Itens is not null)
-    {
-        foreach (var it in payload.Itens)
-        {
-            var produto = await db.Produtos.FindAsync(it.produtoId);
-            if (produto is null)
-                continue;
-
-            decimal preco = produto.PrecoVenda;
-            decimal linha = (preco * it.quantidade) - it.desconto;
-            if (linha < 0) linha = 0;
-
-            itensCupom.Add(new ReceiptPrinter.Item(
-                it.quantidade,
-                produto.Descricao,
-                preco,
-                it.desconto
-            ));
-
-            totalDesconto += it.desconto;
-            totalFinal += linha;
-        }
-    }
-
-    bool isDinheiro = tipoVenda == "dinheiro";
-
-    var cupomBytes = ReceiptPrinter.BuildReceipt(
-        lojaNome: "FARMÁCIA DO ELISEU",
-        lojaEndereco: "Rua xxxx, 000, Centro",
-        lojaFone: "Fone (00) 00000-0000",
-        dataHora: agora,
-        clienteNome: clienteNome,
-        vendedorNome: vendedorNome,
-        itens: itensCupom,
-        isDinheiro: isDinheiro,
-        totalDesconto: totalDesconto,
-        totalFinal: totalFinal,
-        codigoFichario: codigoFichario
-    );
-
+    // impressão
     try
     {
+        var itensCupom = gravados.Select(g =>
+            new ReceiptPrinter.Item(
+                g.Quantidade,
+                g.ProdutosDescricao,
+                g.PrecoUnitarioDiaVenda,
+                g.Desconto
+            )
+        ).ToList();
+
+        var totalDesconto = gravados.Sum(g => g.Desconto);
+        var totalFinal = gravados.Sum(g => (g.PrecoTotalDiaVenda - g.Desconto));
+
+        var cupomBytes = ReceiptPrinter.BuildReceipt(
+            lojaNome: "FARMACIA DO ELISEU",
+            lojaEndereco: "Rua xxxx, 000, Centro",
+            lojaFone: "Fone (00) 00000-0000",
+            dataHora: agora,
+            clienteNome: clienteNome,
+            vendedorNome: vendedor.Nome,
+            itens: itensCupom,
+            isDinheiro: isDinheiro,
+            totalDesconto: totalDesconto,
+            totalFinal: totalFinal,
+            codigoFichario: codigoFichario
+        );
+
         ReceiptPrinter.Print(cupomBytes, null);
-        return Results.Ok(new { impresso = true });
     }
     catch (Exception ex)
     {
         Console.WriteLine("Falha ao imprimir cupom: " + ex.Message);
-        return Results.Problem("Falha ao imprimir cupom.");
     }
+
+    return Results.Created("/api/vendas", new { itens = gravados.Count, codigoMovimento });
 });
 
-/* ===================== MOVIMENTOS ===================== */
+// ===================================================
+// 8. MOVIMENTOS (lista + detalhes) usando int
+// ===================================================
 
+// lista paginada
 app.MapGet("/api/movimentos", async (
     AppDbContext db,
     int page = 1,
     int pageSize = 50,
-    string? column = null,
-    string? search = null
+    string? search = null,
+    string? column = null
 ) =>
 {
     if (page < 1) page = 1;
     if (pageSize < 1) pageSize = 50;
 
-    var query = db.Movimentos.AsNoTracking();
+    var baseQuery = db.Movimentos.AsQueryable(); // mostra todos
 
     if (!string.IsNullOrWhiteSpace(search))
     {
         search = search.Trim();
-        switch (column)
+
+        if (column == "cliente")
         {
-            case "cliente":
-                query = query.Where(m => m.ClientesNome != null && m.ClientesNome.Contains(search));
-                break;
-
-            case "movimento":
-                // contém
-                query = query.Where(m =>
-                    EF.Functions.Like(m.CodigoMovimento.ToString(), $"%{search}%"));
-                break;
-
-            default:
-                query = query.Where(m => m.ClientesNome != null && m.ClientesNome.Contains(search));
-                break;
+            baseQuery = baseQuery.Where(m => m.ClientesNome != null && m.ClientesNome.Contains(search));
+        }
+        else if (column == "movimento")
+        {
+            // CodigoMovimento é int, converte pra string pra filtrar
+            baseQuery = baseQuery.Where(m => m.CodigoMovimento.ToString().Contains(search));
+        }
+        else
+        {
+            baseQuery = baseQuery.Where(m =>
+                (m.ClientesNome != null && m.ClientesNome.Contains(search)) ||
+                m.CodigoMovimento.ToString().Contains(search)
+            );
         }
     }
 
-    var grouped = query
+    var groupedQuery = baseQuery
         .GroupBy(m => m.CodigoMovimento)
         .Select(g => new
         {
-            codigoMovimento = g.Key,
-            clienteNome = g.Select(x => x.ClientesNome).FirstOrDefault() ?? "CLIENTE",
-            dataVenda = g.Max(x => x.DataVenda),
-            valorTotal = g.Sum(x => x.PrecoTotalDiaVenda - x.Desconto),
-            temDinheiro = g.Any(x => x.Deletado == true)
+            CodigoMovimento = g.Key,
+            ClienteNome = g.Max(x => x.ClientesNome),
+            DataVenda = g.Max(x => x.DataVenda),
+            Total = g.Sum(x => (x.PrecoTotalDiaVenda - x.Desconto))
         });
 
-    var total = await grouped.CountAsync();
+    var total = await groupedQuery.CountAsync();
 
-    var items = await grouped
-        .OrderByDescending(x => x.dataVenda)
-        .ThenByDescending(x => x.codigoMovimento)
+    var itens = await groupedQuery
+        .OrderByDescending(m => m.DataVenda)
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
         .ToListAsync();
@@ -806,48 +768,104 @@ app.MapGet("/api/movimentos", async (
         total,
         page,
         pageSize,
-        items
+        items = itens
     });
 });
 
-app.MapGet("/api/movimentos/{codigo:int}", async (int codigo, AppDbContext db) =>
+// detalhes
+app.MapGet("/api/movimentos/{codigoMovimento:int}", async (int codigoMovimento, AppDbContext db) =>
 {
     var itens = await db.Movimentos
-        .AsNoTracking()
-        .Where(m => m.CodigoMovimento == codigo)
+        .Where(m => m.CodigoMovimento == codigoMovimento)
         .OrderBy(m => m.MovimentosId)
         .ToListAsync();
 
-    if (itens.Count == 0)
-        return Results.NotFound();
+    if (itens.Count == 0) return Results.NotFound();
 
     var header = new
     {
-        codigoMovimento = codigo,
-        clienteNome = itens.Select(i => i.ClientesNome).FirstOrDefault() ?? "CLIENTE",
-        dataVenda = itens.Max(i => i.DataVenda),
-        valorTotal = itens.Sum(i => i.PrecoTotalDiaVenda - i.Desconto)
+        CodigoMovimento = codigoMovimento,
+        ClienteNome = itens.First().ClientesNome,
+        DataVenda = itens.Max(x => x.DataVenda),
+        Total = itens.Sum(x => (x.PrecoTotalDiaVenda - x.Desconto))
     };
 
-    var itensDto = itens.Select(i => new
+    return Results.Ok(new
     {
-        i.MovimentosId,
-        i.ProdutosId,
-        i.ProdutosDescricao,
-        i.Quantidade,
-        precoUnitario = i.PrecoUnitarioDiaVenda,
-        desconto = i.Desconto,
-        valorItem = i.PrecoTotalDiaVenda - i.Desconto,
-        deletado = i.Deletado
+        header,
+        itens
     });
-
-    return Results.Ok(new { header, itens = itensDto });
 });
 
 app.Run();
 
-/* ===================== SUPORTE ===================== */
+// ===============================
+// HELPERS / MODELOS DE CONFIG
+// ===============================
+static string BuildConnectionString(DbConfig cfg)
+{
+    var parts = new List<string>
+    {
+        $"Server={cfg.server};",
+        $"Database={cfg.database};"
+    };
 
+    if (cfg.mode == "windows")
+    {
+        parts.Add("Trusted_Connection=True;");
+    }
+    else
+    {
+        parts.Add($"User Id={cfg.username};");
+        parts.Add($"Password={cfg.password};");
+    }
+
+    if (cfg.encrypt)
+        parts.Add("Encrypt=True;");
+    if (cfg.trustServerCertificate)
+        parts.Add("TrustServerCertificate=True;");
+
+    return string.Concat(parts);
+}
+
+namespace WebAppEstudo.Data
+{
+    public class DbConfig
+    {
+        public string mode { get; set; } = "windows"; // windows ou sql
+        public string? target { get; set; }
+        public string server { get; set; } = "";
+        public string database { get; set; } = "";
+        public string username { get; set; } = "";
+        public string password { get; set; } = "";
+        public bool encrypt { get; set; } = false;
+        public bool trustServerCertificate { get; set; } = false;
+
+        public static DbConfig? Load(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    var json = File.ReadAllText(path);
+                    return JsonSerializer.Deserialize<DbConfig>(json);
+                }
+            }
+            catch { }
+            return new DbConfig();
+        }
+
+        public static void Save(DbConfig cfg, string path)
+        {
+            var json = JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(path, json);
+        }
+    }
+}
+
+// ===============================
+// PAYLOADS (mesmo que você já tinha)
+// ===============================
 public record IdsPayload(List<int> ids);
 
 public class VendaPayload
@@ -865,40 +883,4 @@ public class VendaItemPayload
     public int produtoId { get; set; }
     public int quantidade { get; set; }
     public decimal desconto { get; set; }
-}
-
-// config que vamos salvar em disco
-public class DbConfig
-{
-    public string mode { get; set; } = "windows"; // windows | sql
-    public string target { get; set; } = "local"; // local | remoto
-    public string server { get; set; } = "";
-    public string database { get; set; } = "";
-    public string username { get; set; } = "";
-    public string password { get; set; } = "";
-    public bool encrypt { get; set; } = false;
-    public bool trustServerCertificate { get; set; } = false;
-
-    private static string FilePath => Path.Combine(AppContext.BaseDirectory, "dbconfig.json");
-
-    public static DbConfig Load()
-    {
-        try
-        {
-            if (File.Exists(FilePath))
-            {
-                var json = File.ReadAllText(FilePath);
-                var cfg = JsonSerializer.Deserialize<DbConfig>(json);
-                if (cfg != null) return cfg;
-            }
-        }
-        catch { }
-        return new DbConfig();
-    }
-
-    public static void Save(DbConfig cfg)
-    {
-        var json = JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(FilePath, json);
-    }
 }

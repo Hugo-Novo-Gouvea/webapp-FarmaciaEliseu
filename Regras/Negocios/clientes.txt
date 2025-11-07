@@ -1,0 +1,146 @@
+Clientes
+
+Regras da Tela
+
+- Tela que controla o CRUD de clientes
+- Tabela que acessa o banco definido em configurações e a partir do endpoint da api recebe os valores de dbo.clientes onde ID diferente de 1 e deletado é false
+- Tabela apresenta os itens "nome", "endereço", "celular" e "codigoFichario" da tabela
+- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
+- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
+- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
+- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
+- Acima da tabela tem o botão Menu, select box de coluna e input de pesquisa
+- o Botão menu com seu emoji retorna para index.html
+- select box apresenta qual a coluna que será usada de guia para pesquisas, impedindo que retorne valores referentes a outras colunas, as colunas permitidas são "Nome", "Endereco" e "Codigo Fichario", mesmo celular estando na tabela ele fica de fora da pesquisa
+- input de pesquisa recebe um valor a ser pesquisado na tabela e retornado na hora, esse valor podendo estar presente em qualquer parte do item referente a coluna (exemplo: caso eu pesquisa Ado, ele pode retornar a posição ado em qualquer parte do nome)
+- Acima da área de pesquisa ficam os 4 botões do CRUD na ordem visualizar, Editar, Novo, Excluir com seus emojis
+- Apenas o botão novo fica habilitado caso nenhum item da coluna seja selecionado
+- ao selecionar ele habilita todos os botões
+
+Visualizar
+- retorna um modal com "nome", "endereço", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario", "dataCadastro" e "dataUltimoRegistro" preenchidos e sem a capacidade de ser alterados
+
+Editar
+- retorna um modal com "nome", "logradouro", "numero", bairro", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario" preenchidos e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+- regras de cada campo:
+
+	Nome: fornece valor para o campo "nome" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- Não pode ser nulo
+
+
+	Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+	Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "000"
+
+	Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+	(endereco é concatenado como "Logradouro, Numero, Bairro")
+
+	RG: fornece valor para o campo "rg" no dbo.clientes
+	- mascara apenas numeros no formato 00.000.000-0
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "00.000.000-0"
+
+	CPF: fornece valor para o campo "cpf" no dbo.clientes
+	- mascara apenas numeros no formato 000.000.000-00
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "000.000.000-00"
+
+	Telefone: fornece valor para o campo "telefone" no dbo.clientes
+	- mascara apenas numeros no formato (00)0000-0000
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "(00)0000-0000"
+
+	Celular: fornece valor para o campo "celular" no dbo.clientes
+	- mascara apenas numeros no formato (00)00000-0000
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "(00)00000-0000"
+
+	Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
+	- mascara de data
+	- pode ser nulo
+	- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+
+	Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
+	- campo aceita apenas números inteiros positivos começando em zero
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor 0
+
+- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+- botão cancelar para cancelar a operação
+- botão salvar para realizar a operação
+
+Novo
+- retorna um modal com "nome", "logradouro", "numero", bairro", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario", "dataCadastro", "dataUltimoRegistro" em branco e com a capacidade de ser preenchido (Sendo endereco a concatenação de "logradouro, numero, bairro")
+- regras de cada campo:
+
+	Nome: fornece valor para o campo "nome" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- Não pode ser nulo
+
+
+	Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+	Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "000"
+
+	Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+	(endereco é concatenado como "Logradouro, Numero, Bairro")
+
+	RG: fornece valor para o campo "rg" no dbo.clientes
+	- mascara apenas numeros no formato 00.000.000-0
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "00.000.000-0"
+
+	CPF: fornece valor para o campo "cpf" no dbo.clientes
+	- mascara apenas numeros no formato 000.000.000-00
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "000.000.000-00"
+
+	Telefone: fornece valor para o campo "telefone" no dbo.clientes
+	- mascara apenas numeros no formato (00)0000-0000
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "(00)0000-0000"
+
+	Celular: fornece valor para o campo "celular" no dbo.clientes
+	- mascara apenas numeros no formato (00)00000-0000
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor "(00)00000-0000"
+
+	Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
+	- mascara de data
+	- pode ser nulo
+	- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+
+	Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
+	- campo aceita apenas números inteiros positivos começando em zero
+	- pode ser nulo
+	- caso seja nulo o banco recebe o valor 0
+
+- ao ser feito o registro no banco é atualizado o campo "dataCadastro" e "dataUltimoRegistro" com a data e horário atual e o campo deletado com valor false
+- botão cancelar para cancelar a operação
+- botão salvar para realizar a operação
+
+Excluir
+
+- soft delete
+- altera o deletado do item de false para true
