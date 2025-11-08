@@ -55,7 +55,8 @@ function aplicarFiltroFuncionarios() {
 function pegarValorColunaFunc(f, col) {
   switch (col) {
     case 'nome':
-    default: return f.nome || '';
+    default:
+      return f.nome || '';
   }
 }
 
@@ -101,8 +102,9 @@ function renderTabelaFuncionarios() {
     tbody.appendChild(tr);
   });
 
-  funcionarioSelecionado = null;
-  toggleBotoesFuncionarios(true);
+  // AQUI não vamos zerar a seleção, pra não apagar o clique
+  // funcionarioSelecionado = null;
+  // toggleBotoesFuncionarios(true);
 }
 
 /* ========== BOTÕES VISUALIZAR/EDITAR/EXCLUIR ========== */

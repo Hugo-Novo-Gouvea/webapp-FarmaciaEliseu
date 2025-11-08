@@ -130,6 +130,7 @@ function renderTabela() {
     tbody.appendChild(tr);
   });
 
+  // se não clicar em nada, mantém desabilitado
   produtoSelecionado = null;
   toggleAcoes(true);
 }
@@ -216,14 +217,14 @@ document.getElementById('btn-view')?.addEventListener('click', () => {
   const mDataCadastro = document.getElementById('m-dataCadastro');
   if (mDataCadastro) {
     mDataCadastro.textContent = produtoSelecionado.dataCadastroIso
-      ? new Date(produtoSelecionado.dataCadastroIso).toLocaleString()
+      ? formatarDataHoraBR(produtoSelecionado.dataCadastroIso)
       : '';
   }
 
   const mDataUltimo = document.getElementById('m-dataUltimoRegistro');
   if (mDataUltimo) {
     mDataUltimo.textContent = produtoSelecionado.dataUltimoRegistroIso
-      ? new Date(produtoSelecionado.dataUltimoRegistroIso).toLocaleString()
+      ? formatarDataHoraBR(produtoSelecionado.dataUltimoRegistroIso)
       : '';
   }
 
@@ -462,4 +463,17 @@ document.addEventListener('input', (e) => {
 function formatMoedaBR(valor) {
   const n = Number(valor ?? 0);
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Util: formata datetime ISO em dd/MM/yyyy HH:mm
+function formatarDataHoraBR(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (Number.isNaN(d.getTime())) return '';
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const ano = d.getFullYear();
+  const hora = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dia}/${mes}/${ano} ${hora}:${min}`;
 }

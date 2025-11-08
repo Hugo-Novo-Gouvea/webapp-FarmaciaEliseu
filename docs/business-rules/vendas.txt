@@ -1,0 +1,61 @@
+Vendas
+
+Regras da Tela
+
+- Tela que controla as vendas do cliente
+- Linha com 4 Select box "Tipo de Vendas", "Vendedor", "Tipo de Cliente", "Tipo de Produto"
+
+    Tipo de Clientes
+
+    - "Selecione o tipo", "Registrado", "Avulso"
+    - Começa com "Selecione o tipo"
+    - é necessario que o cliente escolha entre "Registrado" e "Avulso" que vai registrar em dbo.movimentos o "clientesID" e o "clientesNome"
+    - Depois de escolher entre "Registrado" e "Avulso" uma nova linha abaixo é carregada
+    - Se selecionado "Registrado" a segunda linha vai ter uma select box "Cliente" que carrega todos os clientes em dbo.clientes onde id != 1 e deletado = 0 e do lado vai ter um input pesquisa que auxilia a encontrar um nome na select box e depois salva em "clientesID" e o "clientesNome" o id e nome do cliente selecionado
+    - Se selecionado "Avulso" a segunda linha vai um input em branco Cliente que registra em movimentos em "clientesID" e o "clientesNome" o id 1 e nome escrito no input
+
+    Tipo de Produto
+
+    - "Selecione o tipo", "Registrado", "Avulso"
+    - Começa com "Selecione o tipo"
+    - é necessario que o cliente escolha entre "Registrado" e "Avulso" que vai registrar em dbo.movimentos o "produtosID", "produtosDescricao" e "produtosCodigoProduto"
+    - Depois de escolher entre "Registrado" e "Avulso" uma nova linha abaixo da de clientes é carregada
+    - Se selecionado "Registrado" a terceira linha vai ter um input Codigo de Barras/Descricao onde o cliente pode passar o nome do produto ou codigo de barras dele, depois um campo quantidade que aceita apenas numeros inteiros de 1 pra cima, depois um campo desconto que aceita apenas numeros de 0 pra cima e por fim um botão Adicionar, registra no movimentos o "produtosID", "produtosDescricao" e "produtosCodigoProduto" referente ao produto selecionado 
+    - Se selecionado "Avulso" a terceira linha vai um campo input Nome do produto, preço de venda que recebe apenas numeros de 0 pra cima, depois um campo quantidade que aceita apenas numeros inteiros de 1 pra cima, depois um campo desconto que aceita apenas numeros de 0 pra cima e por fim um botão Adicionar, registra no movimentos o "produtosID" 1, "produtosDescricao" o nome escrito no input e "produtosCodigoProduto" "000000000"
+
+    Vendedor
+    - Seleciona o vendedor la no banco db.funcionarios os cliente com deletado = false para colocar em movimentos em "funcionariosID" e "funcionariosNome"
+
+    Tipo de Venda
+    - "Selecione o tipo", "Marcar", "Dinheiro"
+    - Só é permitido salvar se escolhido Marcar ou Dinheiro
+    - Se escolher Marcar o deletado do movimento = false e se escolher dinheiro o deletado do movimento = true
+
+- Tabela
+
+- Sempre que o usuario clicar no botão adicionar ou pressionar enter enquanto está com a barre codigo de barras/Descrição selecionado as informções do produto aparecer na tabela
+- "Descricao", "Quantidade", "valor"(referente ao valor de venda do produto), "desconto", "total" (sendo valor - desconto)
+- Realizar venda coloca em movimentos as informações referente aos produtos sendo
+
+movimentoID: PK
+produtosID: ID do produto ou se for avulso colocar 1
+produtosDescricao: descricao do produto escolhido no select box ou digitado no input de avulsos
+produtosCodigoProduto: codigoProduto do produto escolhido ou "000000000" se avulso
+clientesID: ID do cliente escolhido na select box ou 1 se cliente avulso
+clientesNome: nome do cliente escolhido na select box ou digitado no input se avulso
+funcionariosID: ID do funcionario escolhido no select box funcionarios
+funcionariosNome: Nome do funcionario escolhido no select box funcionarios
+quantidade: quantidade do produto digitado tanto em avulso quando registrado
+precoUnitarioDiaVenda: registro do precoVenda do produto feito no dia do registro
+precoTotalDiaVenda: registro do precoVenda x quantidade do produto feito no dia do registro
+precoUnitarioAtual: registro do precoVenda do produto feito no dia do registro (Sim é semelhante ao DiaVenda)
+precoTotalAtual: registro do precoVenda x quantidade do produto feito no dia do registro (Sim é semelhante ao DiaVenda)
+valorPago: se escolhido Dinheiro então recebe precoVenda x quantidad e se escolhido marcar recebe 0
+desconto: recebe o desconto digitado
+DataVenda: data atual do dia que foi criado o registro
+DataPagamento: Null se Marcado, Data atual do dia que foi criado se Dinheiro
+codigoMovimento: Esse é meio complicado, ele serve pra poder agrupar os movimentos em grupos de vendas, se eu vendi X,Y,Z remedio na mesma venda pra um cliente eles tem que ter o mesmo codigoMovimento e nunca pode repetir
+dataCadastro: Controlado pelo sistema, data atual e horario em que a venda foi feita
+datUltimoRegistro: Controlado pelo sistema, data atual e horario em que a venda foi feita
+deletado: Se escolher Marcar o deletado do movimento = false e se escolher dinheiro o deletado do movimento = true
+

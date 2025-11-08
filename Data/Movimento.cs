@@ -58,6 +58,10 @@ namespace WebAppEstudo.Data
         [Column("precoTotalAtual", TypeName = "decimal(19,4)")]
         public decimal PrecoTotalAtual { get; set; }
 
+        // existe na tabela: valorVenda
+        [Column("valorVenda", TypeName = "decimal(19,4)")]
+        public decimal ValorVenda { get; set; }
+
         [Column("valorPago", TypeName = "decimal(19,4)")]
         public decimal ValorPago { get; set; }
 

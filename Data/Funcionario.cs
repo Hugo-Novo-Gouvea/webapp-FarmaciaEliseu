@@ -17,13 +17,12 @@ namespace WebAppEstudo.Data
         public string Nome { get; set; } = "";
 
         [Column("dataCadastro")]
-        public DateTime? DataCadastro { get; set; }
+        public DateTime DataCadastro { get; set; }
 
         [Column("dataUltimoRegistro")]
-        public DateTime? DataUltimoRegistro { get; set; }
+        public DateTime DataUltimoRegistro { get; set; }
 
         [Column("deletado")]
-        public bool? Deletado { get; set; }
+        public bool Deletado { get; set; }
     }
 }
-

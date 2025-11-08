@@ -31,7 +31,7 @@ Editar
 	codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
 	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
 	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- caso seja nulo o banco recebe o valor "000000000"
 
 	Descrição: fornece valor para o campo "descricao" no dbo.produtos
 	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
@@ -86,7 +86,7 @@ Novo
 	codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
 	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
 	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- caso seja nulo o banco recebe o valor "000000000"
 
 	Descrição: fornece valor para o campo "descricao" no dbo.produtos
 	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
@@ -126,7 +126,7 @@ Novo
 	- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
 	- não pode ser nulo
 
-- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+- ao ser feito o registro no banco é atualizado o campo "dataCadastro" e "dataUltimoRegistro" com a data e horário atual e o campo deletado com valor false
 - botão cancelar para cancelar a operação
 - botão salvar para realizar a operação
 

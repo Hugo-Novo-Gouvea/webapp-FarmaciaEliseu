@@ -302,7 +302,7 @@ app.MapPost("/api/produtos", async (Produto dto, AppDbContext db) =>
     var generico = (dto.Generico ?? "").Trim().ToUpper();
     if (generico != "SIM" && generico != "NAO")
         return Results.BadRequest("Campo 'Genérico' deve ser SIM ou NAO.");
-    var codigoProduto = string.IsNullOrWhiteSpace(dto.CodigoProduto) ? "000000000" : dto.CodigoProduto.Trim();
+    var codigoProduto = string.IsNullOrWhiteSpace(dto.CodigoProduto) ? "000000000" : dto.CodigoProduto.Trim().ToUpper();
 
     var agora = DateTime.Now;
 
@@ -359,7 +359,7 @@ app.MapPut("/api/produtos/{id:int}", async (int id, AppDbContext db, Produto dto
     var generico = (dto.Generico ?? "").Trim().ToUpper();
     if (generico != "SIM" && generico != "NAO")
         return Results.BadRequest("Campo 'Genérico' deve ser SIM ou NAO.");
-    var codigoProduto = string.IsNullOrWhiteSpace(dto.CodigoProduto) ? "000000000" : dto.CodigoProduto.Trim();
+    var codigoProduto = string.IsNullOrWhiteSpace(dto.CodigoProduto) ? "000000000" : dto.CodigoProduto.Trim().ToUpper();
 
     var descricaoAntiga = produto.Descricao;
     var precoVendaAntigo = produto.PrecoVenda;
@@ -436,7 +436,7 @@ app.MapGet("/api/funcionarios", async (
     if (pageSize < 1) pageSize = 50;
 
     var query = db.Funcionarios
-        .Where(f => (f.Deletado == null || f.Deletado == false) && f.FuncionariosId != 1)
+        .Where(f => !f.Deletado && f.FuncionariosId != 1)
         .AsQueryable();
 
     if (!string.IsNullOrWhiteSpace(search))
@@ -567,7 +567,7 @@ app.MapPut("/api/contas/movimentos/pagar", async (AppDbContext db, IdsPayload pa
 });
 
 // ===================================================
-// 7. VENDAS (gerando codigoMovimento INT)
+// 7. VENDAS (com payload do DTOs.cs e sem imprimir direto)
 // ===================================================
 app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 {
@@ -608,11 +608,10 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
         var nome = (payload.ClienteNome ?? "").Trim();
         if (string.IsNullOrWhiteSpace(nome))
             return Results.BadRequest("Nome do cliente é obrigatório para venda avulsa.");
-        clienteId = 1; 
+        clienteId = 1;
         clienteNome = nome.ToUpper();
     }
 
-    // >>> AQUI: codigoMovimento INT <<<
     var maxCodigo = await db.Movimentos.MaxAsync(m => (int?)m.CodigoMovimento) ?? 0;
     var codigoMovimento = maxCodigo + 1;
 
@@ -623,35 +622,53 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
     {
         if (it.quantidade <= 0)
             return Results.BadRequest("Quantidade inválida em um dos itens.");
+
         var produto = await db.Produtos.FindAsync(it.produtoId);
         if (produto is null)
             return Results.BadRequest($"Produto {it.produtoId} não encontrado.");
 
+        // valores baseados no produto do banco
+        var prodId = produto.ProdutosId;
+        var prodDescricao = produto.Descricao;
+        var prodCodigo = string.IsNullOrWhiteSpace(produto.CodigoProduto) ? "000000000" : produto.CodigoProduto;
         var precoUnit = produto.PrecoVenda;
+
+        // se for o produto "AVULSO" (id 1) ou se o front mandou descrição/preço, usa o do front
+        if (prodId == 1 || !string.IsNullOrWhiteSpace(it.descricao) || it.precoUnit is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(it.descricao))
+                prodDescricao = it.descricao!.ToUpper();
+            prodCodigo = "000000000";
+            if (it.precoUnit is not null)
+                precoUnit = it.precoUnit.Value;
+        }
+
         var qtd = it.quantidade;
         var desconto = it.desconto < 0 ? 0 : it.desconto;
-        var total = (precoUnit * qtd) - desconto;
-        if (total < 0) total = 0;
+        var totalDia = precoUnit * qtd;
+        var totalFinal = totalDia - desconto;
+        if (totalFinal < 0) totalFinal = 0;
 
-        var valorPago = isDinheiro ? total : 0m;
+        var valorPago = isDinheiro ? totalFinal : 0m;
         DateTime? dataPagamento = isDinheiro ? agora : null;
 
         var mov = new Movimento
         {
             CodigoMovimento = codigoMovimento,
-            ProdutosId = produto.ProdutosId,
-            ProdutosDescricao = produto.Descricao,
-            ProdutosCodigoProduto = string.IsNullOrWhiteSpace(produto.CodigoProduto) ? "000000000" : produto.CodigoProduto,
+            ProdutosId = prodId,
+            ProdutosDescricao = prodDescricao,
+            ProdutosCodigoProduto = prodCodigo,
             ClientesId = clienteId,
             ClientesNome = clienteNome,
             FuncionariosId = vendedor.FuncionariosId,
             FuncionariosNome = vendedor.Nome,
             Quantidade = qtd,
             PrecoUnitarioDiaVenda = precoUnit,
-            PrecoTotalDiaVenda = precoUnit * qtd,
-            PrecoUnitarioAtual = produto.PrecoVenda,
-            PrecoTotalAtual = produto.PrecoVenda * qtd,
+            PrecoTotalDiaVenda = totalDia,
+            PrecoUnitarioAtual = precoUnit,
+            PrecoTotalAtual = totalDia,
             ValorPago = valorPago,
+            ValorVenda = totalFinal,
             Desconto = desconto,
             DataVenda = agora,
             DataPagamento = dataPagamento,
@@ -666,21 +683,98 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 
     await db.SaveChangesAsync();
 
-    // impressão
+    // não imprime aqui – o front chama /api/vendas/imprimir depois
+    return Results.Created("/api/vendas", new { itens = gravados.Count, codigoMovimento });
+});
+
+// ===================================================
+// 7.1. /api/vendas/imprimir – só imprime o que o front mandar
+// ===================================================
+app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload) =>
+{
+    var agora = DateTime.Now;
+
+    var tipoVenda = (payload.TipoVenda ?? "").Trim().ToLower();
+    if (tipoVenda != "marcar" && tipoVenda != "dinheiro")
+        return Results.BadRequest("Tipo de venda inválido.");
+
+    var tipoCliente = (payload.TipoCliente ?? "").Trim().ToLower();
+    if (tipoCliente != "registrado" && tipoCliente != "avulso")
+        return Results.BadRequest("Tipo de cliente inválido.");
+
+    if (payload.Itens == null || payload.Itens.Count == 0)
+        return Results.BadRequest("Lista de itens vazia.");
+
+    var vendedor = await db.Funcionarios.FindAsync(payload.VendedorId);
+    if (vendedor is null)
+        return Results.BadRequest("Vendedor inválido.");
+
+    int clienteId;
+    string clienteNome;
+    string? codigoFichario = null;
+
+    if (tipoCliente == "registrado")
+    {
+        if (payload.ClienteId is null)
+            return Results.BadRequest("Cliente é obrigatório para cliente registrado.");
+        var cliente = await db.Clientes.FindAsync(payload.ClienteId.Value);
+        if (cliente is null)
+            return Results.BadRequest("Cliente não encontrado.");
+        clienteId = cliente.ClientesId;
+        clienteNome = cliente.Nome;
+        codigoFichario = cliente.CodigoFichario?.ToString();
+    }
+    else
+    {
+        var nome = (payload.ClienteNome ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(nome))
+            return Results.BadRequest("Nome do cliente é obrigatório para venda avulsa.");
+        clienteId = 1;
+        clienteNome = nome.ToUpper();
+    }
+
+    var isDinheiro = tipoVenda == "dinheiro";
+
+    var itensCupom = new List<ReceiptPrinter.Item>();
+    decimal totalDesconto = 0;
+    decimal totalFinal = 0;
+
+    foreach (var it in payload.Itens)
+    {
+        var produto = await db.Produtos.FindAsync(it.produtoId);
+        if (produto is null)
+            return Results.BadRequest($"Produto {it.produtoId} não encontrado.");
+
+        var prodDescricao = produto.Descricao;
+        var precoUnit = produto.PrecoVenda;
+
+        if (produto.ProdutosId == 1 || !string.IsNullOrWhiteSpace(it.descricao) || it.precoUnit is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(it.descricao))
+                prodDescricao = it.descricao!.ToUpper();
+            if (it.precoUnit is not null)
+                precoUnit = it.precoUnit.Value;
+        }
+
+        var qtd = it.quantidade;
+        var desconto = it.desconto < 0 ? 0 : it.desconto;
+        var totalDia = precoUnit * qtd;
+        var totalItem = totalDia - desconto;
+        if (totalItem < 0) totalItem = 0;
+
+        itensCupom.Add(new ReceiptPrinter.Item(
+            qtd,
+            prodDescricao,
+            precoUnit,
+            desconto
+        ));
+
+        totalDesconto += desconto;
+        totalFinal += totalItem;
+    }
+
     try
     {
-        var itensCupom = gravados.Select(g =>
-            new ReceiptPrinter.Item(
-                g.Quantidade,
-                g.ProdutosDescricao,
-                g.PrecoUnitarioDiaVenda,
-                g.Desconto
-            )
-        ).ToList();
-
-        var totalDesconto = gravados.Sum(g => g.Desconto);
-        var totalFinal = gravados.Sum(g => (g.PrecoTotalDiaVenda - g.Desconto));
-
         var cupomBytes = ReceiptPrinter.BuildReceipt(
             lojaNome: "FARMACIA DO ELISEU",
             lojaEndereco: "Rua xxxx, 000, Centro",
@@ -700,16 +794,15 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
     catch (Exception ex)
     {
         Console.WriteLine("Falha ao imprimir cupom: " + ex.Message);
+        return Results.Problem("Falha ao imprimir.");
     }
 
-    return Results.Created("/api/vendas", new { itens = gravados.Count, codigoMovimento });
+    return Results.Ok(new { message = "Cupom enviado para a impressora." });
 });
 
 // ===================================================
 // 8. MOVIMENTOS (lista + detalhes) usando int
 // ===================================================
-
-// lista paginada
 app.MapGet("/api/movimentos", async (
     AppDbContext db,
     int page = 1,
@@ -721,7 +814,7 @@ app.MapGet("/api/movimentos", async (
     if (page < 1) page = 1;
     if (pageSize < 1) pageSize = 50;
 
-    var baseQuery = db.Movimentos.AsQueryable(); // mostra todos
+    var baseQuery = db.Movimentos.AsQueryable();
 
     if (!string.IsNullOrWhiteSpace(search))
     {
@@ -733,7 +826,6 @@ app.MapGet("/api/movimentos", async (
         }
         else if (column == "movimento")
         {
-            // CodigoMovimento é int, converte pra string pra filtrar
             baseQuery = baseQuery.Where(m => m.CodigoMovimento.ToString().Contains(search));
         }
         else
@@ -772,7 +864,6 @@ app.MapGet("/api/movimentos", async (
     });
 });
 
-// detalhes
 app.MapGet("/api/movimentos/{codigoMovimento:int}", async (int codigoMovimento, AppDbContext db) =>
 {
     var itens = await db.Movimentos
@@ -832,7 +923,7 @@ namespace WebAppEstudo.Data
 {
     public class DbConfig
     {
-        public string mode { get; set; } = "windows"; // windows ou sql
+        public string mode { get; set; } = "windows";
         public string? target { get; set; }
         public string server { get; set; } = "";
         public string database { get; set; } = "";
@@ -861,26 +952,4 @@ namespace WebAppEstudo.Data
             File.WriteAllText(path, json);
         }
     }
-}
-
-// ===============================
-// PAYLOADS (mesmo que você já tinha)
-// ===============================
-public record IdsPayload(List<int> ids);
-
-public class VendaPayload
-{
-    public string? TipoVenda { get; set; }
-    public string? TipoCliente { get; set; }
-    public int? ClienteId { get; set; }
-    public string? ClienteNome { get; set; }
-    public int VendedorId { get; set; }
-    public List<VendaItemPayload> Itens { get; set; } = new();
-}
-
-public class VendaItemPayload
-{
-    public int produtoId { get; set; }
-    public int quantidade { get; set; }
-    public decimal desconto { get; set; }
 }
