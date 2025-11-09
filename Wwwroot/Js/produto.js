@@ -1,479 +1,484 @@
 // /js/produto.js
+// CRUD de produtos com o mesmo esqueleto dos outros.
+// Mantém formatação de moeda e validação específica de produto.
 
-let produtoSelecionado = null;
-// dataset completo vindo do back
-let todosProdutos = [];
-let produtosFiltrados = [];
+(() => {
+  // -------------------------------------------------------------
+  // ESTADO
+  // -------------------------------------------------------------
+  const state = {
+    all: [],
+    filtered: [],
+    selected: null,
+    page: 1,
+    pageSize: 50
+  };
 
-// paginação no front
-let produtosPaginaAtual = 1;
-let produtosPageSize = 50;
-let produtosTotal = 0;
+  // -------------------------------------------------------------
+  // ELEMENTOS
+  // -------------------------------------------------------------
+  const els = {
+    tableBody: document.querySelector('#tb-produtos tbody'),
+    filterColumn: document.getElementById('filter-column'),
+    filterText: document.getElementById('filter-text'),
+    btnView: document.getElementById('btn-view'),
+    btnEdit: document.getElementById('btn-edit'),
+    btnNew: document.getElementById('btn-new'),
+    btnDelete: document.getElementById('btn-delete'),
+    pagerInfo: document.getElementById('produtos-pg-info'),
+    pagerPrev: document.getElementById('produtos-pg-prev'),
+    pagerNext: document.getElementById('produtos-pg-next'),
 
-// inicial
-carregarProdutos();
+    viewBackdrop: document.getElementById('produto-modal-backdrop'),
+    editBackdrop: document.getElementById('produto-edit-backdrop'),
+    newBackdrop: document.getElementById('produto-new-backdrop')
+  };
 
-/* ========== CARREGAR LISTA PAGINADA ========== */
-async function carregarProdutos() {
-  // busca todos os produtos (pede uma página grande) e filtra no front
-  const resp = await fetch('/api/produtos?pageSize=100000');
-  const tbody = document.querySelector('#tb-produtos tbody');
+  // -------------------------------------------------------------
+  // INIT
+  // -------------------------------------------------------------
+  init();
 
-  if (!resp.ok) {
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Erro ao carregar produtos</td></tr>`;
+  async function init() {
+    await loadData();
+    wireEvents();
+  }
+
+  // -------------------------------------------------------------
+  // LOAD
+  // -------------------------------------------------------------
+  async function loadData() {
+    // pede tudo e filtra no front
+    const resp = await fetch('/api/produtos?pageSize=100000');
+    if (!resp.ok) {
+      renderEmpty('Erro ao carregar produtos');
+      return;
     }
-    return;
+
+    const data = await resp.json();
+    const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+    state.all = items;
+    applyFilter();
+
+    if (els.btnNew) els.btnNew.disabled = false;
   }
 
-  const data = await resp.json();
-  const itens = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+  // -------------------------------------------------------------
+  // EVENTS
+  // -------------------------------------------------------------
+  function wireEvents() {
+    els.filterText?.addEventListener('input', applyFilter);
+    els.filterColumn?.addEventListener('change', applyFilter);
 
-  todosProdutos = itens;
-  aplicarFiltroProdutos();
-  const btnNew = document.getElementById('btn-new');
-  if (btnNew) btnNew.disabled = false;
-}
+    els.pagerPrev?.addEventListener('click', () => changePage(-1));
+    els.pagerNext?.addEventListener('click', () => changePage(1));
 
-/* ========== FILTRO POR COLUNA (local) ========== */
-function aplicarFiltroProdutos() {
-  const col = document.getElementById('filter-column')?.value || 'codigoBarras';
-  let txt = (document.getElementById('filter-text')?.value || '').trim().toLowerCase();
+    els.btnView?.addEventListener('click', onView);
+    els.btnEdit?.addEventListener('click', onEdit);
+    els.btnDelete?.addEventListener('click', onDelete);
+    els.btnNew?.addEventListener('click', onNew);
 
-  // normaliza busca para cada coluna
-  if (col === 'codigoBarras') {
-    // apenas dígitos para comparar código de barras
-    txt = txt.replace(/\D+/g, '');
+    // pequenas máscaras de dígitos para código de barras / unidade
+    document.addEventListener('input', handleDigitFields);
   }
 
-  if (!txt) {
-    produtosFiltrados = [...todosProdutos];
-  } else {
-    produtosFiltrados = todosProdutos.filter(p => {
-      const valor = pegarValorColunaProduto(p, col);
-      return valor.includes(txt);
-    });
-  }
+  // -------------------------------------------------------------
+  // FILTER
+  // -------------------------------------------------------------
+  function applyFilter() {
+    const col = els.filterColumn?.value || 'codigoBarras';
+    let txt = (els.filterText?.value || '').trim().toLowerCase();
 
-  produtosPaginaAtual = 1;
-  renderTabela();
-  atualizarPaginacaoProdutos();
-}
+    if (col === 'codigoBarras') {
+      // remove tudo que não é número pra comparar
+      txt = txt.replace(/\D+/g, '');
+    }
 
-function pegarValorColunaProduto(p, col) {
-  const s = (v) => (v ?? '').toString().toLowerCase();
-  switch (col) {
-    case 'codigoBarras':
-      return s(p.codigoBarras).replace(/\D+/g, '');
-    case 'descricao':
-    default:
-      // remove sequências numéricas longas (ex.: código de barras embutido)
-      return s(p.descricao).replace(/\d{7,}/g, '');
-  }
-}
-
-/* ========== RENDER TABELA (com paginação local) ========== */
-function renderTabela() {
-  const tbody = document.querySelector('#tb-produtos tbody');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-
-  if (!produtosFiltrados || produtosFiltrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Nenhum produto encontrado.</td></tr>`;
-    produtoSelecionado = null;
-    toggleAcoes(true);
-    return;
-  }
-
-  const inicio = (produtosPaginaAtual - 1) * produtosPageSize;
-  const fim = inicio + produtosPageSize;
-  const pagina = produtosFiltrados.slice(inicio, fim);
-
-  pagina.forEach(c => {
-    const tr = document.createElement('tr');
-
-    const produtoData = {
-      id: c.produtosId ?? c.produtosID ?? c.id ?? '',
-      descricao: c.descricao ?? '',
-      unidadeMedida: c.unidadeMedida ?? '',
-      precoCompra: c.precoCompra ?? 0,
-      precoVenda: c.precoVenda ?? 0,
-      localizacao: c.localizacao ?? '',
-      laboratorio: c.laboratorio ?? '',
-      principio: c.principio ?? '',
-      generico: c.generico ?? '',
-      codigoProduto: (c.codigoProduto ?? c.CodigoProduto ?? ''),
-      codigoBarras: c.codigoBarras ?? '',
-      dataCadastroIso: c.dataCadastro || c.DataCadastro || '',
-      dataUltimoRegistroIso: c.dataUltimoRegistro || c.DataUltimoRegistro || '',
-      deletadoBool: !!c.deletado
-    };
-
-    tr.innerHTML = `
-      <td>${produtoData.codigoBarras}</td>
-      <td>${produtoData.descricao}</td>
-      <td>${formatMoedaBR(produtoData.precoCompra)}</td>
-      <td>${formatMoedaBR(produtoData.precoVenda)}</td>
-      <td>${produtoData.generico}</td>
-    `;
-
-    tr.addEventListener('click', () => {
-      document.querySelectorAll('#tb-produtos tbody tr').forEach(row => {
-        row.classList.remove('selected');
-      });
-      tr.classList.add('selected');
-      produtoSelecionado = produtoData;
-      toggleAcoes(false);
-    });
-
-    tbody.appendChild(tr);
-  });
-
-  // se não clicar em nada, mantém desabilitado
-  produtoSelecionado = null;
-  toggleAcoes(true);
-}
-
-function toggleAcoes(disabled) {
-  const btnView = document.getElementById('btn-view');
-  const btnEdit = document.getElementById('btn-edit');
-  const btnDelete = document.getElementById('btn-delete');
-
-  if (btnView) btnView.disabled = disabled;
-  if (btnEdit) btnEdit.disabled = disabled;
-  if (btnDelete) btnDelete.disabled = disabled;
-}
-
-/* ========== PAGINAÇÃO ========== */
-function atualizarPaginacaoProdutos() {
-  const info = document.getElementById('produtos-pg-info');
-  const btnPrev = document.getElementById('produtos-pg-prev');
-  const btnNext = document.getElementById('produtos-pg-next');
-
-  const total = produtosFiltrados.length;
-  const totalPaginas = Math.max(1, Math.ceil(total / produtosPageSize));
-
-  if (info) {
-    if (total === 0) {
-      info.textContent = 'Nenhum registro';
+    if (!txt) {
+      state.filtered = [...state.all];
     } else {
-      const inicio = (produtosPaginaAtual - 1) * produtosPageSize + 1;
-      const fim = Math.min(produtosPaginaAtual * produtosPageSize, total);
-      info.textContent = `Mostrando ${inicio}-${fim} de ${total} (pág. ${produtosPaginaAtual} de ${totalPaginas})`;
+      state.filtered = state.all.filter(p => {
+        const val = getColumnValue(p, col);
+        return val.includes(txt);
+      });
+    }
+
+    state.page = 1;
+    renderTable();
+    updatePager();
+  }
+
+  function getColumnValue(p, col) {
+    const toStr = (v) => (v ?? '').toString().toLowerCase();
+    switch (col) {
+      case 'codigoBarras':
+        return toStr(p.codigoBarras).replace(/\D+/g, '');
+      case 'descricao':
+      default:
+        // tira sequências numéricas longas pra não atrapalhar
+        return toStr(p.descricao).replace(/\d{7,}/g, '');
     }
   }
 
-  if (btnPrev) {
-    const disabled = produtosPaginaAtual <= 1;
-    btnPrev.disabled = disabled;
-    btnPrev.classList.toggle('is-disabled', disabled);
+  // -------------------------------------------------------------
+  // RENDER TABLE
+  // -------------------------------------------------------------
+  function renderTable() {
+    if (!els.tableBody) return;
+    els.tableBody.innerHTML = '';
+
+    if (!state.filtered.length) {
+      renderEmpty('Nenhum produto encontrado.');
+      setSelection(null);
+      toggleActions(true);
+      return;
+    }
+
+    const start = (state.page - 1) * state.pageSize;
+    const end = start + state.pageSize;
+    const pageItems = state.filtered.slice(start, end);
+
+    pageItems.forEach(p => {
+      const data = normalizeProduto(p);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${data.codigoBarras}</td>
+        <td>${data.descricao}</td>
+        <td>${formatMoedaBR(data.precoCompra)}</td>
+        <td>${formatMoedaBR(data.precoVenda)}</td>
+        <td>${data.generico}</td>
+      `;
+      tr.addEventListener('click', () => onRowClick(tr, data));
+      els.tableBody.appendChild(tr);
+    });
+
+    setSelection(null);
+    toggleActions(true);
   }
 
-  if (btnNext) {
-    const disabled = produtosPaginaAtual >= totalPaginas;
-    btnNext.disabled = disabled;
-    btnNext.classList.toggle('is-disabled', disabled);
-  }
-}
-
-document.getElementById('produtos-pg-prev')?.addEventListener('click', () => {
-  const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / produtosPageSize));
-  if (produtosPaginaAtual > 1) {
-    produtosPaginaAtual--;
-    renderTabela();
-    atualizarPaginacaoProdutos();
-  }
-});
-document.getElementById('produtos-pg-next')?.addEventListener('click', () => {
-  const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / produtosPageSize));
-  if (produtosPaginaAtual < totalPaginas) {
-    produtosPaginaAtual++;
-    renderTabela();
-    atualizarPaginacaoProdutos();
-  }
-});
-
-/* ========== VISUALIZAR ========== */
-document.getElementById('btn-view')?.addEventListener('click', () => {
-  if (!produtoSelecionado) return;
-  const b = document.getElementById('produto-modal-backdrop');
-  if (!b) return;
-
-  document.getElementById('m-codigoBarras').textContent = produtoSelecionado.codigoBarras || '';
-
-  const mCodigoProduto = document.getElementById('m-codigoProduto');
-  if (mCodigoProduto) mCodigoProduto.textContent = produtoSelecionado.codigoProduto || '';
-
-  document.getElementById('m-descricao').textContent = produtoSelecionado.descricao || '';
-  document.getElementById('m-unidadeMedida').textContent = produtoSelecionado.unidadeMedida || '';
-  document.getElementById('m-precoCompra').textContent = formatMoedaBR(produtoSelecionado.precoCompra);
-  document.getElementById('m-precoVenda').textContent = formatMoedaBR(produtoSelecionado.precoVenda);
-  document.getElementById('m-localizacao').textContent = produtoSelecionado.localizacao || '';
-  document.getElementById('m-laboratorio').textContent = produtoSelecionado.laboratorio || '';
-  document.getElementById('m-principio').textContent = produtoSelecionado.principio || '';
-  document.getElementById('m-generico').textContent = produtoSelecionado.generico || '';
-
-  const mDataCadastro = document.getElementById('m-dataCadastro');
-  if (mDataCadastro) {
-    mDataCadastro.textContent = produtoSelecionado.dataCadastroIso
-      ? formatarDataHoraBR(produtoSelecionado.dataCadastroIso)
-      : '';
+  function renderEmpty(msg) {
+    if (!els.tableBody) return;
+    els.tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">${msg}</td></tr>`;
   }
 
-  const mDataUltimo = document.getElementById('m-dataUltimoRegistro');
-  if (mDataUltimo) {
-    mDataUltimo.textContent = produtoSelecionado.dataUltimoRegistroIso
-      ? formatarDataHoraBR(produtoSelecionado.dataUltimoRegistroIso)
-      : '';
+  // -------------------------------------------------------------
+  // PAGINATION
+  // -------------------------------------------------------------
+  function changePage(delta) {
+    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+    const newPage = state.page + delta;
+    if (newPage < 1 || newPage > totalPages) return;
+    state.page = newPage;
+    renderTable();
+    updatePager();
   }
 
-  b.classList.add('show');
-  const closeBtn = document.getElementById('modal-close-btn');
-  if (closeBtn) closeBtn.onclick = () => b.classList.remove('show');
-  b.onclick = (e) => { if (e.target === b) b.classList.remove('show'); };
-});
+  function updatePager() {
+    const total = state.filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+    const start = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
+    const end = total === 0 ? 0 : Math.min(state.page * state.pageSize, total);
 
-/* ========== EDITAR ========== */
-document.getElementById('btn-edit')?.addEventListener('click', () => {
-  if (!produtoSelecionado) return;
-  const b = document.getElementById('produto-edit-backdrop');
-  if (!b) return;
+    if (els.pagerInfo) {
+      els.pagerInfo.textContent = total === 0
+        ? 'Nenhum registro'
+        : `Mostrando ${start}-${end} de ${total} (pág. ${state.page} de ${totalPages})`;
+    }
 
-  document.getElementById('e-id').value = produtoSelecionado.id || '';
-  document.getElementById('e-codigoBarras').value = produtoSelecionado.codigoBarras || '';
-  document.getElementById('e-descricao').value = produtoSelecionado.descricao || '';
-  document.getElementById('e-unidadeMedida').value = produtoSelecionado.unidadeMedida || '';
-  document.getElementById('e-precoCompra').value = produtoSelecionado.precoCompra || '';
-  document.getElementById('e-precoVenda').value = produtoSelecionado.precoVenda || '';
-  document.getElementById('e-localizacao').value = produtoSelecionado.localizacao || '';
-  document.getElementById('e-laboratorio').value = produtoSelecionado.laboratorio || '';
-  document.getElementById('e-principio').value = produtoSelecionado.principio || '';
-  document.getElementById('e-generico').value = produtoSelecionado.generico || '';
-  const eCodigoProduto = document.getElementById('e-codigoProduto');
-  if (eCodigoProduto) eCodigoProduto.value = produtoSelecionado.codigoProduto || '';
-
-  b.classList.add('show');
-  document.getElementById('edit-close-btn').onclick = () => b.classList.remove('show');
-  document.getElementById('edit-cancel-btn').onclick = () => b.classList.remove('show');
-  b.onclick = (e) => { if (e.target === b) b.classList.remove('show'); };
-});
-
-document.getElementById('edit-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  // valida campos obrigatórios
-  const camposOk = validarCamposProduto('e-');
-  if (!camposOk.ok) {
-    alert(camposOk.msg);
-    camposOk.el?.focus();
-    return;
+    if (els.pagerPrev) {
+      const disabled = state.page <= 1;
+      els.pagerPrev.disabled = disabled;
+      els.pagerPrev.classList.toggle('is-disabled', disabled);
+    }
+    if (els.pagerNext) {
+      const disabled = state.page >= totalPages;
+      els.pagerNext.disabled = disabled;
+      els.pagerNext.classList.toggle('is-disabled', disabled);
+    }
   }
 
-  const id = document.getElementById('e-id').value;
-
-  const somenteNumeros = (v) => (v || '').toString().replace(/\D+/g, '');
-  const rawCodigoBarras = document.getElementById('e-codigoBarras').value.trim();
-  const rawUnidadeMedida = document.getElementById('e-unidadeMedida').value.trim();
-  const rawLocalizacao = document.getElementById('e-localizacao').value.trim();
-  const rawLaboratorio = document.getElementById('e-laboratorio').value.trim();
-  const rawPrincipio = document.getElementById('e-principio').value.trim();
-  const rawCodigoProduto = document.getElementById('e-codigoProduto')?.value.trim() || '';
-  const selGenerico = document.getElementById('e-generico').value;
-
-  if (!(selGenerico === 'SIM' || selGenerico === 'NAO')) {
-    alert('Selecione "SIM" ou "NAO" no campo Genérico.');
-    document.getElementById('e-generico').focus();
-    return;
+  // -------------------------------------------------------------
+  // SELECTION
+  // -------------------------------------------------------------
+  function onRowClick(tr, data) {
+    document.querySelectorAll('#tb-produtos tbody tr').forEach(row => row.classList.remove('selected'));
+    tr.classList.add('selected');
+    setSelection(data);
+    toggleActions(false);
   }
 
-  const payload = {
-    produtosId: parseInt(id, 10),
-    codigoBarras: somenteNumeros(rawCodigoBarras),
-    descricao: document.getElementById('e-descricao').value.trim().toUpperCase(),
-    unidadeMedida: somenteNumeros(rawUnidadeMedida) || '0',
-    precoCompra: parseFloat(document.getElementById('e-precoCompra').value),
-    precoVenda: parseFloat(document.getElementById('e-precoVenda').value),
-    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NAO INFORMADO'),
-    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NAO INFORMADO'),
-    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NAO INFORMADO'),
-    generico: selGenerico,
-    codigoProduto: rawCodigoProduto || '000000000',
-    deletado: false
-  };
-
-  const resp = await fetch(`/api/produtos/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (resp.ok) {
-    document.getElementById('produto-edit-backdrop').classList.remove('show');
-    carregarProdutos();
-  } else {
-    const txt = await resp.text();
-    alert('Erro ao atualizar produto:\n' + txt);
-  }
-});
-
-/* ========== NOVO ========== */
-document.getElementById('btn-new')?.addEventListener('click', () => {
-  const b = document.getElementById('produto-new-backdrop');
-  if (!b) return;
-
-  document.getElementById('n-codigoBarras').value = '';
-  document.getElementById('n-descricao').value = '';
-  document.getElementById('n-unidadeMedida').value = '';
-  document.getElementById('n-precoCompra').value = '';
-  document.getElementById('n-precoVenda').value = '';
-  document.getElementById('n-localizacao').value = '';
-  document.getElementById('n-laboratorio').value = '';
-  document.getElementById('n-principio').value = '';
-  document.getElementById('n-generico').value = '';
-  const nCodigoProduto = document.getElementById('n-codigoProduto');
-  if (nCodigoProduto) nCodigoProduto.value = '';
-
-  b.classList.add('show');
-  document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
-  document.getElementById('new-cancel-btn').onclick = () => b.classList.remove('show');
-  b.onclick = (e) => { if (e.target === b) b.classList.remove('show'); };
-});
-
-document.getElementById('new-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const camposOk = validarCamposProduto('n-');
-  if (!camposOk.ok) {
-    alert(camposOk.msg);
-    camposOk.el?.focus();
-    return;
+  function setSelection(prod) {
+    state.selected = prod;
   }
 
-  const somenteNumeros = (v) => (v || '').toString().replace(/\D+/g, '');
-
-  const rawCodigoBarras = document.getElementById('n-codigoBarras').value.trim();
-  const rawUnidadeMedida = document.getElementById('n-unidadeMedida').value.trim();
-  const rawLocalizacao = document.getElementById('n-localizacao').value.trim();
-  const rawLaboratorio = document.getElementById('n-laboratorio').value.trim();
-  const rawPrincipio = document.getElementById('n-principio').value.trim();
-  const rawCodigoProduto = document.getElementById('n-codigoProduto')?.value.trim() || '';
-  const selGenerico = document.getElementById('n-generico').value;
-
-  if (!(selGenerico === 'SIM' || selGenerico === 'NAO')) {
-    alert('Selecione "SIM" ou "NAO" no campo Genérico.');
-    document.getElementById('n-generico').focus();
-    return;
+  function toggleActions(disabled) {
+    [els.btnView, els.btnEdit, els.btnDelete].forEach(btn => {
+      if (btn) btn.disabled = disabled;
+    });
   }
 
-  const payload = {
-    codigoBarras: somenteNumeros(rawCodigoBarras),
-    descricao: document.getElementById('n-descricao').value.trim().toUpperCase(),
-    unidadeMedida: somenteNumeros(rawUnidadeMedida) || '0',
-    precoCompra: parseFloat(document.getElementById('n-precoCompra').value),
-    precoVenda: parseFloat(document.getElementById('n-precoVenda').value),
-    localizacao: (rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NAO INFORMADO'),
-    laboratorio: (rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NAO INFORMADO'),
-    principio: (rawPrincipio ? rawPrincipio.toUpperCase() : 'NAO INFORMADO'),
-    generico: selGenerico,
-    codigoProduto: rawCodigoProduto || '000000000',
-    deletado: false
-  };
+  // -------------------------------------------------------------
+  // ACTIONS
+  // -------------------------------------------------------------
+  function onView() {
+    if (!state.selected) return;
+    const p = state.selected;
+    const b = els.viewBackdrop;
+    if (!b) return;
 
-  const resp = await fetch('/api/produtos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+    setText('m-codigoBarras', p.codigoBarras);
+    setText('m-codigoProduto', p.codigoProduto);
+    setText('m-descricao', p.descricao);
+    setText('m-unidadeMedida', p.unidadeMedida);
+    setText('m-precoCompra', formatMoedaBR(p.precoCompra));
+    setText('m-precoVenda', formatMoedaBR(p.precoVenda));
+    setText('m-localizacao', p.localizacao);
+    setText('m-laboratorio', p.laboratorio);
+    setText('m-principio', p.principio);
+    setText('m-generico', p.generico);
+    setText('m-dataCadastro', p.dataCadastroIso ? formatarDataHoraBR(p.dataCadastroIso) : '');
+    setText('m-dataUltimoRegistro', p.dataUltimoRegistroIso ? formatarDataHoraBR(p.dataUltimoRegistroIso) : '');
 
-  if (resp.ok) {
-    document.getElementById('produto-new-backdrop').classList.remove('show');
-    produtosPaginaAtual = 1;
-    carregarProdutos();
-  } else {
-    const txt = await resp.text();
-    alert('Erro ao criar produto:\n' + txt);
-  }
-});
-
-/* ========== DELETE ========== */
-document.getElementById('btn-delete')?.addEventListener('click', async () => {
-  if (!produtoSelecionado) return;
-  const ok = confirm(`Confirma excluir o produto "${produtoSelecionado.descricao}"?`);
-  if (!ok) return;
-
-  const resp = await fetch(`/api/produtos/${produtoSelecionado.id}`, {
-    method: 'DELETE'
-  });
-
-  if (resp.ok) {
-    carregarProdutos();
-  } else {
-    alert('Erro ao excluir produto');
-  }
-});
-
-/* ========== FILTRO ========== */
-document.getElementById('filter-text')?.addEventListener('input', () => {
-  aplicarFiltroProdutos();
-});
-document.getElementById('filter-column')?.addEventListener('change', () => {
-  aplicarFiltroProdutos();
-});
-
-/* ========== VALIDAÇÃO COMUM ========== */
-function validarCamposProduto(prefixo) {
-  const elCodigoBarras = document.getElementById(prefixo + 'codigoBarras');
-  const elDescricao = document.getElementById(prefixo + 'descricao');
-  const elPrecoCompra = document.getElementById(prefixo + 'precoCompra');
-  const elPrecoVenda = document.getElementById(prefixo + 'precoVenda');
-  const elGenerico = document.getElementById(prefixo + 'generico');
-
-  if (!elCodigoBarras.value.trim()) {
-    return { ok: false, msg: 'Código de barras é obrigatório.', el: elCodigoBarras };
-  }
-  if (!elDescricao.value.trim()) {
-    return { ok: false, msg: 'Descrição é obrigatória.', el: elDescricao };
-  }
-  if (!elPrecoCompra.value.trim()) {
-    return { ok: false, msg: 'Preço de compra é obrigatório.', el: elPrecoCompra };
-  }
-  if (!elPrecoVenda.value.trim()) {
-    return { ok: false, msg: 'Preço de venda é obrigatório.', el: elPrecoVenda };
-  }
-  if (!(elGenerico.value === 'SIM' || elGenerico.value === 'NAO')) {
-    return { ok: false, msg: 'Selecione "SIM" ou "NAO" no campo genérico.', el: elGenerico };
+    b.classList.add('show');
+    document.getElementById('modal-close-btn').onclick = () => b.classList.remove('show');
+    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
   }
 
-  return { ok: true };
-}
+  function onEdit() {
+    if (!state.selected) return;
+    const p = state.selected;
+    const b = els.editBackdrop;
+    if (!b) return;
 
-// Restrições de digitação: apenas números para código de barras e unidade de medida
-document.addEventListener('input', (e) => {
-  const t = e.target;
-  if (!t || !t.id) return;
-  if (t.id === 'n-codigoBarras' || t.id === 'e-codigoBarras' || t.id === 'n-unidadeMedida' || t.id === 'e-unidadeMedida') {
-    const pos = t.selectionStart;
-    t.value = (t.value || '').replace(/\D+/g, '');
-    try { t.setSelectionRange(pos, pos); } catch {}
+    setVal('e-id', p.id);
+    setVal('e-codigoBarras', p.codigoBarras);
+    setVal('e-descricao', p.descricao);
+    setVal('e-unidadeMedida', p.unidadeMedida);
+    setVal('e-precoCompra', p.precoCompra);
+    setVal('e-precoVenda', p.precoVenda);
+    setVal('e-localizacao', p.localizacao);
+    setVal('e-laboratorio', p.laboratorio);
+    setVal('e-principio', p.principio);
+    setVal('e-generico', p.generico);
+    setVal('e-codigoProduto', p.codigoProduto);
+
+    b.classList.add('show');
+    document.getElementById('edit-close-btn').onclick = () => b.classList.remove('show');
+    document.getElementById('edit-cancel-btn').onclick = () => b.classList.remove('show');
+    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
+
+    document.getElementById('edit-form').onsubmit = async (ev) => {
+      ev.preventDefault();
+      await submitEdit();
+    };
   }
-});
 
-// Util: formata número em pt-BR com 2 casas (00,00)
-function formatMoedaBR(valor) {
-  const n = Number(valor ?? 0);
-  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+  async function submitEdit() {
+    const valid = validateProduto('e-');
+    if (!valid.ok) {
+      alert(valid.msg);
+      valid.el?.focus();
+      return;
+    }
 
-// Util: formata datetime ISO em dd/MM/yyyy HH:mm
-function formatarDataHoraBR(isoStr) {
-  if (!isoStr) return '';
-  const d = new Date(isoStr);
-  if (Number.isNaN(d.getTime())) return '';
-  const dia = String(d.getDate()).padStart(2, '0');
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const ano = d.getFullYear();
-  const hora = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${dia}/${mes}/${ano} ${hora}:${min}`;
-}
+    const id = getVal('e-id');
+    const payload = buildProdutoPayload('e-');
+    payload.produtosId = parseInt(id, 10);
+
+    const resp = await fetch(`/api/produtos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (resp.ok) {
+      els.editBackdrop.classList.remove('show');
+      await loadData();
+    } else {
+      const txt = await resp.text();
+      alert('Erro ao atualizar produto:\n' + txt);
+    }
+  }
+
+  function onNew() {
+    const b = els.newBackdrop;
+    if (!b) return;
+
+    // limpa
+    ['n-codigoBarras','n-descricao','n-unidadeMedida','n-precoCompra','n-precoVenda','n-localizacao','n-laboratorio','n-principio','n-generico','n-codigoProduto']
+      .forEach(id => setVal(id, ''));
+
+    b.classList.add('show');
+    document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
+    document.getElementById('new-cancel-btn').onclick = () => b.classList.remove('show');
+    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
+
+    document.getElementById('new-form').onsubmit = async (ev) => {
+      ev.preventDefault();
+      await submitNew();
+    };
+  }
+
+  async function submitNew() {
+    const valid = validateProduto('n-');
+    if (!valid.ok) {
+      alert(valid.msg);
+      valid.el?.focus();
+      return;
+    }
+
+    const payload = buildProdutoPayload('n-');
+
+    const resp = await fetch('/api/produtos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (resp.ok) {
+      els.newBackdrop.classList.remove('show');
+      state.page = 1;
+      await loadData();
+    } else {
+      const txt = await resp.text();
+      alert('Erro ao criar produto:\n' + txt);
+    }
+  }
+
+  async function onDelete() {
+    if (!state.selected) return;
+    const ok = confirm(`Confirma excluir o produto "${state.selected.descricao}"?`);
+    if (!ok) return;
+
+    const resp = await fetch(`/api/produtos/${state.selected.id}`, {
+      method: 'DELETE'
+    });
+
+    if (resp.ok) {
+      await loadData();
+    } else {
+      alert('Erro ao excluir produto');
+    }
+  }
+
+  // -------------------------------------------------------------
+  // HELPERS
+  // -------------------------------------------------------------
+  function normalizeProduto(p) {
+    return {
+      id: p.produtosId ?? p.produtosID ?? p.id ?? '',
+      descricao: p.descricao ?? '',
+      unidadeMedida: p.unidadeMedida ?? '',
+      precoCompra: p.precoCompra ?? 0,
+      precoVenda: p.precoVenda ?? 0,
+      localizacao: p.localizacao ?? '',
+      laboratorio: p.laboratorio ?? '',
+      principio: p.principio ?? '',
+      generico: p.generico ?? '',
+      codigoProduto: p.codigoProduto ?? '',
+      codigoBarras: p.codigoBarras ?? '',
+      dataCadastroIso: p.dataCadastro || p.DataCadastro || '',
+      dataUltimoRegistroIso: p.dataUltimoRegistro || p.DataUltimoRegistro || '',
+      deletadoBool: !!p.deletado
+    };
+  }
+
+  function formatMoedaBR(valor) {
+    const n = Number(valor ?? 0);
+    return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function formatarDataHoraBR(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    if (Number.isNaN(d.getTime())) return '';
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const ano = d.getFullYear();
+    const hora = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes}/${ano} ${hora}:${min}`;
+  }
+
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text ?? '';
+  }
+
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val ?? '';
+  }
+
+  function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+
+  function validateProduto(prefix) {
+    const elCodigoBarras = document.getElementById(prefix + 'codigoBarras');
+    const elDescricao = document.getElementById(prefix + 'descricao');
+    const elPrecoCompra = document.getElementById(prefix + 'precoCompra');
+    const elPrecoVenda = document.getElementById(prefix + 'precoVenda');
+    const elGenerico = document.getElementById(prefix + 'generico');
+
+    if (!elCodigoBarras.value.trim()) {
+      return { ok: false, msg: 'Código de barras é obrigatório.', el: elCodigoBarras };
+    }
+    if (!elDescricao.value.trim()) {
+      return { ok: false, msg: 'Descrição é obrigatória.', el: elDescricao };
+    }
+    if (!elPrecoCompra.value.trim()) {
+      return { ok: false, msg: 'Preço de compra é obrigatório.', el: elPrecoCompra };
+    }
+    if (!elPrecoVenda.value.trim()) {
+      return { ok: false, msg: 'Preço de venda é obrigatório.', el: elPrecoVenda };
+    }
+    if (!(elGenerico.value === 'SIM' || elGenerico.value === 'NAO')) {
+      return { ok: false, msg: 'Selecione "SIM" ou "NAO" no campo genérico.', el: elGenerico };
+    }
+
+    return { ok: true };
+  }
+
+  function buildProdutoPayload(prefix) {
+    const onlyDigits = (v) => (v || '').toString().replace(/\D+/g, '');
+    const rawCodigoBarras = getVal(prefix + 'codigoBarras').trim();
+    const rawUnidadeMedida = getVal(prefix + 'unidadeMedida').trim();
+    const rawLocalizacao = getVal(prefix + 'localizacao').trim();
+    const rawLaboratorio = getVal(prefix + 'laboratorio').trim();
+    const rawPrincipio = getVal(prefix + 'principio').trim();
+    const rawCodigoProduto = getVal(prefix + 'codigoProduto').trim();
+    const selGenerico = getVal(prefix + 'generico');
+
+    return {
+      codigoBarras: onlyDigits(rawCodigoBarras),
+      descricao: getVal(prefix + 'descricao').trim().toUpperCase(),
+      unidadeMedida: onlyDigits(rawUnidadeMedida) || '0',
+      precoCompra: parseFloat(getVal(prefix + 'precoCompra')),
+      precoVenda: parseFloat(getVal(prefix + 'precoVenda')),
+      localizacao: rawLocalizacao ? rawLocalizacao.toUpperCase() : 'NAO INFORMADO',
+      laboratorio: rawLaboratorio ? rawLaboratorio.toUpperCase() : 'NAO INFORMADO',
+      principio: rawPrincipio ? rawPrincipio.toUpperCase() : 'NAO INFORMADO',
+      generico: selGenerico,
+      codigoProduto: rawCodigoProduto || '000000000',
+      deletado: false
+    };
+  }
+
+  // força só número para alguns campos
+  function handleDigitFields(e) {
+    const t = e.target;
+    if (!(t instanceof HTMLInputElement)) return;
+    if (
+      t.id === 'n-codigoBarras' ||
+      t.id === 'e-codigoBarras' ||
+      t.id === 'n-unidadeMedida' ||
+      t.id === 'e-unidadeMedida'
+    ) {
+      const pos = t.selectionStart;
+      t.value = (t.value || '').replace(/\D+/g, '');
+      try { t.setSelectionRange(pos, pos); } catch {}
+    }
+  }
+})();

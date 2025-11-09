@@ -1,97 +1,227 @@
 // /js/clientes.js
+// CRUD de clientes seguindo o mesmo padrão dos outros módulos.
+// Mantém emojis, comentários e paginação no front.
 
-let clienteSelecionado = null;
+(() => {
+  // -------------------------------------------------------------
+  // ESTADO CENTRAL
+  // -------------------------------------------------------------
+  const state = {
+    all: [],           // todos os clientes recebidos da API
+    filtered: [],      // clientes após filtro
+    selected: null,    // linha selecionada
+    page: 1,
+    pageSize: 50
+  };
 
-// dataset completo vindo do back
-let todosClientes = [];
-let clientesFiltrados = [];
+  // -------------------------------------------------------------
+  // ELEMENTOS
+  // -------------------------------------------------------------
+  const els = {
+    tableBody: document.querySelector('#tb-clientes tbody'),
+    filterColumn: document.getElementById('filter-column'),
+    filterText: document.getElementById('filter-text'),
+    btnView: document.getElementById('btn-view'),
+    btnEdit: document.getElementById('btn-edit'),
+    btnNew: document.getElementById('btn-new'),
+    btnDelete: document.getElementById('btn-delete'),
+    pagerInfo: document.getElementById('clientes-pg-info'),
+    pagerPrev: document.getElementById('clientes-pg-prev'),
+    pagerNext: document.getElementById('clientes-pg-next'),
 
-// paginaÃ§Ã£o no front
-let clientesPaginaAtual = 1;
-const clientesPageSize = 50;
+    // modais
+    viewBackdrop: document.getElementById('cliente-modal-backdrop'),
+    editBackdrop: document.getElementById('cliente-edit-backdrop'),
+    newBackdrop: document.getElementById('cliente-new-backdrop')
+  };
 
-// inicial
-carregarClientes();
+  // -------------------------------------------------------------
+  // INICIALIZAÇÃO
+  // -------------------------------------------------------------
+  init();
 
-/* ========== CARREGAR TODOS ========== */
-async function carregarClientes() {
-  
-  const resp = await fetch('/api/clientes?pageSize=2500');
-  const tbody = document.querySelector('#tb-clientes tbody');
-
-  if (!resp.ok) {
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erro ao carregar clientes.</td></tr>`;
-    }
-    return;
+  async function init() {
+    await loadData();
+    wireEvents();
   }
 
-  const data = await resp.json();
-  // a API retorna { items, total, ... } ou uma lista
-  const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
-  // guarda tudo
-  todosClientes = items;
-  // aplica filtro atual
-  aplicarFiltro();
-  // botÃ£o novo pode
-  document.getElementById('btn-new').disabled = false;
-}
+  // -------------------------------------------------------------
+  // CARREGAR DADOS DO BACK
+  // -------------------------------------------------------------
+  async function loadData() {
+    // pede uma página bem grande e filtra no front
+    const resp = await fetch('/api/clientes?pageSize=2500');
+    if (!resp.ok) {
+      renderEmpty('Erro ao carregar clientes.');
+      return;
+    }
 
-/* ========== FILTRO POR COLUNA ========== */
-function aplicarFiltro() {
-  const col = document.getElementById('filter-column')?.value || 'nome';
-  const txt = (document.getElementById('filter-text')?.value || '').trim().toLowerCase();
+    const data = await resp.json();
+    const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+    state.all = items;
+    applyFilter();
 
-  if (!txt) {
-    clientesFiltrados = [...todosClientes];
-  } else {
-    clientesFiltrados = todosClientes.filter(c => {
-      const valor = pegarValorColuna(c, col);
-      return valor.toLowerCase().includes(txt);
+    // liberar botão de novo
+    if (els.btnNew) els.btnNew.disabled = false;
+  }
+
+  // -------------------------------------------------------------
+  // LIGAR EVENTOS
+  // -------------------------------------------------------------
+  function wireEvents() {
+    // filtro
+    els.filterText?.addEventListener('input', applyFilter);
+    els.filterColumn?.addEventListener('change', applyFilter);
+
+    // paginação
+    els.pagerPrev?.addEventListener('click', () => changePage(-1));
+    els.pagerNext?.addEventListener('click', () => changePage(1));
+
+    // ações
+    els.btnView?.addEventListener('click', onView);
+    els.btnEdit?.addEventListener('click', onEdit);
+    els.btnDelete?.addEventListener('click', onDelete);
+    els.btnNew?.addEventListener('click', onNew);
+
+    // máscaras (clientes tem isso)
+    document.addEventListener('input', handleMasks);
+  }
+
+  // -------------------------------------------------------------
+  // FILTRO
+  // -------------------------------------------------------------
+  function applyFilter() {
+    const col = els.filterColumn?.value || 'nome';
+    const txt = (els.filterText?.value || '').trim().toLowerCase();
+
+    if (!txt) {
+      state.filtered = [...state.all];
+    } else {
+      state.filtered = state.all.filter(c => {
+        const val = getColumnValue(c, col);
+        return val.toLowerCase().includes(txt);
+      });
+    }
+
+    state.page = 1;
+    renderTable();
+    updatePager();
+  }
+
+  function getColumnValue(c, col) {
+    switch (col) {
+      case 'endereco': return c.endereco || '';
+      case 'codigoFichario': return (c.codigoFichario ?? '').toString();
+      case 'celular': return c.celular || '';
+      case 'nome':
+      default: return c.nome || '';
+    }
+  }
+
+  // -------------------------------------------------------------
+  // RENDER TABELA
+  // -------------------------------------------------------------
+  function renderTable() {
+    if (!els.tableBody) return;
+    els.tableBody.innerHTML = '';
+
+    if (!state.filtered.length) {
+      renderEmpty('Nenhum cliente encontrado.');
+      setSelection(null);
+      toggleActions(true);
+      return;
+    }
+
+    const start = (state.page - 1) * state.pageSize;
+    const end = start + state.pageSize;
+    const pageItems = state.filtered.slice(start, end);
+
+    pageItems.forEach(item => {
+      const c = normalizeCliente(item);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${c.nome}</td>
+        <td>${c.endereco}</td>
+        <td>${c.celular}</td>
+        <td>${c.codigoFichario}</td>
+      `;
+      tr.addEventListener('click', () => onRowClick(tr, c));
+      els.tableBody.appendChild(tr);
+    });
+
+    // se o usuário não clicou em nada, mantém ações desabilitadas
+    setSelection(null);
+    toggleActions(true);
+  }
+
+  function renderEmpty(msg) {
+    if (!els.tableBody) return;
+    els.tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">${msg}</td></tr>`;
+  }
+
+  // -------------------------------------------------------------
+  // PAGINAÇÃO
+  // -------------------------------------------------------------
+  function changePage(delta) {
+    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+    const newPage = state.page + delta;
+    if (newPage < 1 || newPage > totalPages) return;
+    state.page = newPage;
+    renderTable();
+    updatePager();
+  }
+
+  function updatePager() {
+    const total = state.filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+    const start = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
+    const end = total === 0 ? 0 : Math.min(state.page * state.pageSize, total);
+
+    if (els.pagerInfo) {
+      els.pagerInfo.textContent = total === 0
+        ? 'Nenhum registro'
+        : `Mostrando ${start}-${end} de ${total} (pág. ${state.page} de ${totalPages})`;
+    }
+
+    if (els.pagerPrev) {
+      const disabled = state.page <= 1;
+      els.pagerPrev.disabled = disabled;
+      els.pagerPrev.classList.toggle('is-disabled', disabled);
+    }
+    if (els.pagerNext) {
+      const disabled = state.page >= totalPages;
+      els.pagerNext.disabled = disabled;
+      els.pagerNext.classList.toggle('is-disabled', disabled);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // SELEÇÃO
+  // -------------------------------------------------------------
+  function onRowClick(tr, clienteData) {
+    // limpa seleção anterior
+    document.querySelectorAll('#tb-clientes tbody tr').forEach(row => row.classList.remove('selected'));
+    tr.classList.add('selected');
+    setSelection(clienteData);
+    toggleActions(false);
+  }
+
+  function setSelection(cliente) {
+    state.selected = cliente;
+  }
+
+  function toggleActions(disabled) {
+    [els.btnView, els.btnEdit, els.btnDelete].forEach(btn => {
+      if (btn) btn.disabled = disabled;
     });
   }
 
-  clientesPaginaAtual = 1;
-  renderTabela();
-  atualizarPaginacaoClientes();
-}
-
-function pegarValorColuna(c, col) {
-  switch (col) {
-    case 'endereco': return c.endereco || '';
-    case 'codigoFichario': return (c.codigoFichario ?? '').toString();
-    case 'celular': return c.celular || '';
-    case 'nome':
-    default: return c.nome || '';
-  }
-}
-
-/* ========== RENDER TABELA (COM PAGINAÃ‡ÃƒO LOCAL) ========== */
-function renderTabela() {
-  const tbody = document.querySelector('#tb-clientes tbody');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-
-  if (!clientesFiltrados || clientesFiltrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Nenhum cliente encontrado.</td></tr>`;
-    clienteSelecionado = null;
-    toggleBotoes(true);
-    return;
-  }
-
-  const inicio = (clientesPaginaAtual - 1) * clientesPageSize;
-  const fim = inicio + clientesPageSize;
-  const pagina = clientesFiltrados.slice(inicio, fim);
-
-  pagina.forEach(c => {
-    const tr = document.createElement('tr');
-
-    // montar dados
-    const clienteData = {
+  function normalizeCliente(c) {
+    const endereco = c.endereco || '';
+    return {
       id: c.clientesId ?? c.clientesID ?? c.id ?? '',
       nome: c.nome ?? '',
-      endereco: c.endereco ?? '',
+      endereco: endereco,
       rg: c.rg ?? '',
       cpf: c.cpf ?? '',
       telefone: c.telefone ?? '',
@@ -102,365 +232,256 @@ function renderTabela() {
       ultimoRegistroIso: c.dataUltimoRegistro || c.DataUltimoRegistro || '',
       deletadoBool: !!c.deletado
     };
+  }
 
-    tr.innerHTML = `
-      <td>${clienteData.nome}</td>
-      <td>${clienteData.endereco}</td>
-      <td>${clienteData.celular}</td>
-      <td>${clienteData.codigoFichario}</td>
-    `;
+  // -------------------------------------------------------------
+  // AÇÕES (VISUALIZAR / EDITAR / NOVO / DELETE)
+  // -------------------------------------------------------------
+  function onView() {
+    if (!state.selected) return;
+    const c = state.selected;
+    const b = els.viewBackdrop;
+    if (!b) return;
 
-    tr.addEventListener('click', () => {
-      document.querySelectorAll('#tb-clientes tbody tr').forEach(row => {
-        row.classList.remove('selected');
-      });
-      tr.classList.add('selected');
-      clienteSelecionado = clienteData;
-      toggleBotoes(false);
+    setText('m-nome', c.nome);
+    setText('m-endereco', c.endereco);
+    setText('m-rg', c.rg);
+    setText('m-cpf', c.cpf);
+    setText('m-telefone', c.telefone);
+    setText('m-celular', c.celular);
+    setText('m-cod-fichario', c.codigoFichario);
+    setText('m-data-cadastro', c.dataCadastroIso ? new Date(c.dataCadastroIso).toLocaleString() : '');
+    setText('m-ultimo-registro', c.ultimoRegistroIso ? new Date(c.ultimoRegistroIso).toLocaleString() : '');
+    setText('m-data-nasc', c.dataNascimentoIso ? new Date(c.dataNascimentoIso).toLocaleDateString() : '');
+
+    b.classList.add('show');
+    document.getElementById('modal-close-btn').onclick = () => b.classList.remove('show');
+    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
+  }
+
+  function onEdit() {
+    if (!state.selected) return;
+    const c = state.selected;
+    const b = els.editBackdrop;
+    if (!b) return;
+
+    // quebra endereço "LOG, NUM, BAI"
+    const partes = (c.endereco || '').split(',').map(p => p.trim());
+    const logradouro = partes[0] || '';
+    const numero = partes[1] || '';
+    const bairro = partes[2] || '';
+
+    setVal('e-id', c.id);
+    setVal('e-nome', c.nome);
+    setVal('e-logradouro', logradouro);
+    setVal('e-numero', numero);
+    setVal('e-bairro', bairro);
+    setVal('e-rg', c.rg);
+    setVal('e-cpf', c.cpf);
+    setVal('e-telefone', c.telefone);
+    setVal('e-celular', c.celular);
+    setVal('e-cod-fichario', c.codigoFichario);
+    setVal('e-data-nasc', c.dataNascimentoIso ? c.dataNascimentoIso.substring(0, 10) : '');
+
+    b.classList.add('show');
+
+    document.getElementById('edit-close-btn').onclick = () => b.classList.remove('show');
+    document.getElementById('edit-cancel-btn').onclick = () => b.classList.remove('show');
+    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
+
+    // submit
+    document.getElementById('edit-form').onsubmit = async (ev) => {
+      ev.preventDefault();
+      await submitEdit();
+    };
+  }
+
+  async function submitEdit() {
+    const id = getVal('e-id');
+    const nome = getVal('e-nome').trim();
+    if (!nome) {
+      alert('Nome é obrigatório.');
+      document.getElementById('e-nome').focus();
+      return;
+    }
+
+    const endereco = montarEndereco(
+      getVal('e-logradouro'),
+      getVal('e-numero'),
+      getVal('e-bairro')
+    );
+
+    // se vazio, usa hoje
+    let dataNasc = getVal('e-data-nasc');
+    if (!dataNasc) {
+      dataNasc = new Date().toISOString().substring(0, 10);
+    }
+
+    const payload = {
+      clientesId: parseInt(id, 10),
+      nome: nome,
+      endereco: endereco,
+      rg: getVal('e-rg'),
+      cpf: getVal('e-cpf'),
+      telefone: getVal('e-telefone'),
+      celular: getVal('e-celular'),
+      dataNascimento: dataNasc,
+      codigoFichario: getVal('e-cod-fichario') ? parseInt(getVal('e-cod-fichario'), 10) : 0,
+      deletado: false
+    };
+
+    const resp = await fetch(`/api/clientes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
-    tbody.appendChild(tr);
-  });
-
-  // se nÃ£o clicar, fica desabilitado
-  clienteSelecionado = null;
-  toggleBotoes(true);
-}
-
-/* ========== BOTÃ•ES VISUALIZAR/EDITAR/EXCLUIR ========== */
-function toggleBotoes(disabled) {
-  ['btn-view', 'btn-edit', 'btn-delete'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = disabled;
-  });
-}
-
-/* ========== PAGINAÃ‡ÃƒO (VOLTA / AVANÃ‡A) ========== */
-function atualizarPaginacaoClientes() {
-  const info = document.getElementById('clientes-pg-info');
-  const btnPrev = document.getElementById('clientes-pg-prev');
-  const btnNext = document.getElementById('clientes-pg-next');
-
-  const total = clientesFiltrados.length;
-  const totalPaginas = Math.max(1, Math.ceil(total / clientesPageSize));
-
-  const inicio = total === 0 ? 0 : (clientesPaginaAtual - 1) * clientesPageSize + 1;
-  const fim = total === 0 ? 0 : Math.min(clientesPaginaAtual * clientesPageSize, total);
-
-  if (info) {
-    if (total === 0) {
-      info.textContent = 'Nenhum registro';
+    if (resp.ok) {
+      els.editBackdrop.classList.remove('show');
+      await loadData();
     } else {
-      info.textContent = `Mostrando ${inicio}-${fim} de ${total} (pÃ¡g. ${clientesPaginaAtual} de ${totalPaginas})`;
+      const txt = await resp.text();
+      alert('Erro ao atualizar cliente:\n' + txt);
     }
   }
 
-  if (btnPrev) {
-    const disabled = clientesPaginaAtual <= 1;
-    btnPrev.disabled = disabled;
-    btnPrev.classList.toggle('is-disabled', disabled);
+  function onNew() {
+    const b = els.newBackdrop;
+    if (!b) return;
+
+    // limpa
+    ['n-nome','n-logradouro','n-numero','n-bairro','n-rg','n-cpf','n-telefone','n-celular','n-data-nasc','n-cod-fichario']
+      .forEach(id => setVal(id, ''));
+
+    b.classList.add('show');
+    document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
+    document.getElementById('new-cancel-btn').onclick = () => b.classList.remove('show');
+    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
+
+    document.getElementById('new-form').onsubmit = async (ev) => {
+      ev.preventDefault();
+      await submitNew();
+    };
   }
 
-  if (btnNext) {
-    const disabled = clientesPaginaAtual >= totalPaginas;
-    btnNext.disabled = disabled;
-    btnNext.classList.toggle('is-disabled', disabled);
-  }
-}
+  async function submitNew() {
+    const nome = getVal('n-nome').trim();
+    if (!nome) {
+      alert('Nome é obrigatório.');
+      document.getElementById('n-nome').focus();
+      return;
+    }
 
-document.getElementById('clientes-pg-prev')?.addEventListener('click', () => {
-  const totalPaginas = Math.max(1, Math.ceil(clientesFiltrados.length / clientesPageSize));
-  if (clientesPaginaAtual > 1) {
-    clientesPaginaAtual--;
-    renderTabela();
-    atualizarPaginacaoClientes();
-  }
-});
+    const endereco = montarEndereco(
+      getVal('n-logradouro'),
+      getVal('n-numero'),
+      getVal('n-bairro')
+    );
 
-document.getElementById('clientes-pg-next')?.addEventListener('click', () => {
-  const totalPaginas = Math.max(1, Math.ceil(clientesFiltrados.length / clientesPageSize));
-  if (clientesPaginaAtual < totalPaginas) {
-    clientesPaginaAtual++;
-    renderTabela();
-    atualizarPaginacaoClientes();
-  }
-});
+    let dataNasc = getVal('n-data-nasc');
+    if (!dataNasc) {
+      dataNasc = new Date().toISOString().substring(0, 10);
+    }
 
-/* ========== FILTRO INPUT/LISTA ========== */
-document.getElementById('filter-text')?.addEventListener('input', () => {
-  aplicarFiltro();
-});
-document.getElementById('filter-column')?.addEventListener('change', () => {
-  aplicarFiltro();
-});
+    const payload = {
+      nome: nome,
+      endereco: endereco,
+      rg: getVal('n-rg'),
+      cpf: getVal('n-cpf'),
+      telefone: getVal('n-telefone'),
+      celular: getVal('n-celular'),
+      dataNascimento: dataNasc,
+      codigoFichario: getVal('n-cod-fichario') ? parseInt(getVal('n-cod-fichario'), 10) : 0,
+      deletado: false
+    };
 
-/* ========== VISUALIZAR ========== */
-document.getElementById('btn-view')?.addEventListener('click', () => {
-  if (!clienteSelecionado) return;
-  abrirModalCliente(clienteSelecionado);
-});
+    const resp = await fetch('/api/clientes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-function abrirModalCliente(c) {
-  const backdrop = document.getElementById('cliente-modal-backdrop');
-
-  document.getElementById('m-nome').textContent = c.nome || '';
-  document.getElementById('m-endereco').textContent = c.endereco || '';
-  document.getElementById('m-rg').textContent = c.rg || '';
-  document.getElementById('m-cpf').textContent = c.cpf || '';
-  document.getElementById('m-telefone').textContent = c.telefone || '';
-  document.getElementById('m-celular').textContent = c.celular || '';
-  document.getElementById('m-data-nasc').textContent = c.dataNascimentoIso
-    ? new Date(c.dataNascimentoIso).toLocaleDateString()
-    : '';
-  document.getElementById('m-cod-fichario').textContent = (c.codigoFichario ?? '');
-  document.getElementById('m-data-cadastro').textContent = c.dataCadastroIso
-    ? new Date(c.dataCadastroIso).toLocaleString()
-    : '';
-  document.getElementById('m-ultimo-registro').textContent = c.ultimoRegistroIso
-    ? new Date(c.ultimoRegistroIso).toLocaleString()
-    : '';
-
-  backdrop.classList.add('show');
-
-  document.getElementById('modal-close-btn').onclick = () => backdrop.classList.remove('show');
-  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); };
-}
-
-/* ========== EDITAR ========== */
-document.getElementById('btn-edit')?.addEventListener('click', () => {
-  if (!clienteSelecionado) return;
-
-  const editBackdrop = document.getElementById('cliente-edit-backdrop');
-
-  // quebra endereÃ§o em 3
-  const partes = (clienteSelecionado.endereco || '').split(',').map(p => p.trim());
-  const logradouro = partes[0] || '';
-  const numero = partes[1] || '';
-  const bairro = partes[2] || '';
-
-  document.getElementById('e-id').value = clienteSelecionado.id;
-  document.getElementById('e-nome').value = clienteSelecionado.nome;
-  document.getElementById('e-logradouro').value = logradouro;
-  document.getElementById('e-numero').value = numero;
-  document.getElementById('e-bairro').value = bairro;
-  document.getElementById('e-rg').value = clienteSelecionado.rg;
-  document.getElementById('e-cpf').value = clienteSelecionado.cpf;
-  document.getElementById('e-telefone').value = clienteSelecionado.telefone;
-  document.getElementById('e-celular').value = clienteSelecionado.celular;
-  document.getElementById('e-cod-fichario').value = clienteSelecionado.codigoFichario;
-
-  if (clienteSelecionado.dataNascimentoIso) {
-    document.getElementById('e-data-nasc').value = clienteSelecionado.dataNascimentoIso.substring(0, 10);
-  } else {
-    document.getElementById('e-data-nasc').value = '';
+    if (resp.ok) {
+      els.newBackdrop.classList.remove('show');
+      await loadData();
+    } else {
+      const txt = await resp.text();
+      alert('Erro ao criar cliente:\n' + txt);
+    }
   }
 
-  editBackdrop.classList.add('show');
+  async function onDelete() {
+    if (!state.selected) return;
+    const ok = confirm(`Confirma excluir o cliente "${state.selected.nome}"?`);
+    if (!ok) return;
 
-  document.getElementById('edit-close-btn').onclick = () => editBackdrop.classList.remove('show');
-  document.getElementById('edit-cancel-btn').onclick = () => editBackdrop.classList.remove('show');
-  editBackdrop.onclick = (e) => { if (e.target === editBackdrop) editBackdrop.classList.remove('show'); };
-});
+    const resp = await fetch(`/api/clientes/${state.selected.id}`, {
+      method: 'DELETE'
+    });
 
-document.getElementById('edit-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const id = document.getElementById('e-id').value;
-  const nome = document.getElementById('e-nome').value.trim();
-  if (!nome) {
-    alert('Nome é obrigatório.');
-    document.getElementById('e-nome').focus();
-    return;
+    if (resp.ok) {
+      await loadData();
+      setSelection(null);
+      toggleActions(true);
+    } else {
+      const txt = await resp.text();
+      alert('Erro ao excluir:\n' + txt);
+    }
   }
 
-  const endereco = montarEndereco(
-    document.getElementById('e-logradouro').value,
-    document.getElementById('e-numero').value,
-    document.getElementById('e-bairro').value
-  );
-
-  // data default hoje
-  let dataNasc = document.getElementById('e-data-nasc').value;
-  if (!dataNasc) {
-    dataNasc = new Date().toISOString().substring(0, 10);
+  // -------------------------------------------------------------
+  // HELPERS
+  // -------------------------------------------------------------
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text ?? '';
   }
 
-  const payload = {
-    clientesId: parseInt(id, 10),
-    nome: nome,
-    endereco: endereco,
-    rg: document.getElementById('e-rg').value,
-    cpf: document.getElementById('e-cpf').value,
-    telefone: document.getElementById('e-telefone').value,
-    celular: document.getElementById('e-celular').value,
-    dataNascimento: dataNasc,
-    codigoFichario: document.getElementById('e-cod-fichario').value
-      ? parseInt(document.getElementById('e-cod-fichario').value, 10)
-      : 0,
-    deletado: false
-  };
-
-  const resp = await fetch(`/api/clientes/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (resp.ok) {
-    document.getElementById('cliente-edit-backdrop').classList.remove('show');
-    await carregarClientes();
-  } else {
-    const txt = await resp.text();
-    alert('Erro ao atualizar cliente:\n' + txt);
-  }
-});
-
-/* ========== DELETE ========== */
-document.getElementById('btn-delete')?.addEventListener('click', async () => {
-  if (!clienteSelecionado) return;
-
-  const ok = confirm(`Confirma excluir o cliente "${clienteSelecionado.nome}"?`);
-  if (!ok) return;
-
-  const resp = await fetch(`/api/clientes/${clienteSelecionado.id}`, {
-    method: 'DELETE'
-  });
-
-  if (resp.ok) {
-    await carregarClientes();
-    clienteSelecionado = null;
-    toggleBotoes(true);
-  } else {
-    const txt = await resp.text();
-    alert('Erro ao excluir:\n' + txt);
-  }
-});
-
-/* ========== NOVO ========== */
-document.getElementById('btn-new')?.addEventListener('click', () => {
-  const b = document.getElementById('cliente-new-backdrop');
-  if (!b) return;
-
-  document.getElementById('n-nome').value = '';
-  document.getElementById('n-logradouro').value = '';
-  document.getElementById('n-numero').value = '';
-  document.getElementById('n-bairro').value = '';
-  document.getElementById('n-rg').value = '';
-  document.getElementById('n-cpf').value = '';
-  document.getElementById('n-telefone').value = '';
-  document.getElementById('n-celular').value = '';
-  document.getElementById('n-data-nasc').value = '';
-  document.getElementById('n-cod-fichario').value = '';
-
-  b.classList.add('show');
-  document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
-  document.getElementById('new-cancel-btn').onclick = () => b.classList.remove('show');
-  b.onclick = (e) => { if (e.target === b) b.classList.remove('show'); };
-});
-
-document.getElementById('new-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const nome = document.getElementById('n-nome').value.trim();
-  if (!nome) {
-    alert('Nome é obrigatório.');
-    document.getElementById('n-nome').focus();
-    return;
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val ?? '';
   }
 
-  const endereco = montarEndereco(
-    document.getElementById('n-logradouro').value,
-    document.getElementById('n-numero').value,
-    document.getElementById('n-bairro').value
-  );
-
-  // data default hoje
-  let dataNasc = document.getElementById('n-data-nasc').value;
-  if (!dataNasc) {
-    dataNasc = new Date().toISOString().substring(0, 10);
+  function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : '';
   }
 
-  const payload = {
-    nome: nome,
-    endereco: endereco,
-    rg: document.getElementById('n-rg').value,
-    cpf: document.getElementById('n-cpf').value,
-    telefone: document.getElementById('n-telefone').value,
-    celular: document.getElementById('n-celular').value,
-    dataNascimento: dataNasc,
-    codigoFichario: document.getElementById('n-cod-fichario').value
-      ? parseInt(document.getElementById('n-cod-fichario').value, 10)
-      : 0,
-    deletado: false
-  };
-
-  const resp = await fetch('/api/clientes', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (resp.ok) {
-    document.getElementById('cliente-new-backdrop').classList.remove('show');
-    await carregarClientes();
-  } else {
-    const txt = await resp.text();
-    alert('Erro ao criar cliente:\n' + txt);
+  function montarEndereco(log, num, bairro) {
+    const l = log && log.trim() ? log.trim().toUpperCase() : 'NAO INFORMADO';
+    const n = num && num.trim() ? num.trim().toUpperCase() : '000';
+    const b = bairro && bairro.trim() ? bairro.trim().toUpperCase() : 'NAO INFORMADO';
+    return `${l}, ${n}, ${b}`;
   }
-});
 
-
-// ========== UTIL ==========
-function montarEndereco(log, num, bairro) {
-  const l = log && log.trim() ? log.trim().toUpperCase() : 'NAO INFORMADO';
-  const n = num && num.trim() ? num.trim().toUpperCase() : '000';
-  const b = bairro && bairro.trim() ? bairro.trim().toUpperCase() : 'NAO INFORMADO';
-  return `${l}, ${n}, ${b}`;
-}
-
-/* ========== MÃSCARAS (limitam tamanho) ========== */
-function apenasNumeros(str) {
-  return str.replace(/\D/g, '');
-}
-
-function aplicarMascaraCpf(el) {
-  let v = apenasNumeros(el.value).slice(0, 11);
-  v = v.replace(/(\d{3})(\d)/, '$1.$2');
-  v = v.replace(/(\d{3})(\d)/, '$1.$2');
-  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-  el.value = v;
-}
-
-function aplicarMascaraRg(el) {
-  let v = apenasNumeros(el.value).slice(0, 9);
-  v = v.replace(/(\d{2})(\d)/, '$1.$2');
-  v = v.replace(/(\d{3})(\d)/, '$1.$2');
-  v = v.replace(/(\d{3})(\d{1})$/, '$1-$2');
-  el.value = v;
-}
-
-function aplicarMascaraTelefone(el) {
-  let v = apenasNumeros(el.value).slice(0, 10);
-  v = v.replace(/(\d{2})(\d)/, '($1)$2');
-  v = v.replace(/(\d{4})(\d)/, '$1-$2');
-  el.value = v;
-}
-
-function aplicarMascaraCelular(el) {
-  let v = apenasNumeros(el.value).slice(0, 11);
-  v = v.replace(/(\d{2})(\d)/, '($1)$2');
-  v = v.replace(/(\d{5})(\d)/, '$1-$2');
-  el.value = v;
-}
-
-document.addEventListener('input', (e) => {
-  const t = e.target;
-  if (t.classList.contains('mask-cpf')) {
-    aplicarMascaraCpf(t);
-  } else if (t.classList.contains('mask-rg')) {
-    aplicarMascaraRg(t);
-  } else if (t.id === 'n-telefone' || t.id === 'e-telefone') {
-    aplicarMascaraTelefone(t);
-  } else if (t.id === 'n-celular' || t.id === 'e-celular') {
-    aplicarMascaraCelular(t);
+  // máscaras de cpf / rg / telefone
+  function handleMasks(e) {
+    const t = e.target;
+    if (!(t instanceof HTMLInputElement)) return;
+    if (t.classList.contains('mask-cpf')) {
+      t.value = maskCpf(t.value);
+    } else if (t.classList.contains('mask-rg')) {
+      t.value = maskRg(t.value);
+    }
   }
-});
+
+  function onlyDigits(str) {
+    return (str || '').replace(/\D/g, '');
+  }
+
+  function maskCpf(v) {
+    v = onlyDigits(v).slice(0, 11);
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    return v;
+  }
+
+  function maskRg(v) {
+    v = onlyDigits(v).slice(0, 9);
+    v = v.replace(/(\d{2})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1})$/, '$1-$2');
+    return v;
+  }
+})();
