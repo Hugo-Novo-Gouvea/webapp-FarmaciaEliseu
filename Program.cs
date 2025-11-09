@@ -27,7 +27,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // ===================================================
-// 2. ENDPOINTS DE CONFIGURAÇÃO (TI usa isso)
+// 2. ENDPOINTS DE CONFIGURAÇÃO
 // ===================================================
 app.MapGet("/api/config/db", () =>
 {
@@ -139,6 +139,7 @@ app.MapPut("/api/clientes/{id:int}", async (int id, AppDbContext db, Cliente dto
     cliente.DataNascimento = dto.DataNascimento ?? DateTime.Today;
     cliente.DataUltimoRegistro = DateTime.Now;
 
+    // reflete o nome nos movimentos
     var movimentosDoCliente = await db.Movimentos
         .Where(m => m.ClientesId == cliente.ClientesId)
         .ToListAsync();
@@ -376,13 +377,15 @@ app.MapPut("/api/produtos/{id:int}", async (int id, AppDbContext db, Produto dto
     produto.CodigoProduto = codigoProduto;
     produto.DataUltimoRegistro = DateTime.Now;
 
+    // se mudou descrição ou preço, reflete nos movimentos
     var descricaoMudou = !string.Equals(descricaoAntiga, descricao, StringComparison.Ordinal);
     var precoMudou = precoVendaAntigo != dto.PrecoVenda;
     if (descricaoMudou || precoMudou)
     {
         var agora = DateTime.Now;
+        // só movimentos não deletados, pra manter histórico dos pagos
         var movimentosDoProduto = await db.Movimentos
-            .Where(m => m.ProdutosId == produto.ProdutosId)
+            .Where(m => m.ProdutosId == produto.ProdutosId && m.Deletado == false)
             .ToListAsync();
 
         if (movimentosDoProduto.Count > 0)
@@ -498,8 +501,24 @@ app.MapPut("/api/funcionarios/{id:int}", async (int id, AppDbContext db, Funcion
     if (string.IsNullOrWhiteSpace(dto.Nome))
         return Results.BadRequest("Nome é obrigatório.");
 
-    funcionario.Nome = dto.Nome.Trim().ToUpper();
+    var nomeNovo = dto.Nome.Trim().ToUpper();
+
+    funcionario.Nome = nomeNovo;
     funcionario.DataUltimoRegistro = DateTime.Now;
+
+    var movimentosDoFuncionario = await db.Movimentos
+        .Where(m => m.FuncionariosId == funcionario.FuncionariosId)
+        .ToListAsync();
+
+    if (movimentosDoFuncionario.Count > 0)
+    {
+        var agora = DateTime.Now;
+        foreach (var m in movimentosDoFuncionario)
+        {
+            m.FuncionariosNome = nomeNovo;
+            m.DataUltimoRegistro = agora;
+        }
+    }
 
     await db.SaveChangesAsync();
     return Results.NoContent();
@@ -536,7 +555,7 @@ app.MapGet("/api/contas/movimentos", async (AppDbContext db, int clienteId) =>
     if (clienteId <= 0) return Results.BadRequest("clienteId inválido.");
 
     var movimentos = await db.Movimentos
-        .Where(m => (m.Deletado == null || m.Deletado == false) && m.ClientesId == clienteId)
+        .Where(m => (m.Deletado == false) && m.ClientesId == clienteId)
         .OrderBy(m => m.DataVenda)
         .ToListAsync();
 
@@ -566,8 +585,70 @@ app.MapPut("/api/contas/movimentos/pagar", async (AppDbContext db, IdsPayload pa
     return Results.NoContent();
 });
 
+// NOVO: imprimir cupom das contas pagas (modelo com valor)
+app.MapPost("/api/contas/movimentos/imprimir", async (AppDbContext db, IdsPayload payload) =>
+{
+    if (payload?.ids == null || payload.ids.Count == 0)
+        return Results.BadRequest("Lista de IDs vazia.");
+
+    var movimentos = await db.Movimentos
+        .Where(m => payload.ids.Contains(m.MovimentosId))
+        .OrderBy(m => m.DataVenda)
+        .ToListAsync();
+
+    if (movimentos.Count == 0)
+        return Results.NotFound("Nenhum movimento encontrado para imprimir.");
+
+    var clienteNome = movimentos.First().ClientesNome;
+    var vendedorNome = movimentos.First().FuncionariosNome;
+    var dataHora = DateTime.Now;
+
+    // tentar pegar código do fichário
+    string? codigoFichario = null;
+    var clienteId = movimentos.First().ClientesId;
+    var cliente = await db.Clientes.FindAsync(clienteId);
+    if (cliente is not null && cliente.CodigoFichario.HasValue)
+        codigoFichario = cliente.CodigoFichario.Value.ToString();
+
+    var itens = movimentos.Select(m => new ReceiptPrinter.Item(
+        m.Quantidade,
+        m.ProdutosDescricao,
+        m.PrecoUnitarioDiaVenda,
+        m.Desconto
+    )).ToList();
+
+    var totalDesconto = movimentos.Sum(m => m.Desconto);
+    var totalFinal = movimentos.Sum(m => m.PrecoTotalDiaVenda - m.Desconto);
+
+    try
+    {
+        var cupomBytes = ReceiptPrinter.BuildReceipt(
+            lojaNome: "FARMACIA DO ELISEU",
+            lojaEndereco: "Rua xxxx, 000, Centro",
+            lojaFone: "Fone (00) 00000-0000",
+            dataHora: dataHora,
+            clienteNome: clienteNome,
+            vendedorNome: vendedorNome,
+            itens: itens,
+            isDinheiro: true,              // <-- modelo COM valor
+            totalDesconto: totalDesconto,
+            totalFinal: totalFinal,
+            codigoFichario: codigoFichario
+        );
+
+        ReceiptPrinter.Print(cupomBytes, null);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Falha ao imprimir contas pagas: " + ex.Message);
+        return Results.Problem("Falha ao imprimir.");
+    }
+
+    return Results.Ok(new { message = "Cupom de contas pagas enviado para a impressora." });
+});
+
 // ===================================================
-// 7. VENDAS (com payload do DTOs.cs e sem imprimir direto)
+// 7. VENDAS
 // ===================================================
 app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 {
@@ -627,13 +708,11 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
         if (produto is null)
             return Results.BadRequest($"Produto {it.produtoId} não encontrado.");
 
-        // valores baseados no produto do banco
         var prodId = produto.ProdutosId;
         var prodDescricao = produto.Descricao;
         var prodCodigo = string.IsNullOrWhiteSpace(produto.CodigoProduto) ? "000000000" : produto.CodigoProduto;
         var precoUnit = produto.PrecoVenda;
 
-        // se for o produto "AVULSO" (id 1) ou se o front mandou descrição/preço, usa o do front
         if (prodId == 1 || !string.IsNullOrWhiteSpace(it.descricao) || it.precoUnit is not null)
         {
             if (!string.IsNullOrWhiteSpace(it.descricao))
@@ -645,6 +724,7 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 
         var qtd = it.quantidade;
         var desconto = it.desconto < 0 ? 0 : it.desconto;
+
         var totalDia = precoUnit * qtd;
         var totalFinal = totalDia - desconto;
         if (totalFinal < 0) totalFinal = 0;
@@ -663,17 +743,20 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
             FuncionariosId = vendedor.FuncionariosId,
             FuncionariosNome = vendedor.Nome,
             Quantidade = qtd,
+
             PrecoUnitarioDiaVenda = precoUnit,
             PrecoTotalDiaVenda = totalDia,
+
             PrecoUnitarioAtual = precoUnit,
             PrecoTotalAtual = totalDia,
+
             ValorPago = valorPago,
-            ValorVenda = totalFinal,
             Desconto = desconto,
             DataVenda = agora,
             DataPagamento = dataPagamento,
             DataCadastro = agora,
             DataUltimoRegistro = agora,
+
             Deletado = isDinheiro
         };
 
@@ -683,12 +766,11 @@ app.MapPost("/api/vendas", async (AppDbContext db, VendaPayload payload) =>
 
     await db.SaveChangesAsync();
 
-    // não imprime aqui – o front chama /api/vendas/imprimir depois
     return Results.Created("/api/vendas", new { itens = gravados.Count, codigoMovimento });
 });
 
 // ===================================================
-// 7.1. /api/vendas/imprimir – só imprime o que o front mandar
+// 7.1. /api/vendas/imprimir
 // ===================================================
 app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload) =>
 {
@@ -801,7 +883,7 @@ app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload
 });
 
 // ===================================================
-// 8. MOVIMENTOS (lista + detalhes) usando int
+// 8. MOVIMENTOS (lista + detalhes)
 // ===================================================
 app.MapGet("/api/movimentos", async (
     AppDbContext db,
@@ -814,7 +896,9 @@ app.MapGet("/api/movimentos", async (
     if (page < 1) page = 1;
     if (pageSize < 1) pageSize = 50;
 
-    var baseQuery = db.Movimentos.AsQueryable();
+    var baseQuery = db.Movimentos
+        .AsNoTracking()
+        .AsQueryable();
 
     if (!string.IsNullOrWhiteSpace(search))
     {
@@ -837,23 +921,34 @@ app.MapGet("/api/movimentos", async (
         }
     }
 
-    var groupedQuery = baseQuery
-        .GroupBy(m => m.CodigoMovimento)
+    var linhas = await baseQuery
+        .Select(m => new
+        {
+            m.CodigoMovimento,
+            m.ClientesNome,
+            m.DataVenda,
+            valorCalculado = m.PrecoTotalAtual - m.Desconto
+        })
+        .ToListAsync();
+
+    var agrupados = linhas
+        .GroupBy(x => x.CodigoMovimento)
         .Select(g => new
         {
-            CodigoMovimento = g.Key,
-            ClienteNome = g.Max(x => x.ClientesNome),
-            DataVenda = g.Max(x => x.DataVenda),
-            Total = g.Sum(x => (x.PrecoTotalDiaVenda - x.Desconto))
-        });
+            codigoMovimento = g.Key,
+            clienteNome = g.Max(x => x.ClientesNome),
+            dataVenda = g.Max(x => x.DataVenda),
+            valorTotal = g.Sum(x => x.valorCalculado)
+        })
+        .OrderByDescending(x => x.dataVenda)
+        .ToList();
 
-    var total = await groupedQuery.CountAsync();
+    var total = agrupados.Count;
 
-    var itens = await groupedQuery
-        .OrderByDescending(m => m.DataVenda)
+    var itens = agrupados
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
-        .ToListAsync();
+        .ToList();
 
     return Results.Ok(new
     {
@@ -867,6 +962,7 @@ app.MapGet("/api/movimentos", async (
 app.MapGet("/api/movimentos/{codigoMovimento:int}", async (int codigoMovimento, AppDbContext db) =>
 {
     var itens = await db.Movimentos
+        .AsNoTracking()
         .Where(m => m.CodigoMovimento == codigoMovimento)
         .OrderBy(m => m.MovimentosId)
         .ToListAsync();
@@ -875,17 +971,141 @@ app.MapGet("/api/movimentos/{codigoMovimento:int}", async (int codigoMovimento, 
 
     var header = new
     {
-        CodigoMovimento = codigoMovimento,
-        ClienteNome = itens.First().ClientesNome,
-        DataVenda = itens.Max(x => x.DataVenda),
-        Total = itens.Sum(x => (x.PrecoTotalDiaVenda - x.Desconto))
+        codigoMovimento = codigoMovimento,
+        clienteNome = itens.First().ClientesNome,
+        dataVenda = itens.Max(x => x.DataVenda),
+        valorTotal = itens.Sum(x => (x.PrecoTotalAtual - x.Desconto))
     };
+
+    var itensDto = itens.Select(m => new
+    {
+        produtosDescricao = m.ProdutosDescricao,
+        quantidade = m.Quantidade,
+        precoUnitario = m.PrecoUnitarioAtual,
+        desconto = m.Desconto,
+        valorItem = m.PrecoTotalAtual - m.Desconto,
+        pago = m.ValorPago,
+        deletado = m.Deletado
+    });
 
     return Results.Ok(new
     {
         header,
-        itens
+        itens = itensDto
     });
+});
+
+// ===================================================
+// 8.1. IMPRIMIR MOVIMENTO (AJUSTADO)
+// ===================================================
+app.MapPost("/api/movimentos/{codigoMovimento:int}/imprimir", async (int codigoMovimento, AppDbContext db, MovimentoPrintRequest req) =>
+{
+    var filtro = (req?.filtro ?? "todos").Trim().ToLower();
+
+    var movimentos = await db.Movimentos
+        .Where(m => m.CodigoMovimento == codigoMovimento)
+        .OrderBy(m => m.MovimentosId)
+        .ToListAsync();
+
+    if (movimentos.Count == 0)
+        return Results.NotFound("Movimento não encontrado.");
+
+    var clienteNome = movimentos.First().ClientesNome;
+    var vendedorNome = movimentos.First().FuncionariosNome;
+    var data = movimentos.Max(m => m.DataVenda);
+
+    string? codigoFichario = null;
+    var clienteId = movimentos.First().ClientesId;
+    var cliente = await db.Clientes.FindAsync(clienteId);
+    if (cliente is not null && cliente.CodigoFichario.HasValue)
+        codigoFichario = cliente.CodigoFichario.Value.ToString();
+
+    var pagos = movimentos.Where(m => m.Deletado == true).ToList();
+    var naoPagos = movimentos.Where(m => m.Deletado == false).ToList();
+
+    List<ReceiptPrinter.Item> ToItems(List<Movimento> list) =>
+        list.Select(m => new ReceiptPrinter.Item(
+            m.Quantidade,
+            m.ProdutosDescricao,
+            m.PrecoUnitarioDiaVenda,
+            m.Desconto
+        )).ToList();
+
+    try
+    {
+        if (filtro == "pagos")
+        {
+            if (pagos.Count == 0)
+                return Results.BadRequest("Nenhum item pago nesse movimento.");
+
+            var itens = ToItems(pagos);
+            var totalDesconto = pagos.Sum(m => m.Desconto);
+            var totalFinal = pagos.Sum(m => m.PrecoTotalDiaVenda - m.Desconto);
+
+            var bytes = ReceiptPrinter.BuildReceipt(
+                lojaNome: "FARMACIA DO ELISEU",
+                lojaEndereco: "Rua xxxx, 000, Centro",
+                lojaFone: "Fone (00) 00000-0000",
+                dataHora: data,
+                clienteNome: clienteNome,
+                vendedorNome: vendedorNome,
+                itens: itens,
+                isDinheiro: true,
+                totalDesconto: totalDesconto,
+                totalFinal: totalFinal,
+                codigoFichario: codigoFichario
+            );
+            ReceiptPrinter.Print(bytes, null);
+        }
+        else if (filtro == "naopagos" || filtro == "não pagos" || filtro == "nao pagos")
+        {
+            if (naoPagos.Count == 0)
+                return Results.BadRequest("Nenhum item em aberto nesse movimento.");
+
+            var itens = ToItems(naoPagos);
+
+            var bytes = ReceiptPrinter.BuildReceipt(
+                lojaNome: "FARMACIA DO ELISEU",
+                lojaEndereco: "Rua xxxx, 000, Centro",
+                lojaFone: "Fone (00) 00000-0000",
+                dataHora: data,
+                clienteNome: clienteNome,
+                vendedorNome: vendedorNome,
+                itens: itens,
+                isDinheiro: false,
+                totalDesconto: 0,
+                totalFinal: 0,
+                codigoFichario: codigoFichario
+            );
+            ReceiptPrinter.Print(bytes, null);
+        }
+        else // TODOS -> usar modelo sem valor, com todos os itens
+        {
+            var itens = ToItems(movimentos);
+
+            var bytes = ReceiptPrinter.BuildReceipt(
+                lojaNome: "FARMACIA DO ELISEU",
+                lojaEndereco: "Rua xxxx, 000, Centro",
+                lojaFone: "Fone (00) 00000-0000",
+                dataHora: data,
+                clienteNome: clienteNome,
+                vendedorNome: vendedorNome,
+                itens: itens,
+                isDinheiro: false,       // <--- modelo sem valores
+                totalDesconto: 0,
+                totalFinal: 0,
+                codigoFichario: codigoFichario
+            );
+            ReceiptPrinter.Print(bytes, null);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Falha ao imprimir movimento: " + ex.Message);
+        return Results.Problem("Falha ao imprimir.");
+    }
+
+    return Results.Ok(new { message = "Impressão enviada." });
 });
 
 app.Run();
@@ -951,5 +1171,10 @@ namespace WebAppEstudo.Data
             var json = JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
         }
+    }
+
+    public class MovimentoPrintRequest
+    {
+        public string? filtro { get; set; }
     }
 }

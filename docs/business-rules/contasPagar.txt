@@ -1,0 +1,16 @@
+Contas a Pagar
+
+Regras da Tela
+
+- Tela que apresenta os cliente com dividas
+- Tabela começa sem nenhum item
+- Acima da tabela botão de Voltar com emoji, Select Box cliente que mostra todos os clientes como deletado = false, input para auxiliar na pesquisa de um cliente, label de total em reais
+- ao escolher um cliente na select box a tabela acessa o banco dbo.movimentos e carrega todos os movimentos onde deletado = false
+- header da tabela caixa para selecionar, "Produto/Descrição", "Quantidade", "Data Venda", "Valor" usando os campos "produtosDescricao", "quantidade", "dataVenda", "precoAtualTotal"
+- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
+- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
+- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
+- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
+- o Botão menu com seu emoji retorna para index.html
+- Acima do botão menu, botão "Marcar com Pago" que mostra uma pergunta confirm se deseja realmente marcar os itens selecionados na caixinha como pagos e se confirmado, mudar o deletado de false pra true
+

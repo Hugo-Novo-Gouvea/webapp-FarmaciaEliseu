@@ -17,31 +17,31 @@ namespace WebAppEstudo.Data
         [Column("produtosID")]
         public int ProdutosId { get; set; }
 
-        [Column("produtosDescricao")]
         [Required]
         [MaxLength(200)]
-        public string ProdutosDescricao { get; set; } = "";
+        [Column("produtosDescricao")]
+        public string ProdutosDescricao { get; set; } = string.Empty;
 
-        [Column("produtosCodigoProduto")]
         [Required]
         [MaxLength(9)]
-        public string ProdutosCodigoProduto { get; set; } = "";
+        [Column("produtosCodigoProduto")]
+        public string ProdutosCodigoProduto { get; set; } = string.Empty;
 
         [Column("clientesID")]
         public int ClientesId { get; set; }
 
-        [Column("clientesNome")]
         [Required]
         [MaxLength(200)]
-        public string ClientesNome { get; set; } = "";
+        [Column("clientesNome")]
+        public string ClientesNome { get; set; } = string.Empty;
 
         [Column("funcionariosID")]
         public int FuncionariosId { get; set; }
 
-        [Column("funcionariosNome")]
         [Required]
         [MaxLength(200)]
-        public string FuncionariosNome { get; set; } = "";
+        [Column("funcionariosNome")]
+        public string FuncionariosNome { get; set; } = string.Empty;
 
         [Column("quantidade")]
         public int Quantidade { get; set; }
@@ -58,9 +58,7 @@ namespace WebAppEstudo.Data
         [Column("precoTotalAtual", TypeName = "decimal(19,4)")]
         public decimal PrecoTotalAtual { get; set; }
 
-        // existe na tabela: valorVenda
-        [Column("valorVenda", TypeName = "decimal(19,4)")]
-        public decimal ValorVenda { get; set; }
+        // não existe valorVenda na tabela, então não colocamos
 
         [Column("valorPago", TypeName = "decimal(19,4)")]
         public decimal ValorPago { get; set; }
@@ -68,19 +66,20 @@ namespace WebAppEstudo.Data
         [Column("desconto", TypeName = "decimal(19,4)")]
         public decimal Desconto { get; set; }
 
+        // no script do banco isso é NOT NULL
         [Column("DataVenda")]
-        public DateTime? DataVenda { get; set; }
+        public DateTime DataVenda { get; set; }
 
         [Column("DataPagamento")]
         public DateTime? DataPagamento { get; set; }
 
         [Column("dataCadastro")]
-        public DateTime? DataCadastro { get; set; }
+        public DateTime DataCadastro { get; set; }
 
         [Column("dataUltimoRegistro")]
-        public DateTime? DataUltimoRegistro { get; set; }
+        public DateTime DataUltimoRegistro { get; set; }
 
         [Column("deletado")]
-        public bool? Deletado { get; set; }
+        public bool Deletado { get; set; }
     }
 }

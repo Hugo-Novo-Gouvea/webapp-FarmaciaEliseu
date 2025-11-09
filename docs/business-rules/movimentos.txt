@@ -1,0 +1,41 @@
+Movimentos
+
+Regras da Tela
+
+- Tela que apresenta os agrupamentos de movimentos
+- Tabela acessa o banco dbo.movimentos e cria um item na tabela por codigoMovimento mostrando "Movimento", "Cliente" (já q todos os itens com mesmo codigoMovimento tem o mesmo cliente), "Data (já q todos os itens com mesmo codigoMovimento tem o mesma Data sem ter hora), Total (Somatorio de todos os precoVendas dos itens que tem o codigoMovimento)"
+- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
+- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
+- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
+- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
+- Acima da tabela tem o botão Menu, select box de coluna e input de pesquisa
+- o Botão menu com seu emoji retorna para index.html
+- select box apresenta qual a coluna que será usada de guia para pesquisas, impedindo que retorne valores referentes a outras colunas, as colunas permitidas são "Cliente", "Movimento", mesmo celular estando na tabela ele fica de fora da pesquisa
+- input de pesquisa recebe um valor a ser pesquisado na tabela e retornado na hora, esse valor podendo estar presente em qualquer parte do item referente a coluna (exemplo: caso eu pesquisa Ado, ele pode retornar a posição ado em qualquer parte do nome)
+- Acima da área de pesquisa fica o botões de Detalhes com seu emoji
+- ao selecionar um item habilita o botão Detalhe
+
+Detalhes
+- Cria um modal
+- Apresenta novamento as informações "Movimento", "Cliente", "Data (sem horario)", "Total"
+- Abaixo das informações apresenta outra tabela mostrando cada movimento daquele codigoMovimento, mostrando "produtoDescricao", "quantidade", "precoUnitarioAtual", "desconto", "precoTotalAtual", "deletado"
+- os header da cabeça vão ser "Descricao", "Qtd", Vlr Unit", "Desconto", "Total", "Pago"
+
+exemplo
+
+movimentosID,produtosID,produtosDescricao,produtosCodigoProduto,clientesID,clientesNome,funcionariosID,funcionariosNome,quantidade,precoUnitarioDiaVenda,precoTotalDiaVenda,precoUnitarioAtual,precoTotalAtual,valorPago,desconto,DataVenda,DataPagamento,codigoMovimento,dataCadastro,dataUltimoRegistro,deletado
+3,28605,LACTO PURGA - UN,OUTROSPRO,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,1,4.2000,4.2000,4.2000,4.2000,4.2000,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51,2025-11-06 15:34:51,1
+4,2926,MANTEIGA CACAU ZANPHY - SEM UNIDADE MEDIDA,00001810P,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,2,1.9900,3.9800,1.9900,3.9800,3.9800,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51,2025-11-06 15:34:51,1
+5,5153,DIPIRONA 500MG C/10 - SEM UNIDADE MEDIDA,00003115P,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,1,4.9900,4.9900,4.9900,4.9900,4.9900,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51, 2025-11-06 15:34:51,1
+6,32143,LISTERINE ZERO MENTA SUAVE 500ML - SEM UNIDADE MED,00005898P,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,1,22.9900,22.9900,22.9900,22.9900,22.9900,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51,2025-11-06 15:34:51,1
+
+Isso são 4 itens registrados em movimentos, perceba que eles tem o mesmo codigoMovimento, oq eu quero é q na tela eu vejo um item na tabela assim
+MOVIMENTO CLIENTE                      DATA                TOTAL
+6424      EDISLEI GONCALVES DE AZEVEDO 2021-08-01 00:00:00 30,69
+
+e quando eu clicar no Descrição, vai abrir um modal onde vai mostrar essas informações novamente e vai ter mais uma tabela, dessa vez mostrando todos os movimentos referentes a esse codigoMovimento, no caso 4 e os itens produtoDescricao                                   quantidade precoUnitarioAtual desconto Total ((precoUnitario x quantidade( - desconto) pago (deletado)
+LACTO PURGA - UN                                   1          4.2000             0.0000   4.2000                                          1
+MANTEIGA CACAU ZANPHY - SEM UNIDADE MEDIDA         2          1.9900             0.0000   3.9800                                          1
+DIPIRONA 500MG C/10 - SEM UNIDADE MEDIDA           1          4.9900             0.0000   4.9900                                          1
+LISTERINE ZERO MENTA SUAVE 500ML - SEM UNIDADE MED 1          22.9900            0.0000   22.9900                                         1
+

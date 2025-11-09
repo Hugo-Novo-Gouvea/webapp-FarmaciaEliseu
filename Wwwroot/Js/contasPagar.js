@@ -105,6 +105,8 @@ function wiringEventosContas() {
   document.getElementById('btn-pay')?.addEventListener('click', async () => {
     const ids = coletarSelecionados();
     if (ids.length === 0) return;
+
+    // 1º confirm: marcar como pago
     const ok = confirm(`Marcar ${ids.length} movimento(s) como pago?`);
     if (!ok) return;
 
@@ -115,8 +117,28 @@ function wiringEventosContas() {
     });
 
     if (resp.ok) {
+      // 2º confirm: imprimir cupom (em loop)
+      let querImprimir = confirm('Pagamentos marcados.\nDeseja imprimir o cupom agora?');
+      while (querImprimir) {
+        const respPrint = await fetch('/api/contas/movimentos/imprimir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        if (!respPrint.ok) {
+          const txt = await respPrint.text();
+          alert('Erro ao imprimir cupom.' + (txt ? '\n' + txt : ''));
+          break;
+        }
+        // pergunta de novo
+        querImprimir = confirm('Imprimir novamente?');
+      }
+
+      // recarrega a lista do cliente depois de tudo
       const id = parseInt(document.getElementById('filter-person').value, 10);
-      await carregarMovimentosCliente(id);
+      if (!isNaN(id)) {
+        await carregarMovimentosCliente(id);
+      }
     } else {
       const txt = await resp.text();
       alert('Erro ao marcar como pago' + (txt ? `\n${txt}` : ''));
@@ -192,7 +214,8 @@ function renderTabelaContas() {
     };
 
     const dataVendaFmt = dados.dataVendaIso ? new Date(dados.dataVendaIso).toLocaleDateString() : '';
-    const valorFmt = (typeof dados.valor === 'number' ? dados.valor : parseFloat(dados.valor || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const valorNum = typeof dados.valor === 'number' ? dados.valor : parseFloat(dados.valor || 0);
+    const valorFmt = valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     tr.innerHTML = `
       <td><input type="checkbox" class="row-select" data-id="${dados.id}" /></td>

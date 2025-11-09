@@ -10,18 +10,15 @@
   <main class="app-main">
     <div class="container">
       <div class="list-shell" id="movimentos-shell">
-        <!-- título -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Movimentos</h2>
           <p class="text-muted" style="font-size:.7rem;">todas as vendas agrupadas por movimento</p>
         </div>
 
-        <!-- barra de ações -->
         <div class="action-bar">
           <button id="btn-details" class="action-btn success" disabled>📄 Detalhes</button>
         </div>
 
-        <!-- filtros -->
         <div class="list-filter">
           <div class="list-filter-action">
             <a href="/" class="btn-modern small">◀ Menu</a>
@@ -39,7 +36,6 @@
           </div>
         </div>
 
-        <!-- tabela -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-movimentos">
@@ -81,9 +77,7 @@
           <button type="button" class="app-modal-close" id="mov-modal-close">&times;</button>
         </div>
         <div class="app-modal-body">
-          <!-- bloco de info no mesmo estilo dos clientes -->
           <dl class="app-modal-dl" id="mov-modal-header-info">
-            <!-- preenchido via JS -->
           </dl>
 
           <div class="table-responsive app-table-wrapper mt-3">
@@ -95,15 +89,26 @@
                   <th>Vlr unit.</th>
                   <th>Desconto</th>
                   <th>Total</th>
+                  <th>Pago?</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="5" class="text-center text-muted">Carregando...</td>
+                  <td colspan="6" class="text-center text-muted">Carregando...</td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <div class="mt-3 d-flex gap-2">
+            <select id="mov-print-filter" class="form-select form-select-sm" style="max-width: 180px;">
+              <option value="todos">Todos</option>
+              <option value="pagos">Pagos</option>
+              <option value="naoPagos">Não Pagos</option>
+            </select>
+            <button id="mov-print-btn" class="btn-modern primary small">🖨 Imprimir</button>
+          </div>
+
         </div>
       </div>
     </div>

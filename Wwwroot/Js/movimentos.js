@@ -12,10 +12,14 @@
   const modalHeaderInfo = document.querySelector('#mov-modal-header-info');
   const modalItemsBody = document.querySelector('#tb-movimento-itens tbody');
 
+  const printFilter = document.querySelector('#mov-print-filter');
+  const printBtn = document.querySelector('#mov-print-btn');
+
   let currentPage = 1;
   let pageSize = 50;
   let total = 0;
-  let currentSelection = null; // codigoMovimento selecionado
+  let currentSelection = null;
+  let currentModalMovimento = null;
   let searchTimer = null;
 
   function fmtMoney(v) {
@@ -28,7 +32,8 @@
   function fmtDate(d) {
     if (!d) return '';
     const dt = new Date(d);
-    return dt.toLocaleString('pt-BR');
+    if (isNaN(dt)) return '';
+    return dt.toLocaleDateString('pt-BR');
   }
 
   async function loadPage(page) {
@@ -45,7 +50,14 @@
     btnDetails.disabled = true;
     currentSelection = null;
 
-    const resp = await fetch('/api/movimentos?' + params.toString());
+    let resp;
+    try {
+      resp = await fetch('/api/movimentos?' + params.toString());
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erro ao carregar.</td></tr>`;
+      return;
+    }
+
     if (!resp.ok) {
       tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erro ao carregar.</td></tr>`;
       return;
@@ -74,7 +86,6 @@
         tbody.appendChild(tr);
       });
 
-      // seleção de linha - usa .selected como nas outras telas
       tbody.querySelectorAll('tr').forEach(tr => {
         tr.addEventListener('click', () => {
           tbody.querySelectorAll('tr').forEach(x => x.classList.remove('selected'));
@@ -85,7 +96,6 @@
       });
     }
 
-    // pager
     const start = total === 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
     const end = Math.min(currentPage * pageSize, total);
     pgInfo.textContent = `Mostrando ${start}-${end} de ${total}`;
@@ -105,18 +115,29 @@
 
   async function loadDetails(codigo) {
     modalBackdrop.style.display = 'flex';
-    // limpa e mostra carregando
+    currentModalMovimento = codigo;
+
     modalHeaderInfo.innerHTML = `
       <div><dt>Movimento</dt><dd>Carregando...</dd></div>
     `;
-    modalItemsBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>`;
+    modalItemsBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>`;
 
-    const resp = await fetch(`/api/movimentos/${codigo}`);
+    let resp;
+    try {
+      resp = await fetch(`/api/movimentos/${codigo}`);
+    } catch (e) {
+      modalHeaderInfo.innerHTML = `
+        <div><dt>Movimento</dt><dd class="text-danger">Erro ao carregar</dd></div>
+      `;
+      modalItemsBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Sem itens.</td></tr>`;
+      return;
+    }
+
     if (!resp.ok) {
       modalHeaderInfo.innerHTML = `
         <div><dt>Movimento</dt><dd class="text-danger">Não encontrado</dd></div>
       `;
-      modalItemsBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Sem itens.</td></tr>`;
+      modalItemsBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Sem itens.</td></tr>`;
       return;
     }
 
@@ -130,12 +151,13 @@
     `;
 
     if (!itens || itens.length === 0) {
-      modalItemsBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Sem itens.</td></tr>`;
+      modalItemsBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Sem itens.</td></tr>`;
       return;
     }
 
     modalItemsBody.innerHTML = '';
     itens.forEach(it => {
+      const pagoLabel = it.deletado ? 'SIM' : 'NÃO';
       modalItemsBody.innerHTML += `
         <tr>
           <td>${it.produtosDescricao}</td>
@@ -143,12 +165,12 @@
           <td>${fmtMoney(it.precoUnitario)}</td>
           <td>${fmtMoney(it.desconto)}</td>
           <td>${fmtMoney(it.valorItem)}</td>
+          <td>${pagoLabel}</td>
         </tr>
       `;
     });
   }
 
-  // eventos de paginação
   btnPrev.addEventListener('click', () => {
     if (currentPage > 1) {
       loadPage(currentPage - 1);
@@ -161,16 +183,13 @@
     }
   });
 
-  // filtro ao digitar (igual clientes)
   filterText.addEventListener('input', () => {
-    // debounce de 300ms
     if (searchTimer) clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
       loadPage(1);
     }, 300);
   });
 
-  // também troca se mudar a coluna
   filterCol.addEventListener('change', () => {
     loadPage(1);
   });
@@ -185,6 +204,24 @@
     modalBackdrop.style.display = 'none';
   });
 
-  // inicia
+  printBtn.addEventListener('click', async () => {
+    if (!currentModalMovimento) return;
+    const filtro = printFilter.value;
+    try {
+      const resp = await fetch(`/api/movimentos/${currentModalMovimento}/imprimir`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filtro })
+      });
+      if (!resp.ok) {
+        console.warn('Falha ao imprimir movimento');
+      }
+    } catch (e) {
+      console.warn('Erro de rede ao imprimir', e);
+    }
+  });
+
   loadPage(1);
 })();

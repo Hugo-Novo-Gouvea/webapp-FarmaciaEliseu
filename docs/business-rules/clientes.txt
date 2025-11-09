@@ -21,7 +21,7 @@ Visualizar
 - retorna um modal com "nome", "endereço", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario", "dataCadastro" e "dataUltimoRegistro" preenchidos e sem a capacidade de ser alterados
 
 Editar
-- retorna um modal com "nome", "logradouro", "numero", bairro", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario" preenchidos e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+- retorna um modal com "nome", "logradouro", "numero", "bairro", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario" preenchidos e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
 - regras de cada campo:
 
 	Nome: fornece valor para o campo "nome" no dbo.clientes
