@@ -5,6 +5,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>webapp_FarmaciaEliseu</RootNamespace>
+
+    <!-- diz que vamos publicar pra Windows 64 -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+    <!-- opcional: se quiser um exe único, descomenta a de baixo -->
+    <!-- <PublishSingleFile>true</PublishSingleFile> -->
+
+    <!-- se quiser levar o runtime junto, troca pra true -->
+    <!-- <SelfContained>true</SelfContained> -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +23,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+
+    <!-- garante o host de serviço do windows -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

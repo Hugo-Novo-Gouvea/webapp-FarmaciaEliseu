@@ -17,6 +17,7 @@ function wiringVendas() {
   const tipoClienteEl = document.getElementById('tipo-cliente');
   const tipoVendaEl = document.getElementById('tipo-venda');
   const tipoProdutoEl = document.getElementById('tipo-produto');
+  const tipoDescontoEl = document.getElementById('tipo-desconto'); // NOVO
 
   tipoClienteEl?.addEventListener('change', async () => {
     const v = tipoClienteEl.value;
@@ -35,6 +36,11 @@ function wiringVendas() {
     const v = tipoProdutoEl.value;
     updateProdutoBlocks(v);
     atualizarStateBotaoVenda();
+  });
+
+  // NOVO: trocar label dos campos de desconto
+  tipoDescontoEl?.addEventListener('change', () => {
+    atualizarLabelsDesconto();
   });
 
   document.getElementById('cliente-pesquisa')?.addEventListener('input', () => {
@@ -75,6 +81,16 @@ function wiringVendas() {
   updateClienteBlocks(v0);
   const p0 = tipoProdutoEl?.value || '';
   updateProdutoBlocks(p0);
+  atualizarLabelsDesconto(); // garante "Desconto (%)" no load
+}
+
+function atualizarLabelsDesconto() {
+  const tipo = document.getElementById('tipo-desconto')?.value || 'porcentagem';
+  const lblReg = document.getElementById('label-desconto-reg');
+  const lblAvu = document.getElementById('label-desconto-avulso');
+  const txt = tipo === 'porcentagem' ? 'Desconto (%)' : 'Desconto (R$)';
+  if (lblReg) lblReg.textContent = txt;
+  if (lblAvu) lblAvu.textContent = txt;
 }
 
 function updateClienteBlocks(tipo) {
@@ -165,12 +181,14 @@ async function adicionarItemVenda() {
     document.getElementById('quantidade').focus();
     return;
   }
-  const desconto = parseFloat(document.getElementById('desconto').value || '0');
-  if (isNaN(desconto) || desconto < 0) {
+  const descontoDigitado = parseFloat(document.getElementById('desconto').value || '0');
+  if (isNaN(descontoDigitado) || descontoDigitado < 0) {
     alert('Desconto inválido.');
     document.getElementById('desconto').focus();
     return;
   }
+
+  const tipoDesconto = document.getElementById('tipo-desconto')?.value || 'porcentagem';
 
   const isCodigo = /^\d+$/.test(termo);
   const column = isCodigo ? 'codigoBarras' : 'descricao';
@@ -189,13 +207,24 @@ async function adicionarItemVenda() {
   }
   const p = itens[0];
 
+  const precoUnit = Number(p.precoVenda ?? p.PrecoVenda ?? 0);
+  let valorDesconto = 0;
+  if (tipoDesconto === 'porcentagem') {
+    // descontoDigitado é porcentagem
+    valorDesconto = (precoUnit * qtd) * (descontoDigitado / 100);
+  } else {
+    // fixo em R$
+    valorDesconto = descontoDigitado;
+  }
+  if (valorDesconto < 0) valorDesconto = 0;
+
   const item = {
     produtoId: p.produtosId ?? p.ProdutosId ?? p.id,
     descricao: p.descricao ?? p.Descricao ?? '',
     codigoProduto: p.codigoProduto ?? p.CodigoProduto ?? '000000000',
-    precoUnit: Number(p.precoVenda ?? p.PrecoVenda ?? 0),
+    precoUnit: precoUnit,
     quantidade: qtd,
-    desconto: desconto
+    desconto: Number(valorDesconto.toFixed(2)) // sempre manda em R$
   };
 
   vendasItens.push(item);
@@ -232,12 +261,21 @@ async function adicionarItemAvulso() {
     document.getElementById('quantidade-avulso').focus();
     return;
   }
-  const desconto = parseFloat(document.getElementById('desconto-avulso').value || '0');
-  if (isNaN(desconto) || desconto < 0) {
+  const descontoDigitado = parseFloat(document.getElementById('desconto-avulso').value || '0');
+  if (isNaN(descontoDigitado) || descontoDigitado < 0) {
     alert('Desconto inválido.');
     document.getElementById('desconto-avulso').focus();
     return;
   }
+
+  const tipoDesconto = document.getElementById('tipo-desconto')?.value || 'porcentagem';
+  let valorDesconto = 0;
+  if (tipoDesconto === 'porcentagem') {
+    valorDesconto = (preco * qtd) * (descontoDigitado / 100);
+  } else {
+    valorDesconto = descontoDigitado;
+  }
+  if (valorDesconto < 0) valorDesconto = 0;
 
   const item = {
     produtoId: 1, // item avulso usa produto 1
@@ -245,7 +283,7 @@ async function adicionarItemAvulso() {
     codigoProduto: '000000000',
     precoUnit: Number(preco),
     quantidade: qtd,
-    desconto: desconto
+    desconto: Number(valorDesconto.toFixed(2))
   };
 
   vendasItens.push(item);
@@ -301,7 +339,6 @@ function atualizarStateBotaoVenda() {
   if (btn) btn.disabled = !ok;
 }
 
-// AQUI é a parte que mudou
 async function realizarVenda() {
   const tipoVenda = document.getElementById('tipo-venda').value;
   const tipoCliente = document.getElementById('tipo-cliente').value;
@@ -318,7 +355,7 @@ async function realizarVenda() {
   const itens = vendasItens.map(it => ({
     produtoId: it.produtoId,
     quantidade: it.quantidade,
-    desconto: it.desconto,
+    desconto: it.desconto, // já é valor em R$
     descricao: it.descricao,
     precoUnit: it.precoUnit
   }));
@@ -344,7 +381,6 @@ async function realizarVenda() {
     return;
   }
 
-  // daqui pra baixo é o fluxo de impressão
   let querImprimir = confirm('Venda registrada com sucesso.\nDeseja imprimir o cupom?');
 
   while (querImprimir) {
@@ -366,6 +402,5 @@ async function realizarVenda() {
   vendasItens = [];
   renderItensVenda();
   atualizarStateBotaoVenda();
-  // se quiser limpar cliente avulso:
   // document.getElementById('cliente-avulso').value = '';
 }

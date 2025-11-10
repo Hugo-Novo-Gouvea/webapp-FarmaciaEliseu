@@ -1,9 +1,13 @@
 ﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting; // <-- adicionado
 using WebAppEstudo.Data;
 using WebAppEstudo.Printing;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// permite rodar como serviço do Windows
+builder.Host.UseWindowsService();
 
 // =========================
 // 1. MONTA A CONNECTION STRING (lê o que o TI salvou)

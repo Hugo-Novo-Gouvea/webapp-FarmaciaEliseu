@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Vendas - Farm�cia Eliseu</title>
+  <title>Vendas - Farmácia Eliseu</title>
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
@@ -10,25 +10,24 @@
   <main class="app-main">
     <div class="container">
       <div class="list-shell" id="vendas-shell">
-        <!-- t�tulo -->
+        <!-- titulo -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Vendas</h2>
-          <p class="text-muted" style="font-size:.7rem;">registro de venda e inclus�o de itens</p>
         </div>
 
-        <!-- barra de a��es -->
+        <!-- barra de acoes -->
         <div class="action-bar">
-          <button id="btn-sell" class="action-btn success" disabled>? Realizar venda</button>
+          <button id="btn-sell" class="action-btn success" disabled>✏️ Realizar venda</button>
         </div>
 
         <!-- linha do menu (sem busca) -->
         <div class="list-filter">
           <div class="list-filter-action">
-            <a href="/" class="btn-modern small">? Menu</a>
+            <a href="/" class="btn-modern small">⬅️ Menu</a>
           </div>
         </div>
 
-        <!-- LINHA 1: Tipo de venda | Vendedor | Tipo de cliente | Tipo de produto -->
+        <!-- LINHA 1: Tipo de venda | Vendedor | Tipo de cliente | Tipo de produto | Tipo de desconto -->
         <div class="list-filter">
           <div class="list-filter-field">
             <label for="tipo-venda">Tipo de venda *</label>
@@ -60,6 +59,14 @@
               <option value="avulso">Avulso</option>
             </select>
           </div>
+          <!-- NOVO: tipo de desconto -->
+          <div class="list-filter-field">
+            <label for="tipo-desconto">Tipo de desconto</label>
+            <select id="tipo-desconto">
+              <option value="porcentagem" selected>Porcentagem</option>
+              <option value="fixo">Fixo</option>
+            </select>
+          </div>
         </div>
 
         <!-- LINHA 2: cliente REGISTRADO -->
@@ -84,7 +91,7 @@
           </div>
         </div>
 
-        <!-- LINHA 3: vendedor -->
+        <!-- LINHA 3: vendedor (oculta antiga) -->
         <div class="list-filter" style="display:none;">
           <div class="list-filter-field">
             <label for="vendedor">Vendedor *</label>
@@ -94,18 +101,18 @@
           </div>
         </div>
 
-        <!-- LINHA 4: produto + qtd + desconto + bot�o -->
+        <!-- LINHA 4: produto + qtd + desconto + botão (produto registrado) -->
         <div class="list-filter vendas-itens-row" id="produto-registrado-block" style="display:none;">
           <div class="list-filter-input vendas-produto">
-            <label for="produto">C�digo de barras / descri��o *</label>
-            <input id="produto" type="text" placeholder="leia o c�digo ou digite a descri��o..." />
+            <label for="produto">Código de barras / descricão *</label>
+            <input id="produto" type="text" placeholder="leia o código ou digite a descricão..." />
           </div>
           <div class="list-filter-input vendas-qtd">
             <label for="quantidade">Quantidade</label>
             <input id="quantidade" type="number" min="1" value="1" />
           </div>
           <div class="list-filter-input vendas-desc">
-            <label for="desconto">Desconto</label>
+            <label for="desconto" id="label-desconto-reg">Desconto (%)</label>
             <input id="desconto" type="number" min="0" step="0.01" value="0" />
           </div>
           <div class="list-filter-action vendas-add">
@@ -113,7 +120,7 @@
           </div>
         </div>
 
-        <!-- LINHA 3 alternativa: produto AVULSO -->
+        <!-- LINHA 4 alternativa: produto AVULSO -->
         <div class="list-filter vendas-itens-row" id="produto-avulso-block" style="display:none;">
           <div class="list-filter-input vendas-produto" style="min-width:260px;">
             <label for="produto-nome">Nome do produto *</label>
@@ -128,7 +135,7 @@
             <input id="quantidade-avulso" type="number" min="1" value="1" />
           </div>
           <div class="list-filter-input vendas-desc">
-            <label for="desconto-avulso">Desconto</label>
+            <label for="desconto-avulso" id="label-desconto-avulso">Desconto (%)</label>
             <input id="desconto-avulso" type="number" min="0" step="0.01" value="0" />
           </div>
           <div class="list-filter-action vendas-add">
