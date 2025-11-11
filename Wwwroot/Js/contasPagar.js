@@ -1,17 +1,16 @@
 // /js/contasPagar.js
 // Tela de Contas a Receber/Pagar
-// Agora PRIORIZA o valor atualizado (precoTotalAtual) que vem do movimento,
-// pra refletir a alteração de preço feita no produto.
+// Agora com AUTOCOMPLETE de clientes (apenas input) e mesma lógica de antes.
 
 'use strict';
 
 // ====== estado ======
 let todosClientesCP = [];
-let clientesFiltradosCP = [];
 let movimentosCliente = [];
 
 let contasPgAtual = 1;
 const contasPgPageSize = 50;
+let clienteSelecionadoCP = null;
 
 // inicialização
 iniciarContasPagar();
@@ -22,14 +21,9 @@ async function iniciarContasPagar() {
 }
 
 /* =========================================================
-   1. CARREGAR LISTA DE CLIENTES (pro select)
+   1. CARREGAR LISTA DE CLIENTES (pro autocomplete)
    ========================================================= */
 async function carregarClientesContas() {
-  const sel = document.getElementById('filter-person');
-  if (!sel) return;
-
-  sel.innerHTML = '<option value="">Selecione um cliente</option>';
-
   let carregado = false;
 
   // tenta endpoint específico
@@ -46,9 +40,7 @@ async function carregarClientesContas() {
         .filter(c => c.id && c.nome);
       carregado = true;
     }
-  } catch (_) {
-    // deixa cair no fallback
-  }
+  } catch (_) { }
 
   // fallback pro /api/clientes
   if (!carregado) {
@@ -69,65 +61,62 @@ async function carregarClientesContas() {
           .filter(c => c.id && c.nome);
         carregado = true;
       }
-    } catch (_) {
-      // se falhar aqui também, mostra erro
-    }
+    } catch (_) { }
   }
 
+  // se não carregou, mostra mensagem na tabela
   if (!carregado) {
-    sel.innerHTML = '<option value="">Erro ao carregar clientes</option>';
-    return;
+    limparTabelaContas('Erro ao carregar clientes');
   }
-
-  clientesFiltradosCP = [...todosClientesCP];
-  popularSelectClientes();
-}
-
-/* monta o <select> com o array filtrado */
-function popularSelectClientes() {
-  const sel = document.getElementById('filter-person');
-  if (!sel) return;
-
-  const current = sel.value;
-  sel.innerHTML = '<option value="">Selecione um cliente</option>';
-
-  clientesFiltradosCP.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.id ?? c.clientesId ?? c.ClientesId ?? c.clientesID;
-    opt.textContent = c.nome ?? c.Nome ?? '';
-    sel.appendChild(opt);
-  });
-
-  sel.value = current || '';
 }
 
 /* =========================================================
    2. EVENTOS DA TELA
    ========================================================= */
 function wiringEventosContas() {
-  // filtra clientes digitando no input
-  document.getElementById('filter-text')?.addEventListener('input', () => {
-    const txt = (document.getElementById('filter-text').value || '').toLowerCase();
-    if (!txt) {
-      clientesFiltradosCP = [...todosClientesCP];
-    } else {
-      clientesFiltradosCP = todosClientesCP.filter(c =>
-        (c.nome || '').toLowerCase().includes(txt)
-      );
-    }
-    popularSelectClientes();
-  });
+  const inp = document.getElementById('filter-person-input');
+  const sug = document.getElementById('contas-clientes-suggest');
 
-  // troca de cliente no select -> carrega movimentos
-  document.getElementById('filter-person')?.addEventListener('change', async () => {
-    const id = document.getElementById('filter-person').value;
-    if (!id) {
-      limparTabelaContas('Selecione um cliente para carregar os movimentos...');
+  // autocomplete de cliente
+  inp?.addEventListener('input', () => {
+    const txt = (inp.value || '').toLowerCase();
+    if (!txt) {
+      sug.style.display = 'none';
+      clienteSelecionadoCP = null;
+      limparTabelaContas('Digite o nome do cliente para carregar os movimentos...');
       togglePayButton(true);
       atualizarTotalContas(0);
       return;
     }
-    await carregarMovimentosCliente(parseInt(id, 10));
+    const filtrados = todosClientesCP
+      .filter(c => (c.nome || '').toLowerCase().includes(txt))
+      .slice(0, 40);
+    if (filtrados.length === 0) {
+      sug.style.display = 'none';
+      return;
+    }
+    sug.innerHTML = '';
+    filtrados.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'suggest-item';
+      div.textContent = c.nome;
+      div.addEventListener('click', async () => {
+        inp.value = c.nome;
+        sug.style.display = 'none';
+        clienteSelecionadoCP = c;
+        await carregarMovimentosCliente(c.id);
+      });
+      sug.appendChild(div);
+    });
+    sug.style.display = 'block';
+  });
+
+  // fecha sugestões ao clicar fora
+  document.addEventListener('click', (e) => {
+    if (!sug) return;
+    if (!sug.contains(e.target) && e.target !== inp) {
+      sug.style.display = 'none';
+    }
   });
 
   // checkbox de selecionar todos
@@ -149,7 +138,6 @@ function wiringEventosContas() {
     const ok = confirm(`Marcar ${ids.length} movimento(s) como pago?`);
     if (!ok) return;
 
-    // 1) marca como pago no back
     const resp = await fetch('/api/contas/movimentos/pagar', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -157,7 +145,7 @@ function wiringEventosContas() {
     });
 
     if (resp.ok) {
-      // 2) opcional: imprimir cupom
+      // imprimir cupom opcional
       let querImprimir = confirm('Pagamentos marcados.\nDeseja imprimir o cupom agora?');
       while (querImprimir) {
         const respPrint = await fetch('/api/contas/movimentos/imprimir', {
@@ -173,10 +161,9 @@ function wiringEventosContas() {
         querImprimir = confirm('Imprimir novamente?');
       }
 
-      // recarrega a lista do cliente
-      const id = parseInt(document.getElementById('filter-person').value, 10);
-      if (!isNaN(id)) {
-        await carregarMovimentosCliente(id);
+      // recarrega
+      if (clienteSelecionadoCP?.id) {
+        await carregarMovimentosCliente(clienteSelecionadoCP.id);
       }
     } else {
       const txt = await resp.text();
@@ -260,7 +247,6 @@ function renderTabelaContas() {
   pagina.forEach(m => {
     const tr = document.createElement('tr');
 
-    // normaliza campos que podem vir com nome diferente do back
     const dados = {
       id: m.id ?? m.movimentosId ?? m.MovimentosId ?? m.movimentosID,
       descricao: m.produtosDescricao ?? m.ProdutosDescricao ?? '',
@@ -268,9 +254,6 @@ function renderTabelaContas() {
       dataVendaIso: m.dataVenda ?? m.DataVenda ?? ''
     };
 
-    // 🔴 AQUI está o pulo do gato:
-    // primeiro tenta o PREÇO ATUAL (precoTotalAtual), que o back atualiza quando o produto muda de preço.
-    // se não vier, cai para o valor do dia da venda.
     const valorNum = extrairValorMovimento(m);
 
     const dataVendaFmt = dados.dataVendaIso
@@ -289,7 +272,6 @@ function renderTabelaContas() {
       <td>${valorFmt}</td>
     `;
 
-    // quando marca/desmarca uma linha, atualiza o botão
     tr.addEventListener('change', (e) => {
       if (e.target && e.target.matches('input.row-select')) {
         togglePayButton(!haSelecionados());
@@ -365,16 +347,7 @@ function togglePayButton(disabled) {
 /* =========================================================
    7. TOTALIZADOR
    ========================================================= */
-
-/**
- * Extrai o valor do movimento dando prioridade ao valor ATUAL.
- * Ordem de prioridade:
- * 1) precoTotalAtual / PrecoTotalAtual
- * 2) precoTotalDiaVenda / PrecoTotalDiaVenda
- * 3) valorVenda / ValorVenda
- */
 function extrairValorMovimento(m) {
-  // tenta atualizado primeiro
   let v =
     m.precoTotalAtual ??
     m.PrecoTotalAtual ??
@@ -388,7 +361,6 @@ function extrairValorMovimento(m) {
   return isNaN(num) ? 0 : num;
 }
 
-/* soma tudo que está carregado (não só a página) e joga no "Total: R$" */
 function atualizarTotalContas(forceValor) {
   const el = document.getElementById('contas-total-info');
   if (!el) return;

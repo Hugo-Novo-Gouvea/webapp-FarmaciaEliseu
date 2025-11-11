@@ -5,6 +5,38 @@
   <title>Vendas - Farmácia Eliseu</title>
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
+  <style>
+    /* caixinha de sugestões que vamos usar pros clientes e pros produtos */
+    .suggest-box {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(0,0,0,.1);
+      z-index: 50;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,.12);
+    }
+    .suggest-item {
+      padding: .25rem .5rem;
+      cursor: pointer;
+      font-size: .75rem;
+      color: #333;
+    }
+    .suggest-item:hover {
+      background: rgba(0,0,0,.04);
+    }
+    /* modalzinho de lookup de produto */
+    .app-modal-xl {
+      max-width: 780px;
+    }
+    #produto-lookup-table th,
+    #produto-lookup-table td {
+      font-size: .7rem;
+    }
+  </style>
 </head>
 <body class="app-body app-body-gradient">
   <main class="app-main">
@@ -69,17 +101,16 @@
           </div>
         </div>
 
-        <!-- LINHA 2: cliente REGISTRADO -->
+        <!-- LINHA 2: cliente REGISTRADO (agora é só input + sugestões + total) -->
         <div class="list-filter" id="cliente-registrado-block" style="display:none;">
-          <div class="list-filter-field" style="min-width:280px;">
-            <label for="cliente-registrado">Cliente *</label>
-            <select id="cliente-registrado">
-              <option value="">Selecione o cliente...</option>
-            </select>
+          <div class="list-filter-input" style="min-width:280px; position:relative;">
+            <label for="cliente-registrado-input">Cliente *</label>
+            <input id="cliente-registrado-input" type="text" autocomplete="off" placeholder="digite para buscar..." />
+            <div id="cliente-registrado-suggest" class="suggest-box" style="display:none;"></div>
           </div>
-          <div class="list-filter-input">
-            <label for="cliente-pesquisa">Pesquisa</label>
-            <input id="cliente-pesquisa" type="text" placeholder="filtrar cliente..." />
+          <div class="list-filter-total">
+            <!-- mesmo estilo do contas a receber -->
+            <div id="vendas-total-cliente" class="table-pager-info">Total: R$ 0,00</div>
           </div>
         </div>
 
@@ -169,6 +200,39 @@
       </div>
     </div>
   </main>
+
+  <!-- MODAL DE ESCOLHA DE PRODUTO POR DESCRIÇÃO -->
+  <div class="app-modal-backdrop" id="produto-lookup-backdrop" style="display:none;">
+    <div class="app-modal app-modal-xl">
+      <div class="app-modal-header">
+        <h2 class="h6 mb-0">Selecione o produto</h2>
+        <button type="button" class="app-modal-close" id="produto-lookup-close">&times;</button>
+      </div>
+      <div class="app-modal-body">
+        <p class="text-muted" style="font-size:.7rem;">Foram encontrados produtos com a descrição digitada. Escolha um.</p>
+        <div class="table-responsive app-table-wrapper">
+          <table class="table-modern" id="produto-lookup-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Cód. Barras</th>
+                <th>Preço venda</th>
+                <th style="width:60px;"></th>
+              </tr>
+            </thead>
+            <tbody id="produto-lookup-tbody">
+              <tr><td colspan="4" class="text-center text-muted">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-3 text-end">
+          <button class="btn-modern secondary small" id="produto-lookup-cancel">Cancelar</button>
+          <button class="btn-modern primary small" id="produto-lookup-confirm">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/js/vendas.js"></script>
 </body>
 </html>

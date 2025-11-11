@@ -11,6 +11,17 @@
   /* 10% – destaque (botão principal, estado importante) */
   --color-10: #1fa37a;
 
+  /*Tabela*/
+  --tEven: #f9fafb;
+  --tOdd: #ffffff;
+  --tHover: #eef2ff;
+  --tHead: #edf1f5;
+  --tHeadSticky: rgba(237, 241, 245, 0.92); 
+
+  /*btn menu*/
+  --btn-menu-bg: #ffffff;
+  --btn-menu-border: rgba(148, 163, 184, 0.35);
+
   /* neutros e textos */
   --color-border: rgba(15, 23, 42, 0.04);
   --color-border-soft: rgba(148, 163, 184, 0.25);
@@ -23,7 +34,7 @@
   --color-danger: #b91c1c;
   --color-danger-soft: rgba(248, 113, 113, 0.35);
   --color-primary: #2563eb;
-  --color-surface-alt: #f8fafc;
+  --color-surface-alt: #f8fafc; /*Fundo da barra de pesquisa*/
 }
 
 /* =========================================================
@@ -176,7 +187,7 @@
 }
 
 .table-modern thead {
-  background: #edf1f5;
+  background: var(--tHead);
 }
 
 .table-modern th,
@@ -196,11 +207,15 @@
 }
 
 .table-modern tbody tr:nth-child(even) {
-  background: #f9fafb;
+  background: var(--tEven);
+}
+
+.table-modern tbody tr:nth-child(odd) {
+  background: var(--tOdd);
 }
 
 .table-modern tbody tr:hover {
-  background: #eef2ff;
+  background: var(--tHover);
   transition: background 120ms ease-out;
 }
 
@@ -219,7 +234,7 @@
   position: sticky;
   top: 0;
   z-index: 5;
-  background: rgba(237, 241, 245, 0.92);
+  background: var(--tHeadSticky);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.95);
@@ -571,8 +586,8 @@
   align-items: center !important;
   justify-content: center;
   gap: 0.35rem;
-  background: #fff !important;
-  border: 1px solid rgba(148, 163, 184, 0.35) !important;
+  background: var(--btn-menu-bg) !important;
+  border: 1px solid var(--btn-menu-border) !important;
   color: var(--color-text) !important;
   border-radius: 0.55rem !important;
   font-size: 0.68rem !important;
