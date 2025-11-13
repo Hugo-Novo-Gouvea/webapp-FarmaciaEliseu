@@ -64,6 +64,7 @@ app.MapGet("/api/clientes", async (
     if (pageSize < 1) pageSize = 50;
 
     var query = db.Clientes
+        .AsNoTracking()
         .Where(c => (c.Deletado == null || c.Deletado == false) && c.ClientesId != 1)
         .AsQueryable();
 
@@ -236,8 +237,10 @@ app.MapGet("/api/produtos", async (
 {
     if (page < 1) page = 1;
     if (pageSize < 1) pageSize = 50;
+    if (pageSize > 200) pageSize = 200; // segurança
 
     var query = db.Produtos
+        .AsNoTracking()
         .Where(p => (p.Deletado == null || p.Deletado == false) && p.ProdutosId != 1)
         .AsQueryable();
 
@@ -260,10 +263,19 @@ app.MapGet("/api/produtos", async (
 
     var total = await query.CountAsync();
 
+    // PROJEÇÃO LEVE (apenas colunas exibidas na grid)
     var itens = await query
         .OrderBy(p => p.Descricao)
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
+        .Select(p => new {
+            p.ProdutosId,
+            p.CodigoBarras,
+            p.Descricao,
+            p.PrecoCompra,
+            p.PrecoVenda,
+            p.Generico
+        })
         .ToListAsync();
 
     return Results.Ok(new
@@ -443,6 +455,7 @@ app.MapGet("/api/funcionarios", async (
     if (pageSize < 1) pageSize = 50;
 
     var query = db.Funcionarios
+        .AsNoTracking()
         .Where(f => !f.Deletado && f.FuncionariosId != 1)
         .AsQueryable();
 
@@ -547,6 +560,7 @@ app.MapDelete("/api/funcionarios/{id:int}", async (int id, AppDbContext db) =>
 app.MapGet("/api/contas/clientes", async (AppDbContext db) =>
 {
     var clientes = await db.Clientes
+        .AsNoTracking()
         .Where(c => (c.Deletado == null || c.Deletado == false) && c.ClientesId != 1)
         .OrderBy(c => c.Nome)
         .Select(c => new { c.ClientesId, c.Nome })
@@ -559,6 +573,7 @@ app.MapGet("/api/contas/movimentos", async (AppDbContext db, int clienteId) =>
     if (clienteId <= 0) return Results.BadRequest("clienteId inválido.");
 
     var movimentos = await db.Movimentos
+        .AsNoTracking()
         .Where(m => (m.Deletado == false) && m.ClientesId == clienteId)
         .OrderBy(m => m.DataVenda)
         .ToListAsync();
