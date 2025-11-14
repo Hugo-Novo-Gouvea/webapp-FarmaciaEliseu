@@ -1,6 +1,10 @@
 USE farmaciaEliseu;
 GO
 
+/* =========================================================
+   PRODUTOS
+   ========================================================= */
+
 -- PRODUTOS: índice por Descricao (acelera busca por nome)
 IF NOT EXISTS (
     SELECT 1 FROM sys.indexes 
@@ -25,7 +29,11 @@ BEGIN
 END
 GO
 
--- CLIENTES: índice por Nome (usado nos seus filtros)
+/* =========================================================
+   CLIENTES
+   ========================================================= */
+
+-- CLIENTES: índice por Nome (usado nos filtros/pesquisa)
 IF NOT EXISTS (
     SELECT 1 FROM sys.indexes 
     WHERE name = 'IX_Clientes_Nome' 
@@ -37,4 +45,24 @@ BEGIN
 END
 GO
 
+/* =========================================================
+   FUNCIONÁRIOS
+   ========================================================= */
+
+-- FUNCIONÁRIOS: índice por Nome (usado nos filtros/pesquisa)
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes 
+    WHERE name = 'IX_Funcionarios_Nome' 
+      AND object_id = OBJECT_ID('dbo.funcionarios')
+)
+BEGIN
+    CREATE INDEX IX_Funcionarios_Nome
+        ON dbo.funcionarios(Nome);
+END
+GO
+
+/* =========================================================
+   MANUTENÇÃO LEVE DE ESTATÍSTICAS
+   ========================================================= */
 EXEC sp_updatestats;
+GO

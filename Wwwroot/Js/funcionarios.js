@@ -1,327 +1,258 @@
-// /js/funcionarios.js
-// CRUD de funcionários no mesmo padrão dos demais.
+// wwwroot/js/funcionarios.js
+// Tela de funcionários usando o motor genérico CrudList.
 
 (() => {
-  // -------------------------------------------------------------
-  // ESTADO
-  // -------------------------------------------------------------
-  const state = {
-    all: [],
-    filtered: [],
-    selected: null,
-    page: 1,
-    pageSize: 50
-  };
+  if (!window.CrudList) {
+    console.error('CrudList não encontrado. Certifique-se de carregar /js/crudList.js antes de /js/funcionarios.js');
+    return;
+  }
 
-  // -------------------------------------------------------------
-  // ELEMENTOS
-  // -------------------------------------------------------------
+  // -------------------------
+  // ELEMENTOS DOS MODAIS
+  // -------------------------
   const els = {
-    tableBody: document.querySelector('#tb-funcionarios tbody'),
-    filterColumn: document.getElementById('filter-column'),
-    filterText: document.getElementById('filter-text'),
-    btnView: document.getElementById('btn-view'),
-    btnEdit: document.getElementById('btn-edit'),
-    btnNew: document.getElementById('btn-new'),
-    btnDelete: document.getElementById('btn-delete'),
-    pagerInfo: document.getElementById('funcionarios-pg-info'),
-    pagerPrev: document.getElementById('funcionarios-pg-prev'),
-    pagerNext: document.getElementById('funcionarios-pg-next'),
-
+    // modal visualizar
     viewBackdrop: document.getElementById('funcionario-modal-backdrop'),
+    viewCloseBtn: document.getElementById('modal-close-btn'),
+
+    v: {
+      nome: document.getElementById('m-nome'),
+    },
+
+    // modal editar
     editBackdrop: document.getElementById('funcionario-edit-backdrop'),
-    newBackdrop: document.getElementById('funcionario-new-backdrop')
+    editCloseBtn: document.getElementById('edit-close-btn'),
+    editCancelBtn: document.getElementById('edit-cancel-btn'),
+    editForm: document.getElementById('edit-form'),
+
+    e: {
+      id:   document.getElementById('e-id'),
+      nome: document.getElementById('e-nome'),
+    },
+
+    // modal novo
+    newBackdrop: document.getElementById('funcionario-new-backdrop'),
+    newCloseBtn: document.getElementById('new-close-btn'),
+    newCancelBtn: document.getElementById('new-cancel-btn'),
+    newForm: document.getElementById('new-form'),
+
+    n: {
+      nome: document.getElementById('n-nome'),
+    },
   };
 
-  // -------------------------------------------------------------
-  // INIT
-  // -------------------------------------------------------------
-  init();
-
-  async function init() {
-    await loadData();
-    wireEvents();
-  }
-
-  // -------------------------------------------------------------
-  // LOAD
-  // -------------------------------------------------------------
-  async function loadData() {
-    const resp = await fetch('/api/funcionarios?pageSize=100000');
+  // -------------------------
+  // HELPERS
+  // -------------------------
+  async function fetchJson(url, options) {
+    const resp = await fetch(url, options);
     if (!resp.ok) {
-      renderEmpty('Erro ao carregar funcionários.');
-      return;
+      const txt = await resp.text();
+      throw new Error(txt || `Erro HTTP ${resp.status}`);
     }
-    const data = await resp.json();
-    const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
-    state.all = items;
-    applyFilter();
-
-    // liberar novo
-    if (els.btnNew) els.btnNew.disabled = false;
+    return await resp.json();
   }
 
-  // -------------------------------------------------------------
-  // EVENTS
-  // -------------------------------------------------------------
-  function wireEvents() {
-    els.filterText?.addEventListener('input', applyFilter);
-    els.filterColumn?.addEventListener('change', applyFilter);
-
-    els.pagerPrev?.addEventListener('click', () => changePage(-1));
-    els.pagerNext?.addEventListener('click', () => changePage(1));
-
-    els.btnView?.addEventListener('click', onView);
-    els.btnEdit?.addEventListener('click', onEdit);
-    els.btnDelete?.addEventListener('click', onDelete);
-    els.btnNew?.addEventListener('click', onNew);
+  function openModal(el) {
+    if (el) el.classList.add('show');
   }
 
-  // -------------------------------------------------------------
-  // FILTER
-  // -------------------------------------------------------------
-  function applyFilter() {
-    const col = els.filterColumn?.value || 'nome';
-    const txt = (els.filterText?.value || '').trim().toLowerCase();
-
-    if (!txt) {
-      state.filtered = [...state.all];
-    } else {
-      state.filtered = state.all.filter(f => {
-        const val = getColumnValue(f, col);
-        return val.toLowerCase().includes(txt);
-      });
-    }
-
-    state.page = 1;
-    renderTable();
-    updatePager();
+  function closeModal(el) {
+    if (el) el.classList.remove('show');
   }
 
-  function getColumnValue(f, col) {
-    switch (col) {
-      case 'nome':
-      default:
-        return f.nome || '';
-    }
+  function fillViewModal(f) {
+    if (!f) return;
+    const nome = f.nome ?? f.Nome ?? '';
+    if (els.v.nome) els.v.nome.textContent = nome;
   }
 
-  // -------------------------------------------------------------
-  // RENDER
-  // -------------------------------------------------------------
-  function renderTable() {
-    if (!els.tableBody) return;
-    els.tableBody.innerHTML = '';
+  function fillEditModal(f) {
+    if (!f) return;
+    const id   = f.funcionariosId ?? f.FuncionariosId ?? f.id ?? null;
+    const nome = f.nome ?? f.Nome ?? '';
 
-    if (!state.filtered.length) {
-      renderEmpty('Nenhum funcionário encontrado.');
-      setSelection(null);
-      toggleActions(true);
-      return;
-    }
+    if (els.e.id)   els.e.id.value = id ?? '';
+    if (els.e.nome) els.e.nome.value = nome;
+  }
 
-    const start = (state.page - 1) * state.pageSize;
-    const end = start + state.pageSize;
-    const pageItems = state.filtered.slice(start, end);
+  function clearNewForm() {
+    if (els.n.nome) els.n.nome.value = '';
+  }
 
-    pageItems.forEach(f => {
-      const data = {
-        id: f.funcionariosId ?? f.funcionariosID ?? f.id ?? '',
-        nome: f.nome ?? ''
+  function buildEditPayload() {
+    const nome = (els.e.nome?.value ?? '').trim();
+    return {
+      Nome: nome.toUpperCase(),
+    };
+  }
+
+  function buildNewPayload() {
+    const nome = (els.n.nome?.value ?? '').trim();
+    return {
+      Nome: nome.toUpperCase(),
+    };
+  }
+
+  // -------------------------
+  // INSTÂNCIA DO CrudList
+  // -------------------------
+  let list;
+
+  const cfg = {
+    endpoint: '/api/funcionarios',
+    tableBodySelector: '#tb-funcionarios tbody',
+    pagerInfoSelector: '#funcionarios-pg-info',
+    pagerPrevSelector: '#funcionarios-pg-prev',
+    pagerNextSelector: '#funcionarios-pg-next',
+    filterColumnSelector: '#filter-column',
+    filterTextSelector: '#filter-text',
+    btnViewSelector: '#btn-view',
+    btnEditSelector: '#btn-edit',
+    btnNewSelector: '#btn-new',
+    btnDeleteSelector: '#btn-delete',
+
+    defaultColumn: 'nome',
+    pageSize: 50,
+    columnsCount: 1, // só a coluna Nome
+
+    mapRow: (f) => {
+      const id   = f.funcionariosId ?? f.FuncionariosId ?? f.id ?? 0;
+      const nome = f.nome ?? f.Nome ?? '';
+      return {
+        id,
+        cells: [nome],
       };
+    },
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${data.nome}</td>`;
-      tr.addEventListener('click', () => onRowClick(tr, data));
-      els.tableBody.appendChild(tr);
-    });
+    async onView(id) {
+      try {
+        const f = await fetchJson(`/api/funcionarios/${id}`);
+        fillViewModal(f);
+        openModal(els.viewBackdrop);
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao carregar detalhes do funcionário.');
+      }
+    },
 
-    setSelection(null);
-    toggleActions(true);
-  }
+    async onEdit(id) {
+      try {
+        const f = await fetchJson(`/api/funcionarios/${id}`);
+        fillEditModal(f);
+        openModal(els.editBackdrop);
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao carregar funcionário para edição.');
+      }
+    },
 
-  function renderEmpty(msg) {
-    if (!els.tableBody) return;
-    els.tableBody.innerHTML = `<tr><td colspan="1" class="text-center text-muted">${msg}</td></tr>`;
-  }
+    async onDelete(id) {
+      if (!confirm('Deseja realmente excluir este funcionário?')) return;
+      try {
+        const resp = await fetch(`/api/funcionarios/${id}`, { method: 'DELETE' });
+        if (!resp.ok) {
+          const txt = await resp.text();
+          throw new Error(txt || 'Erro ao excluir funcionário.');
+        }
+        await list.loadPage();
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao excluir funcionário.');
+      }
+    },
 
-  // -------------------------------------------------------------
-  // PAGINATION
-  // -------------------------------------------------------------
-  function changePage(delta) {
-    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
-    const newPage = state.page + delta;
-    if (newPage < 1 || newPage > totalPages) return;
-    state.page = newPage;
-    renderTable();
-    updatePager();
-  }
+    onNew() {
+      clearNewForm();
+      openModal(els.newBackdrop);
+    },
+  };
 
-  function updatePager() {
-    const total = state.filtered.length;
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    const start = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
-    const end = total === 0 ? 0 : Math.min(state.page * state.pageSize, total);
+  list = new CrudList(cfg);
 
-    if (els.pagerInfo) {
-      els.pagerInfo.textContent = total === 0
-        ? 'Nenhum registro'
-        : `Mostrando ${start}-${end} de ${total} (pág. ${state.page} de ${totalPages})`;
-    }
+  // -------------------------
+  // EVENTOS DOS MODAIS
+  // -------------------------
 
-    if (els.pagerPrev) {
-      const disabled = state.page <= 1;
-      els.pagerPrev.disabled = disabled;
-      els.pagerPrev.classList.toggle('is-disabled', disabled);
-    }
-    if (els.pagerNext) {
-      const disabled = state.page >= totalPages;
-      els.pagerNext.disabled = disabled;
-      els.pagerNext.classList.toggle('is-disabled', disabled);
-    }
-  }
+  // modal visualizar
+  els.viewCloseBtn?.addEventListener('click', () => closeModal(els.viewBackdrop));
+  els.viewBackdrop?.addEventListener('click', ev => {
+    if (ev.target === els.viewBackdrop) closeModal(els.viewBackdrop);
+  });
 
-  // -------------------------------------------------------------
-  // SELECTION
-  // -------------------------------------------------------------
-  function onRowClick(tr, data) {
-    document.querySelectorAll('#tb-funcionarios tbody tr').forEach(row => row.classList.remove('selected'));
-    tr.classList.add('selected');
-    setSelection(data);
-    toggleActions(false);
-  }
+  // modal editar
+  els.editCloseBtn?.addEventListener('click', () => closeModal(els.editBackdrop));
+  els.editCancelBtn?.addEventListener('click', () => closeModal(els.editBackdrop));
+  els.editBackdrop?.addEventListener('click', ev => {
+    if (ev.target === els.editBackdrop) closeModal(els.editBackdrop);
+  });
 
-  function setSelection(func) {
-    state.selected = func;
-  }
+  els.editForm?.addEventListener('submit', async ev => {
+    ev.preventDefault();
 
-  function toggleActions(disabled) {
-    [els.btnView, els.btnEdit, els.btnDelete].forEach(btn => {
-      if (btn) btn.disabled = disabled;
-    });
-  }
-
-  // -------------------------------------------------------------
-  // ACTIONS
-  // -------------------------------------------------------------
-  function onView() {
-    if (!state.selected) return;
-    const b = els.viewBackdrop;
-    if (!b) return;
-    document.getElementById('m-nome').textContent = state.selected.nome || '';
-    b.classList.add('show');
-    document.getElementById('modal-close-btn').onclick = () => b.classList.remove('show');
-    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
-  }
-
-  function onEdit() {
-    if (!state.selected) return;
-    const b = els.editBackdrop;
-    if (!b) return;
-
-    document.getElementById('e-id').value = state.selected.id;
-    document.getElementById('e-nome').value = state.selected.nome;
-
-    b.classList.add('show');
-    document.getElementById('edit-close-btn').onclick = () => b.classList.remove('show');
-    document.getElementById('edit-cancel-btn').onclick = () => b.classList.remove('show');
-    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
-
-    document.getElementById('edit-form').onsubmit = async (ev) => {
-      ev.preventDefault();
-      await submitEdit();
-    };
-  }
-
-  async function submitEdit() {
-    const id = document.getElementById('e-id').value;
-    const nome = document.getElementById('e-nome').value.trim();
-    if (!nome) {
-      alert('Nome é obrigatório.');
-      document.getElementById('e-nome').focus();
+    const idRaw = els.e.id?.value ?? '';
+    const id = parseInt(idRaw || '0', 10);
+    if (!id) {
+      alert('ID inválido para edição.');
       return;
     }
 
-    const payload = {
-      funcionariosId: parseInt(id, 10),
-      nome: nome.toUpperCase(),
-      deletado: false
-    };
-
-    const resp = await fetch(`/api/funcionarios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (resp.ok) {
-      els.editBackdrop.classList.remove('show');
-      await loadData();
-    } else {
-      const txt = await resp.text();
-      alert('Erro ao atualizar funcionário:\n' + txt);
-    }
-  }
-
-  function onNew() {
-    const b = els.newBackdrop;
-    if (!b) return;
-    document.getElementById('n-nome').value = '';
-    b.classList.add('show');
-    document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
-    document.getElementById('new-cancel-btn').onclick = () => b.classList.remove('show');
-    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
-
-    document.getElementById('new-form').onsubmit = async (ev) => {
-      ev.preventDefault();
-      await submitNew();
-    };
-  }
-
-  async function submitNew() {
-    const nome = document.getElementById('n-nome').value.trim();
-    if (!nome) {
+    const payload = buildEditPayload();
+    if (!payload.Nome || !payload.Nome.trim()) {
       alert('Nome é obrigatório.');
-      document.getElementById('n-nome').focus();
       return;
     }
 
-    const payload = {
-      nome: nome.toUpperCase(),
-      deletado: false
-    };
-
-    const resp = await fetch('/api/funcionarios', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (resp.ok) {
-      els.newBackdrop.classList.remove('show');
-      await loadData();
-    } else {
-      const txt = await resp.text();
-      alert('Erro ao criar funcionário:\n' + txt);
+    try {
+      const resp = await fetch(`/api/funcionarios/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'Erro ao salvar alterações.');
+      }
+      closeModal(els.editBackdrop);
+      await list.loadPage();
+    } catch (err) {
+      console.error(err);
+      alert('Falha ao salvar alterações.');
     }
-  }
+  });
 
-  async function onDelete() {
-    if (!state.selected) return;
-    const ok = confirm(`Confirma excluir o funcionário "${state.selected.nome}"?`);
-    if (!ok) return;
+  // modal novo
+  els.newCloseBtn?.addEventListener('click', () => closeModal(els.newBackdrop));
+  els.newCancelBtn?.addEventListener('click', () => closeModal(els.newBackdrop));
+  els.newBackdrop?.addEventListener('click', ev => {
+    if (ev.target === els.newBackdrop) closeModal(els.newBackdrop);
+  });
 
-    const resp = await fetch(`/api/funcionarios/${state.selected.id}`, {
-      method: 'DELETE'
-    });
+  els.newForm?.addEventListener('submit', async ev => {
+    ev.preventDefault();
 
-    if (resp.ok) {
-      await loadData();
-      setSelection(null);
-      toggleActions(true);
-    } else {
-      const txt = await resp.text();
-      alert('Erro ao excluir:\n' + txt);
+    const payload = buildNewPayload();
+    if (!payload.Nome || !payload.Nome.trim()) {
+      alert('Nome é obrigatório.');
+      return;
     }
-  }
+
+    try {
+      const resp = await fetch('/api/funcionarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'Erro ao criar funcionário.');
+      }
+      closeModal(els.newBackdrop);
+      list.state.page = 1;
+      await list.loadPage();
+    } catch (err) {
+      console.error(err);
+      alert('Falha ao criar funcionário.');
+    }
+  });
 })();

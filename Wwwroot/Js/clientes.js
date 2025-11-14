@@ -1,487 +1,417 @@
-// /js/clientes.js
-// CRUD de clientes seguindo o mesmo padrão dos outros módulos.
-// Mantém emojis, comentários e paginação no front.
+// wwwroot/js/clientes.js
+// Tela de clientes usando o motor genérico CrudList.
 
 (() => {
-  // -------------------------------------------------------------
-  // ESTADO CENTRAL
-  // -------------------------------------------------------------
-  const state = {
-    all: [],           // todos os clientes recebidos da API
-    filtered: [],      // clientes após filtro
-    selected: null,    // linha selecionada
-    page: 1,
-    pageSize: 50
-  };
+  if (!window.CrudList) {
+    console.error('CrudList não encontrado. Certifique-se de carregar /js/crudList.js antes de /js/clientes.js');
+    return;
+  }
 
-  // -------------------------------------------------------------
+  // -------------------------
   // ELEMENTOS
-  // -------------------------------------------------------------
+  // -------------------------
   const els = {
-    tableBody: document.querySelector('#tb-clientes tbody'),
-    filterColumn: document.getElementById('filter-column'),
-    filterText: document.getElementById('filter-text'),
-    btnView: document.getElementById('btn-view'),
-    btnEdit: document.getElementById('btn-edit'),
-    btnNew: document.getElementById('btn-new'),
-    btnDelete: document.getElementById('btn-delete'),
-    pagerInfo: document.getElementById('clientes-pg-info'),
-    pagerPrev: document.getElementById('clientes-pg-prev'),
-    pagerNext: document.getElementById('clientes-pg-next'),
-
-    // modais
+    // modal visualizar
     viewBackdrop: document.getElementById('cliente-modal-backdrop'),
+    viewCloseBtn: document.getElementById('modal-close-btn'),
+
+    v: {
+      nome:            document.getElementById('m-nome'),
+      endereco:        document.getElementById('m-endereco'),
+      rg:              document.getElementById('m-rg'),
+      cpf:             document.getElementById('m-cpf'),
+      telefone:        document.getElementById('m-telefone'),
+      celular:         document.getElementById('m-celular'),
+      dataNasc:        document.getElementById('m-data-nasc'),
+      codFichario:     document.getElementById('m-cod-fichario'),
+      dataCadastro:    document.getElementById('m-data-cadastro'),
+      ultimoRegistro:  document.getElementById('m-ultimo-registro'),
+    },
+
+    // modal editar
     editBackdrop: document.getElementById('cliente-edit-backdrop'),
-    newBackdrop: document.getElementById('cliente-new-backdrop')
+    editCloseBtn: document.getElementById('edit-close-btn'),
+    editCancelBtn: document.getElementById('edit-cancel-btn'),
+    editForm: document.getElementById('edit-form'),
+
+    e: {
+      id:           document.getElementById('e-id'),
+      nome:         document.getElementById('e-nome'),
+      logradouro:   document.getElementById('e-logradouro'),
+      numero:       document.getElementById('e-numero'),
+      bairro:       document.getElementById('e-bairro'),
+      rg:           document.getElementById('e-rg'),
+      cpf:          document.getElementById('e-cpf'),
+      telefone:     document.getElementById('e-telefone'),
+      celular:      document.getElementById('e-celular'),
+      dataNasc:     document.getElementById('e-data-nasc'),
+      codFichario:  document.getElementById('e-cod-fichario'),
+    },
+
+    // modal novo
+    newBackdrop: document.getElementById('cliente-new-backdrop'),
+    newCloseBtn: document.getElementById('new-close-btn'),
+    newCancelBtn: document.getElementById('new-cancel-btn'),
+    newForm: document.getElementById('new-form'),
+
+    n: {
+      nome:         document.getElementById('n-nome'),
+      logradouro:   document.getElementById('n-logradouro'),
+      numero:       document.getElementById('n-numero'),
+      bairro:       document.getElementById('n-bairro'),
+      rg:           document.getElementById('n-rg'),
+      cpf:          document.getElementById('n-cpf'),
+      telefone:     document.getElementById('n-telefone'),
+      celular:      document.getElementById('n-celular'),
+      dataNasc:     document.getElementById('n-data-nasc'),
+      codFichario:  document.getElementById('n-cod-fichario'),
+    },
   };
 
-  // -------------------------------------------------------------
-  // INICIALIZAÇÃO
-  // -------------------------------------------------------------
-  init();
-
-  async function init() {
-    await loadData();
-    wireEvents();
-  }
-
-  // -------------------------------------------------------------
-  // CARREGAR DADOS DO BACK
-  // -------------------------------------------------------------
-  async function loadData() {
-    // pede uma página bem grande e filtra no front
-    const resp = await fetch('/api/clientes?pageSize=2500');
-    if (!resp.ok) {
-      renderEmpty('Erro ao carregar clientes.');
-      return;
-    }
-
-    const data = await resp.json();
-    const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
-    state.all = items;
-    applyFilter();
-
-    // liberar botão de novo
-    if (els.btnNew) els.btnNew.disabled = false;
-  }
-
-  // -------------------------------------------------------------
-  // LIGAR EVENTOS
-  // -------------------------------------------------------------
-  function wireEvents() {
-    // filtro
-    els.filterText?.addEventListener('input', applyFilter);
-    els.filterColumn?.addEventListener('change', applyFilter);
-
-    // paginação
-    els.pagerPrev?.addEventListener('click', () => changePage(-1));
-    els.pagerNext?.addEventListener('click', () => changePage(1));
-
-    // ações
-    els.btnView?.addEventListener('click', onView);
-    els.btnEdit?.addEventListener('click', onEdit);
-    els.btnDelete?.addEventListener('click', onDelete);
-    els.btnNew?.addEventListener('click', onNew);
-
-    // máscaras (clientes tem isso)
-    document.addEventListener('input', handleMasks);
-  }
-
-  // -------------------------------------------------------------
-  // FILTRO
-  // -------------------------------------------------------------
-  function applyFilter() {
-    const col = els.filterColumn?.value || 'nome';
-    const txt = (els.filterText?.value || '').trim().toLowerCase();
-
-    if (!txt) {
-      state.filtered = [...state.all];
-    } else {
-      state.filtered = state.all.filter(c => {
-        const val = getColumnValue(c, col);
-        return val.toLowerCase().includes(txt);
-      });
-    }
-
-    state.page = 1;
-    renderTable();
-    updatePager();
-  }
-
-  function getColumnValue(c, col) {
-    switch (col) {
-      case 'endereco': return c.endereco || '';
-      case 'codigoFichario': return (c.codigoFichario ?? '').toString();
-      case 'celular': return c.celular || '';
-      case 'nome':
-      default: return c.nome || '';
-    }
-  }
-
-  // -------------------------------------------------------------
-  // RENDER TABELA
-  // -------------------------------------------------------------
-  function renderTable() {
-    if (!els.tableBody) return;
-    els.tableBody.innerHTML = '';
-
-    if (!state.filtered.length) {
-      renderEmpty('Nenhum cliente encontrado.');
-      setSelection(null);
-      toggleActions(true);
-      return;
-    }
-
-    const start = (state.page - 1) * state.pageSize;
-    const end = start + state.pageSize;
-    const pageItems = state.filtered.slice(start, end);
-
-    pageItems.forEach(item => {
-      const c = normalizeCliente(item);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${c.nome}</td>
-        <td>${c.endereco}</td>
-        <td>${c.celular}</td>
-        <td>${c.codigoFichario}</td>
-      `;
-      tr.addEventListener('click', () => onRowClick(tr, c));
-      els.tableBody.appendChild(tr);
-    });
-
-    // se o usuário não clicou em nada, mantém ações desabilitadas
-    setSelection(null);
-    toggleActions(true);
-  }
-
-  function renderEmpty(msg) {
-    if (!els.tableBody) return;
-    els.tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">${msg}</td></tr>`;
-  }
-
-  // -------------------------------------------------------------
-  // PAGINAÇÃO
-  // -------------------------------------------------------------
-  function changePage(delta) {
-    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
-    const newPage = state.page + delta;
-    if (newPage < 1 || newPage > totalPages) return;
-    state.page = newPage;
-    renderTable();
-    updatePager();
-  }
-
-  function updatePager() {
-    const total = state.filtered.length;
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    const start = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
-    const end = total === 0 ? 0 : Math.min(state.page * state.pageSize, total);
-
-    if (els.pagerInfo) {
-      els.pagerInfo.textContent = total === 0
-        ? 'Nenhum registro'
-        : `Mostrando ${start}-${end} de ${total} (pág. ${state.page} de ${totalPages})`;
-    }
-
-    if (els.pagerPrev) {
-      const disabled = state.page <= 1;
-      els.pagerPrev.disabled = disabled;
-      els.pagerPrev.classList.toggle('is-disabled', disabled);
-    }
-    if (els.pagerNext) {
-      const disabled = state.page >= totalPages;
-      els.pagerNext.disabled = disabled;
-      els.pagerNext.classList.toggle('is-disabled', disabled);
-    }
-  }
-
-  // -------------------------------------------------------------
-  // SELEÇÃO
-  // -------------------------------------------------------------
-  function onRowClick(tr, clienteData) {
-    // limpa seleção anterior
-    document.querySelectorAll('#tb-clientes tbody tr').forEach(row => row.classList.remove('selected'));
-    tr.classList.add('selected');
-    setSelection(clienteData);
-    toggleActions(false);
-  }
-
-  function setSelection(cliente) {
-    state.selected = cliente;
-  }
-
-  function toggleActions(disabled) {
-    [els.btnView, els.btnEdit, els.btnDelete].forEach(btn => {
-      if (btn) btn.disabled = disabled;
-    });
-  }
-
-  function normalizeCliente(c) {
-    const endereco = c.endereco || '';
-    return {
-      id: c.clientesId ?? c.clientesID ?? c.id ?? '',
-      nome: c.nome ?? '',
-      endereco: endereco,
-      rg: c.rg ?? '',
-      cpf: c.cpf ?? '',
-      telefone: c.telefone ?? '',
-      celular: c.celular ?? '',
-      dataNascimentoIso: c.dataNascimento || '',
-      codigoFichario: c.codigoFichario ?? '',
-      dataCadastroIso: c.dataCadastro || c.DataCadastro || '',
-      ultimoRegistroIso: c.dataUltimoRegistro || c.DataUltimoRegistro || '',
-      deletadoBool: !!c.deletado
-    };
-  }
-
-  // -------------------------------------------------------------
-  // AÇÕES (VISUALIZAR / EDITAR / NOVO / DELETE)
-  // -------------------------------------------------------------
-  function onView() {
-    if (!state.selected) return;
-    const c = state.selected;
-    const b = els.viewBackdrop;
-    if (!b) return;
-
-    setText('m-nome', c.nome);
-    setText('m-endereco', c.endereco);
-    setText('m-rg', c.rg);
-    setText('m-cpf', c.cpf);
-    setText('m-telefone', c.telefone);
-    setText('m-celular', c.celular);
-    setText('m-cod-fichario', c.codigoFichario);
-    setText('m-data-cadastro', c.dataCadastroIso ? new Date(c.dataCadastroIso).toLocaleString() : '');
-    setText('m-ultimo-registro', c.ultimoRegistroIso ? new Date(c.ultimoRegistroIso).toLocaleString() : '');
-    setText('m-data-nasc', c.dataNascimentoIso ? new Date(c.dataNascimentoIso).toLocaleDateString() : '');
-
-    b.classList.add('show');
-    document.getElementById('modal-close-btn').onclick = () => b.classList.remove('show');
-    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
-  }
-
-  function onEdit() {
-    if (!state.selected) return;
-    const c = state.selected;
-    const b = els.editBackdrop;
-    if (!b) return;
-
-    // quebra endereço "LOG, NUM, BAI"
-    const partes = (c.endereco || '').split(',').map(p => p.trim());
-    const logradouro = partes[0] || '';
-    const numero = partes[1] || '';
-    const bairro = partes[2] || '';
-
-    setVal('e-id', c.id);
-    setVal('e-nome', c.nome);
-    setVal('e-logradouro', logradouro);
-    setVal('e-numero', numero);
-    setVal('e-bairro', bairro);
-    setVal('e-rg', c.rg);
-    setVal('e-cpf', c.cpf);
-    setVal('e-telefone', c.telefone);
-    setVal('e-celular', c.celular);
-    setVal('e-cod-fichario', c.codigoFichario);
-    setVal('e-data-nasc', c.dataNascimentoIso ? c.dataNascimentoIso.substring(0, 10) : '');
-
-    b.classList.add('show');
-
-    document.getElementById('edit-close-btn').onclick = () => b.classList.remove('show');
-    document.getElementById('edit-cancel-btn').onclick = () => b.classList.remove('show');
-    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
-
-    // submit
-    document.getElementById('edit-form').onsubmit = async (ev) => {
-      ev.preventDefault();
-      await submitEdit();
-    };
-  }
-
-  async function submitEdit() {
-    const id = getVal('e-id');
-    const nome = getVal('e-nome').trim();
-    if (!nome) {
-      alert('Nome é obrigatório.');
-      document.getElementById('e-nome').focus();
-      return;
-    }
-
-    const endereco = montarEndereco(
-      getVal('e-logradouro'),
-      getVal('e-numero'),
-      getVal('e-bairro')
-    );
-
-    // se vazio, usa hoje
-    let dataNasc = getVal('e-data-nasc');
-    if (!dataNasc) {
-      dataNasc = new Date().toISOString().substring(0, 10);
-    }
-
-    const payload = {
-      clientesId: parseInt(id, 10),
-      nome: nome,
-      endereco: endereco,
-      rg: getVal('e-rg'),
-      cpf: getVal('e-cpf'),
-      telefone: getVal('e-telefone'),
-      celular: getVal('e-celular'),
-      dataNascimento: dataNasc,
-      codigoFichario: getVal('e-cod-fichario') ? parseInt(getVal('e-cod-fichario'), 10) : 0,
-      deletado: false
-    };
-
-    const resp = await fetch(`/api/clientes/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (resp.ok) {
-      els.editBackdrop.classList.remove('show');
-      await loadData();
-    } else {
-      const txt = await resp.text();
-      alert('Erro ao atualizar cliente:\n' + txt);
-    }
-  }
-
-  function onNew() {
-    const b = els.newBackdrop;
-    if (!b) return;
-
-    // limpa
-    ['n-nome','n-logradouro','n-numero','n-bairro','n-rg','n-cpf','n-telefone','n-celular','n-data-nasc','n-cod-fichario']
-      .forEach(id => setVal(id, ''));
-
-    b.classList.add('show');
-    document.getElementById('new-close-btn').onclick = () => b.classList.remove('show');
-    document.getElementById('new-cancel-btn').onclick = () => b.classList.remove('show');
-    b.onclick = e => { if (e.target === b) b.classList.remove('show'); };
-
-    document.getElementById('new-form').onsubmit = async (ev) => {
-      ev.preventDefault();
-      await submitNew();
-    };
-  }
-
-  async function submitNew() {
-    const nome = getVal('n-nome').trim();
-    if (!nome) {
-      alert('Nome é obrigatório.');
-      document.getElementById('n-nome').focus();
-      return;
-    }
-
-    const endereco = montarEndereco(
-      getVal('n-logradouro'),
-      getVal('n-numero'),
-      getVal('n-bairro')
-    );
-
-    let dataNasc = getVal('n-data-nasc');
-    if (!dataNasc) {
-      dataNasc = new Date().toISOString().substring(0, 10);
-    }
-
-    const payload = {
-      nome: nome,
-      endereco: endereco,
-      rg: getVal('n-rg'),
-      cpf: getVal('n-cpf'),
-      telefone: getVal('n-telefone'),
-      celular: getVal('n-celular'),
-      dataNascimento: dataNasc,
-      codigoFichario: getVal('n-cod-fichario') ? parseInt(getVal('n-cod-fichario'), 10) : 0,
-      deletado: false
-    };
-
-    const resp = await fetch('/api/clientes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (resp.ok) {
-      els.newBackdrop.classList.remove('show');
-      await loadData();
-    } else {
-      const txt = await resp.text();
-      alert('Erro ao criar cliente:\n' + txt);
-    }
-  }
-
-  async function onDelete() {
-    if (!state.selected) return;
-    const ok = confirm(`Confirma excluir o cliente "${state.selected.nome}"?`);
-    if (!ok) return;
-
-    const resp = await fetch(`/api/clientes/${state.selected.id}`, {
-      method: 'DELETE'
-    });
-
-    if (resp.ok) {
-      await loadData();
-      setSelection(null);
-      toggleActions(true);
-    } else {
-      const txt = await resp.text();
-      alert('Erro ao excluir:\n' + txt);
-    }
-  }
-
-  // -------------------------------------------------------------
+  // -------------------------
   // HELPERS
-  // -------------------------------------------------------------
-  function setText(id, text) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text ?? '';
+  // -------------------------
+  function fmtDate(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
   }
 
-  function setVal(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val ?? '';
+  function fmtDateTime(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${yy} ${hh}:${mi}`;
   }
 
-  function getVal(id) {
-    const el = document.getElementById(id);
-    return el ? el.value : '';
+  function isoDateOnly(v) {
+    if (!v) return '';
+    const m = String(v).match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : '';
   }
 
-  function montarEndereco(log, num, bairro) {
-    const l = log && log.trim() ? log.trim().toUpperCase() : 'NAO INFORMADO';
-    const n = num && num.trim() ? num.trim().toUpperCase() : '000';
-    const b = bairro && bairro.trim() ? bairro.trim().toUpperCase() : 'NAO INFORMADO';
-    return `${l}, ${n}, ${b}`;
-  }
-
-  // máscaras de cpf / rg / telefone
-  function handleMasks(e) {
-    const t = e.target;
-    if (!(t instanceof HTMLInputElement)) return;
-    if (t.classList.contains('mask-cpf')) {
-      t.value = maskCpf(t.value);
-    } else if (t.classList.contains('mask-rg')) {
-      t.value = maskRg(t.value);
+  async function fetchJson(url, options) {
+    const resp = await fetch(url, options);
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(txt || `Erro HTTP ${resp.status}`);
     }
+    return await resp.json();
   }
 
-  function onlyDigits(str) {
-    return (str || '').replace(/\D/g, '');
+  function openModal(el) {
+    if (el) el.classList.add('show');
   }
 
-  function maskCpf(v) {
-    v = onlyDigits(v).slice(0, 11);
-    v = v.replace(/(\d{3})(\d)/, '$1.$2');
-    v = v.replace(/(\d{3})(\d)/, '$1.$2');
-    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    return v;
+  function closeModal(el) {
+    if (el) el.classList.remove('show');
   }
 
-  function maskRg(v) {
-    v = onlyDigits(v).slice(0, 9);
-    v = v.replace(/(\d{2})(\d)/, '$1.$2');
-    v = v.replace(/(\d{3})(\d)/, '$1.$2');
-    v = v.replace(/(\d{3})(\d{1})$/, '$1-$2');
-    return v;
+  function splitEndereco(endereco) {
+    const partes = (endereco || '').split(',').map(p => p.trim());
+    return {
+      logradouro: partes[0] || '',
+      numero: partes[1] || '',
+      bairro: partes[2] || '',
+    };
   }
+
+  function montarEndereco(logradouro, numero, bairro) {
+    const log = (logradouro || '').trim() || 'NAO INFORMADO';
+    const num = (numero || '').trim() || '000';
+    const bai = (bairro || '').trim() || 'NAO INFORMADO';
+    return `${log.toUpperCase()}, ${num.toUpperCase()}, ${bai.toUpperCase()}`;
+  }
+
+  // -------------------------
+  // PREENCHER MODAIS
+  // -------------------------
+  function fillViewModal(c) {
+    if (!c) return;
+    const v = els.v;
+
+    const nome           = c.nome ?? c.Nome ?? '';
+    const endereco       = c.endereco ?? c.Endereco ?? '';
+    const rg             = c.rg ?? c.Rg ?? '';
+    const cpf            = c.cpf ?? c.Cpf ?? '';
+    const telefone       = c.telefone ?? c.Telefone ?? '';
+    const celular        = c.celular ?? c.Celular ?? '';
+    const dataNasc       = c.dataNascimento ?? c.DataNascimento ?? null;
+    const codFichario    = c.codigoFichario ?? c.CodigoFichario ?? null;
+    const dataCadastro   = c.dataCadastro ?? c.DataCadastro ?? null;
+    const ultimoRegistro = c.dataUltimoRegistro ?? c.DataUltimoRegistro ?? null;
+
+    if (v.nome)           v.nome.textContent = nome;
+    if (v.endereco)       v.endereco.textContent = endereco;
+    if (v.rg)             v.rg.textContent = rg;
+    if (v.cpf)            v.cpf.textContent = cpf;
+    if (v.telefone)       v.telefone.textContent = telefone;
+    if (v.celular)        v.celular.textContent = celular;
+    if (v.dataNasc)       v.dataNasc.textContent = fmtDate(dataNasc);
+    if (v.codFichario)    v.codFichario.textContent = codFichario ?? '';
+    if (v.dataCadastro)   v.dataCadastro.textContent = fmtDateTime(dataCadastro);
+    if (v.ultimoRegistro) v.ultimoRegistro.textContent = fmtDateTime(ultimoRegistro);
+  }
+
+  function fillEditModal(c) {
+    if (!c) return;
+    const e = els.e;
+
+    const id             = c.clientesId ?? c.ClientesId ?? c.id ?? null;
+    const nome           = c.nome ?? c.Nome ?? '';
+    const endereco       = c.endereco ?? c.Endereco ?? '';
+    const rg             = c.rg ?? c.Rg ?? '';
+    const cpf            = c.cpf ?? c.Cpf ?? '';
+    const telefone       = c.telefone ?? c.Telefone ?? '';
+    const celular        = c.celular ?? c.Celular ?? '';
+    const dataNasc       = c.dataNascimento ?? c.DataNascimento ?? null;
+    const codFichario    = c.codigoFichario ?? c.CodigoFichario ?? null;
+
+    const { logradouro, numero, bairro } = splitEndereco(endereco);
+
+    if (e.id)          e.id.value = id ?? '';
+    if (e.nome)        e.nome.value = nome;
+    if (e.logradouro)  e.logradouro.value = logradouro;
+    if (e.numero)      e.numero.value = numero;
+    if (e.bairro)      e.bairro.value = bairro;
+    if (e.rg)          e.rg.value = rg;
+    if (e.cpf)         e.cpf.value = cpf;
+    if (e.telefone)    e.telefone.value = telefone;
+    if (e.celular)     e.celular.value = celular;
+    if (e.dataNasc)    e.dataNasc.value = isoDateOnly(dataNasc);
+    if (e.codFichario) e.codFichario.value = codFichario ?? '';
+  }
+
+  function clearNewForm() {
+    const n = els.n;
+    Object.keys(n).forEach(k => {
+      if (n[k]) n[k].value = '';
+    });
+  }
+
+  function buildEditPayload() {
+    const e = els.e;
+
+    const nome        = (e.nome?.value ?? '').trim();
+    const logradouro  = e.logradouro?.value ?? '';
+    const numero      = e.numero?.value ?? '';
+    const bairro      = e.bairro?.value ?? '';
+    const rg          = e.rg?.value ?? '';
+    const cpf         = e.cpf?.value ?? '';
+    const telefone    = e.telefone?.value ?? '';
+    const celular     = e.celular?.value ?? '';
+    const dataNasc    = e.dataNasc?.value ?? '';
+    const codFichario = e.codFichario?.value ?? '';
+
+    return {
+      Nome: (nome || '').toUpperCase(),
+      Endereco: montarEndereco(logradouro, numero, bairro),
+      Rg: rg,
+      Cpf: cpf,
+      Telefone: telefone,
+      Celular: celular,
+      DataNascimento: dataNasc || null,
+      CodigoFichario: codFichario ? parseInt(codFichario, 10) : 0,
+    };
+  }
+
+  function buildNewPayload() {
+    const n = els.n;
+
+    const nome        = (n.nome?.value ?? '').trim();
+    const logradouro  = n.logradouro?.value ?? '';
+    const numero      = n.numero?.value ?? '';
+    const bairro      = n.bairro?.value ?? '';
+    const rg          = n.rg?.value ?? '';
+    const cpf         = n.cpf?.value ?? '';
+    const telefone    = n.telefone?.value ?? '';
+    const celular     = n.celular?.value ?? '';
+    const dataNasc    = n.dataNasc?.value ?? '';
+    const codFichario = n.codFichario?.value ?? '';
+
+    return {
+      Nome: (nome || '').toUpperCase(),
+      Endereco: montarEndereco(logradouro, numero, bairro),
+      Rg: rg,
+      Cpf: cpf,
+      Telefone: telefone,
+      Celular: celular,
+      DataNascimento: dataNasc || null,
+      CodigoFichario: codFichario ? parseInt(codFichario, 10) : 0,
+    };
+  }
+
+  // -------------------------
+  // INSTÂNCIA DO CrudList
+  // -------------------------
+  let list;
+
+  const cfg = {
+    endpoint: '/api/clientes',
+    tableBodySelector: '#tb-clientes tbody',
+    pagerInfoSelector: '#clientes-pg-info',
+    pagerPrevSelector: '#clientes-pg-prev',
+    pagerNextSelector: '#clientes-pg-next',
+    filterColumnSelector: '#filter-column',
+    filterTextSelector: '#filter-text',
+    btnViewSelector: '#btn-view',
+    btnEditSelector: '#btn-edit',
+    btnNewSelector: '#btn-new',
+    btnDeleteSelector: '#btn-delete',
+
+    defaultColumn: 'nome',
+    pageSize: 50,
+    columnsCount: 4, // Nome, Endereço, Celular, Cod. Fichário
+
+    mapRow: (c) => {
+      const id       = c.clientesId ?? c.ClientesId ?? c.id ?? 0;
+      const nome     = c.nome ?? c.Nome ?? '';
+      const endereco = c.endereco ?? c.Endereco ?? '';
+      const celular  = c.celular ?? c.Celular ?? '';
+      const codFich  = c.codigoFichario ?? c.CodigoFichario ?? '';
+
+      return {
+        id,
+        cells: [nome, endereco, celular, codFich],
+      };
+    },
+
+    async onView(id) {
+      try {
+        const c = await fetchJson(`/api/clientes/${id}`);
+        fillViewModal(c);
+        openModal(els.viewBackdrop);
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao carregar detalhes do cliente.');
+      }
+    },
+
+    async onEdit(id) {
+      try {
+        const c = await fetchJson(`/api/clientes/${id}`);
+        fillEditModal(c);
+        openModal(els.editBackdrop);
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao carregar cliente para edição.');
+      }
+    },
+
+    async onDelete(id) {
+      if (!confirm('Deseja realmente excluir este cliente?')) return;
+      try {
+        const resp = await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
+        if (!resp.ok) {
+          const txt = await resp.text();
+          throw new Error(txt || 'Erro ao excluir cliente.');
+        }
+        await list.loadPage();
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao excluir cliente.');
+      }
+    },
+
+    onNew() {
+      clearNewForm();
+      openModal(els.newBackdrop);
+    },
+  };
+
+  list = new CrudList(cfg);
+
+  // -------------------------
+  // EVENTOS DOS MODAIS
+  // -------------------------
+
+  // modal visualizar
+  els.viewCloseBtn?.addEventListener('click', () => closeModal(els.viewBackdrop));
+  els.viewBackdrop?.addEventListener('click', ev => {
+    if (ev.target === els.viewBackdrop) closeModal(els.viewBackdrop);
+  });
+
+  // modal editar
+  els.editCloseBtn?.addEventListener('click', () => closeModal(els.editBackdrop));
+  els.editCancelBtn?.addEventListener('click', () => closeModal(els.editBackdrop));
+  els.editBackdrop?.addEventListener('click', ev => {
+    if (ev.target === els.editBackdrop) closeModal(els.editBackdrop);
+  });
+
+  els.editForm?.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const idRaw = els.e.id?.value ?? '';
+    const id = parseInt(idRaw || '0', 10);
+    if (!id) {
+      alert('ID inválido para edição.');
+      return;
+    }
+
+    const payload = buildEditPayload();
+    if (!payload.Nome || !payload.Nome.trim()) {
+      alert('Nome é obrigatório.');
+      return;
+    }
+
+    try {
+      const resp = await fetch(`/api/clientes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'Erro ao salvar alterações.');
+      }
+      closeModal(els.editBackdrop);
+      await list.loadPage();
+    } catch (err) {
+      console.error(err);
+      alert('Falha ao salvar alterações.');
+    }
+  });
+
+  // modal novo
+  els.newCloseBtn?.addEventListener('click', () => closeModal(els.newBackdrop));
+  els.newCancelBtn?.addEventListener('click', () => closeModal(els.newBackdrop));
+  els.newBackdrop?.addEventListener('click', ev => {
+    if (ev.target === els.newBackdrop) closeModal(els.newBackdrop);
+  });
+
+  els.newForm?.addEventListener('submit', async ev => {
+    ev.preventDefault();
+
+    const payload = buildNewPayload();
+    if (!payload.Nome || !payload.Nome.trim()) {
+      alert('Nome é obrigatório.');
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'Erro ao criar cliente.');
+      }
+      closeModal(els.newBackdrop);
+      list.state.page = 1;
+      await list.loadPage();
+    } catch (err) {
+      console.error(err);
+      alert('Falha ao criar cliente.');
+    }
+  });
 })();

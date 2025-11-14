@@ -3,11 +3,14 @@
    ========================================================= */
 :root {
   /* Paleta principal controlável */
-  --color-one: #ECEBDE;    /* superfícies: blocos, botão Menu, linhas odd */
-  --color-two: #D7D3BF;    /* superfícies: linhas even e barra de busca */
-  --color-three: #C1BAA1;  /* cabeçalho da tabela, seleção/hover de linhas, hovers */
-  --color-four: #A59D84;   /* fundo do app (gradiente) */
-  --color-five: #D7D3BF;   /* bordas das linhas (odd e even) */
+  --color-one: #F2E9D0;    /* superfícies: blocos, botão Menu, linhas odd */
+  --color-two: #EACEB4;    /* superfícies: linhas even e barra de busca */
+  --color-three: #E79E85;  /* cabeçalho da tabela, seleção/hover de linhas, hovers */
+  --color-four: #BB5A5A;   /* fundo do app (gradiente) */
+  --color-five: #c4a78d;   /* bordas das linhas (odd e even) */
+
+  /* ações principais (Novo / Salvar) */
+  --color-six: #1fa37a;
 
   /* Tabela */
   --tEven: var(--color-two);
@@ -196,11 +199,14 @@
 .table-modern tbody tr:nth-child(even) { background: var(--tEven); }
 
 /* hover e seleção em color-three */
-.table-modern tbody tr:hover { background: var(--tHover) !important; transition: background 120ms ease-out; }
+.table-modern tbody tr:hover {
+  background: var(--tHover) !important;
+  transition: background 120ms ease-out;
+}
 
 .table-modern tr.selected {
   background: var(--color-three) !important;
-  outline: 1px solid var(--color-five);  /* <<< bordinha do selecionado agora na cor-five */
+  outline: 1px solid var(--color-five);
   outline-offset: -1px;
 }
 
@@ -215,7 +221,7 @@
   background: var(--tHeadSticky);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--color-five); /* divisória do header */
+  border-bottom: 1px solid var(--color-five);
   box-shadow: 0 6px 12px -6px rgba(15, 23, 42, 0.08);
 }
 
@@ -279,7 +285,7 @@
 .table-pager-group { display: flex; gap: 0.5rem; }
 
 .table-pager .pager-btn {
-  background: var(--color-two);                 /* base em color-two */
+  background: var(--color-two);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
   font-size: 0.72rem; padding: 0.35rem 0.85rem;
@@ -289,7 +295,7 @@
 }
 
 .table-pager .pager-btn:hover:not(.is-disabled) {
-  background: var(--color-three);               /* hover em color-three */
+  background: var(--color-three);
   border-color: rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
 }
@@ -356,11 +362,72 @@
   border-radius: 0.55rem; font-size: 0.7rem;
   padding: 0.35rem 0.85rem; border: 1px solid transparent; cursor: pointer;
 }
-.btn-modern.secondary { background: #e2e8f0; color: var(--color-text); border-color: #e2e8f0; }
-.btn-modern.primary   { background: var(--color-primary); color: #fff; border-color: #1d4ed8; }
+
+.btn-modern.secondary {
+  background: #e2e8f0;
+  color: var(--color-text);
+  border-color: #e2e8f0;
+}
+
+.btn-modern.primary {
+  background: var(--color-six);
+  color: #fff;
+  border-color: #158455;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
+}
+
+/* hover do botão Salvar (primary) */
+.btn-modern.primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
 
 /* botão pequeno */
-.btn-modern.small { font-size: 0.68rem; padding: 0.25rem 0.6rem; line-height: 1.1; }
+.btn-modern.small {
+  font-size: 0.68rem;
+  padding: 0.25rem 0.6rem;
+  line-height: 1.1;
+}
+
+/* Botão Cancelar dentro dos modais */
+.app-modal .btn-modern.secondary {
+  background: var(--color-two);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: var(--color-text);
+  transition: background 120ms ease-out, transform 120ms ease-out, box-shadow 120ms ease-out, border-color 120ms ease-out;
+}
+
+.app-modal .btn-modern.secondary:hover {
+  background: var(--color-three);
+  border-color: rgba(148, 163, 184, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
+}
+
+/* =========================================================
+   7.1 CAMPOS DE FORMULÁRIO NOS MODAIS
+   ========================================================= */
+.app-modal-body input[type="text"],
+.app-modal-body input[type="number"],
+.app-modal-body input[type="date"],
+.app-modal-body input[type="tel"],
+.app-modal-body input[type="email"],
+.app-modal-body input[type="password"],
+.app-modal-body textarea,
+.app-modal-body select {
+  background: var(--color-two);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: var(--color-text);
+}
+
+/* foco bonitinho nos campos do modal */
+.app-modal-body input:focus,
+.app-modal-body textarea:focus,
+.app-modal-body select:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
+  border-color: rgba(37, 99, 235, 0.8);
+}
 
 /* =========================================================
    8. BARRA DE AÇÕES
@@ -378,13 +445,41 @@
   justify-content: center; border: 1px solid rgba(148,163,184,0.35);
   background: var(--color-one); color: var(--color-text);
 }
-.action-btn.primary { background: var(--color-one); color: var(--color-text); }
+
+.action-btn.primary {
+  background: var(--color-one);
+  color: var(--color-text);
+}
+
 .action-btn.success {
-  background: #1fa37a; border-color: #1fa37a; color: #fff;
+  background: var(--color-six);
+  border-color: var(--color-six);
+  color: #fff;
   box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
 }
-.action-btn.danger  { background: var(--color-one); color: var(--color-danger); border-color: var(--color-danger-soft); }
+
+.action-btn.danger  {
+  background: var(--color-one);
+  color: var(--color-danger);
+  border-color: var(--color-danger-soft);
+}
+
 .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* hover do botão Novo (success) */
+.action-btn.success:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+/* hover para Visualizar / Editar / Excluir */
+.action-btn.primary:hover:not(:disabled),
+.action-btn.danger:hover:not(:disabled) {
+  background: var(--color-two);
+  border-color: rgba(148, 163, 184, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
+}
 
 /* =========================================================
    9. BARRA DE BUSCA
@@ -397,15 +492,30 @@
   flex-wrap: wrap; align-items: flex-end;
 }
 
-/* Botão “Menu” com hover em color-three */
+/* Botão “Menu” com hover animado */
 .list-filter > .list-filter-action > a.btn-modern.small {
   display: inline-flex !important; align-items: center !important; justify-content: center;
-  gap: 0.35rem; background: var(--btn-menu-bg) !important; border: 1px solid var(--btn-menu-border) !important;
-  color: var(--color-text) !important; border-radius: 0.55rem !important;
-  font-size: 0.68rem !important; padding: 0 1rem !important; line-height: 1.1 !important;
-  height: 38px !important; text-decoration: none !important;
+  gap: 0.35rem;
+  background: var(--btn-menu-bg) !important;
+  border: 1px solid var(--btn-menu-border) !important;
+  color: var(--color-text) !important;
+  border-radius: 0.55rem !important;
+  font-size: 0.68rem !important;
+  padding: 0 1rem !important;
+  line-height: 1.1 !important;
+  height: 38px !important;
+  text-decoration: none !important;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.03);
+  transition: background 120ms ease-out, transform 120ms ease-out,
+              box-shadow 120ms ease-out, border-color 120ms ease-out;
 }
-.list-filter > .list-filter-action > a.btn-modern.small:hover { background: var(--color-three) !important; }
+
+.list-filter > .list-filter-action > a.btn-modern.small:hover {
+  background: var(--color-three) !important;
+  border-color: rgba(148, 163, 184, 0.7) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
+}
 
 .list-filter-field, .list-filter-input { display: flex; flex-direction: column; gap: 0.25rem; }
 
