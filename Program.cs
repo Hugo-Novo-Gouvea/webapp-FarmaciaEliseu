@@ -629,6 +629,12 @@ app.MapPost("/api/contas/movimentos/imprimir", async (AppDbContext db, IdsPayloa
     if (cliente is not null && cliente.CodigoFichario.HasValue)
         codigoFichario = cliente.CodigoFichario.Value.ToString();
 
+    // se todos forem do mesmo código de movimento, usamos como DOC
+    int? codigoMovDoc = null;
+    var codigos = movimentos.Select(m => m.CodigoMovimento).Distinct().ToList();
+    if (codigos.Count == 1)
+        codigoMovDoc = codigos[0];
+
     var itens = movimentos.Select(m => new ReceiptPrinter.Item(
         m.Quantidade,
         m.ProdutosDescricao,
@@ -643,16 +649,15 @@ app.MapPost("/api/contas/movimentos/imprimir", async (AppDbContext db, IdsPayloa
     {
         var cupomBytes = ReceiptPrinter.BuildReceipt(
             lojaNome: "FARMACIA DO ELISEU",
-            lojaEndereco: "Rua xxxx, 000, Centro",
-            lojaFone: "Fone (00) 00000-0000",
             dataHora: dataHora,
             clienteNome: clienteNome,
             vendedorNome: vendedorNome,
             itens: itens,
-            isDinheiro: true,              // <-- modelo COM valor
+            isDinheiro: true,              // modelo COM valor
             totalDesconto: totalDesconto,
             totalFinal: totalFinal,
-            codigoFichario: codigoFichario
+            codigoFichario: codigoFichario,
+            codigoMovimento: codigoMovDoc
         );
 
         ReceiptPrinter.Print(cupomBytes, null);
@@ -878,8 +883,6 @@ app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload
     {
         var cupomBytes = ReceiptPrinter.BuildReceipt(
             lojaNome: "FARMACIA DO ELISEU",
-            lojaEndereco: "Rua xxxx, 000, Centro",
-            lojaFone: "Fone (00) 00000-0000",
             dataHora: agora,
             clienteNome: clienteNome,
             vendedorNome: vendedor.Nome,
@@ -887,7 +890,8 @@ app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload
             isDinheiro: isDinheiro,
             totalDesconto: totalDesconto,
             totalFinal: totalFinal,
-            codigoFichario: codigoFichario
+            codigoFichario: codigoFichario,
+            codigoMovimento: null // aqui não temos DOC salvo ainda
         );
 
         ReceiptPrinter.Print(cupomBytes, null);
@@ -1063,8 +1067,6 @@ app.MapPost("/api/movimentos/{codigoMovimento:int}/imprimir", async (int codigoM
 
             var bytes = ReceiptPrinter.BuildReceipt(
                 lojaNome: "FARMACIA DO ELISEU",
-                lojaEndereco: "Rua xxxx, 000, Centro",
-                lojaFone: "Fone (00) 00000-0000",
                 dataHora: data,
                 clienteNome: clienteNome,
                 vendedorNome: vendedorNome,
@@ -1072,7 +1074,8 @@ app.MapPost("/api/movimentos/{codigoMovimento:int}/imprimir", async (int codigoM
                 isDinheiro: true,
                 totalDesconto: totalDesconto,
                 totalFinal: totalFinal,
-                codigoFichario: codigoFichario
+                codigoFichario: codigoFichario,
+                codigoMovimento: codigoMovimento
             );
             ReceiptPrinter.Print(bytes, null);
         }
@@ -1085,8 +1088,6 @@ app.MapPost("/api/movimentos/{codigoMovimento:int}/imprimir", async (int codigoM
 
             var bytes = ReceiptPrinter.BuildReceipt(
                 lojaNome: "FARMACIA DO ELISEU",
-                lojaEndereco: "Rua xxxx, 000, Centro",
-                lojaFone: "Fone (00) 00000-0000",
                 dataHora: data,
                 clienteNome: clienteNome,
                 vendedorNome: vendedorNome,
@@ -1094,7 +1095,8 @@ app.MapPost("/api/movimentos/{codigoMovimento:int}/imprimir", async (int codigoM
                 isDinheiro: false,
                 totalDesconto: 0,
                 totalFinal: 0,
-                codigoFichario: codigoFichario
+                codigoFichario: codigoFichario,
+                codigoMovimento: codigoMovimento
             );
             ReceiptPrinter.Print(bytes, null);
         }
@@ -1104,16 +1106,15 @@ app.MapPost("/api/movimentos/{codigoMovimento:int}/imprimir", async (int codigoM
 
             var bytes = ReceiptPrinter.BuildReceipt(
                 lojaNome: "FARMACIA DO ELISEU",
-                lojaEndereco: "Rua xxxx, 000, Centro",
-                lojaFone: "Fone (00) 00000-0000",
                 dataHora: data,
                 clienteNome: clienteNome,
                 vendedorNome: vendedorNome,
                 itens: itens,
-                isDinheiro: false,       // <--- modelo sem valores
+                isDinheiro: false,       // modelo sem valores
                 totalDesconto: 0,
                 totalFinal: 0,
-                codigoFichario: codigoFichario
+                codigoFichario: codigoFichario,
+                codigoMovimento: codigoMovimento
             );
             ReceiptPrinter.Print(bytes, null);
         }
