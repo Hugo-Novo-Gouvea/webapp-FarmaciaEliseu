@@ -85,6 +85,10 @@ app.MapGet("/api/clientes", async (
             case "endereco":
                 query = query.Where(c => c.Endereco != null && c.Endereco.Contains(search));
                 break;
+            case "codigoFichario":
+                query = query.Where(c => c.CodigoFichario.HasValue &&
+                                         c.CodigoFichario.Value.ToString().Contains(search));
+                break;
             default:
                 query = query.Where(c => c.Nome != null && c.Nome.Contains(search));
                 break;
@@ -247,17 +251,30 @@ app.MapGet("/api/produtos", async (
     if (!string.IsNullOrWhiteSpace(search))
     {
         search = search.Trim();
-        switch (column)
+
+        if (string.IsNullOrWhiteSpace(column) || column == "auto")
         {
-            case "codigoBarras":
-                query = query.Where(p => p.CodigoBarras != null && p.CodigoBarras.Contains(search));
-                break;
-            case "generico":
-                query = query.Where(p => p.Generico != null && p.Generico.Contains(search));
-                break;
-            default:
-                query = query.Where(p => p.Descricao != null && p.Descricao.Contains(search));
-                break;
+            // busca "inteligente": código de barras OU descrição OU genérico
+            query = query.Where(p =>
+                (p.CodigoBarras != null && p.CodigoBarras.Contains(search)) ||
+                (p.Descricao != null && p.Descricao.Contains(search)) ||
+                (p.Generico != null && p.Generico.Contains(search))
+            );
+        }
+        else
+        {
+            switch (column)
+            {
+                case "codigoBarras":
+                    query = query.Where(p => p.CodigoBarras != null && p.CodigoBarras.Contains(search));
+                    break;
+                case "generico":
+                    query = query.Where(p => p.Generico != null && p.Generico.Contains(search));
+                    break;
+                default:
+                    query = query.Where(p => p.Descricao != null && p.Descricao.Contains(search));
+                    break;
+            }
         }
     }
 
@@ -629,12 +646,6 @@ app.MapPost("/api/contas/movimentos/imprimir", async (AppDbContext db, IdsPayloa
     if (cliente is not null && cliente.CodigoFichario.HasValue)
         codigoFichario = cliente.CodigoFichario.Value.ToString();
 
-    // se todos forem do mesmo código de movimento, usamos como DOC
-    int? codigoMovDoc = null;
-    var codigos = movimentos.Select(m => m.CodigoMovimento).Distinct().ToList();
-    if (codigos.Count == 1)
-        codigoMovDoc = codigos[0];
-
     var itens = movimentos.Select(m => new ReceiptPrinter.Item(
         m.Quantidade,
         m.ProdutosDescricao,
@@ -657,7 +668,7 @@ app.MapPost("/api/contas/movimentos/imprimir", async (AppDbContext db, IdsPayloa
             totalDesconto: totalDesconto,
             totalFinal: totalFinal,
             codigoFichario: codigoFichario,
-            codigoMovimento: codigoMovDoc
+            codigoMovimento: null          // vários movimentos, não faz sentido um DOC único
         );
 
         ReceiptPrinter.Print(cupomBytes, null);
@@ -891,7 +902,7 @@ app.MapPost("/api/vendas/imprimir", async (AppDbContext db, VendaPayload payload
             totalDesconto: totalDesconto,
             totalFinal: totalFinal,
             codigoFichario: codigoFichario,
-            codigoMovimento: null // aqui não temos DOC salvo ainda
+            codigoMovimento: null // aqui ainda não temos o codigoMovimento gerado
         );
 
         ReceiptPrinter.Print(cupomBytes, null);

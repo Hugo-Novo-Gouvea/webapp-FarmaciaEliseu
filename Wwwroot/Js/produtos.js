@@ -202,9 +202,14 @@
     btnNewSelector: '#btn-new',
     btnDeleteSelector: '#btn-delete',
 
-    defaultColumn: 'descricao',
+    // ANTES:
+    // defaultColumn: 'descricao',
+
+    // DEPOIS (pra bater com o <option selected> do HTML):
+    defaultColumn: 'codigoBarras',
+
     pageSize: 20,
-    columnsCount: 5, // código, descrição, compra, venda, genérico
+    columnsCount: 5,
 
     mapRow: (p) => {
       const id     = p.produtosId ?? p.ProdutosId ?? p.id ?? 0;

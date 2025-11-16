@@ -8,6 +8,7 @@ namespace WebAppEstudo.Printing
 {
     public static class ReceiptPrinter
     {
+        // Largura típica de bobina 40 colunas
         public const int Cols = 40;
 
         public record Item(int Qty, string Desc, decimal Unit, decimal Discount);
@@ -57,11 +58,14 @@ namespace WebAppEstudo.Printing
             int? codigoMovimento = null
         )
         {
-            // ESC/POS bold on/off
             byte[] boldOn = new byte[] { 0x1B, 0x45, 0x01 };
             byte[] boldOff = new byte[] { 0x1B, 0x45, 0x00 };
 
-            string Line(string s) => (s.Length > Cols ? s[..Cols] : s) + "\r\n";
+            string Line(string s)
+            {
+                if (s.Length > Cols) s = s[..Cols];
+                return s + "\r\n";
+            }
 
             string Center(string s)
             {
@@ -71,33 +75,48 @@ namespace WebAppEstudo.Printing
                 return new string(' ', left) + s;
             }
 
-            // sem separador de milhar pra caber melhor na linha
-            string Money(decimal v) => v.ToString("0.00", new CultureInfo("pt-BR"));
+            string Money(decimal v) => v.ToString("N2", new CultureInfo("pt-BR"));
+
+            string FitLeft(string s, int width)
+            {
+                s ??= "";
+                if (s.Length > width) return s[..width];
+                return s.PadRight(width);
+            }
+
+            string FitRight(string s, int width)
+            {
+                s ??= "";
+                if (s.Length > width) return s[^width..];
+                return s.PadLeft(width);
+            }
+
+            string RightLine(string s)
+            {
+                s ??= "";
+                if (s.Length > Cols) s = s[^Cols..];
+                return new string(' ', Math.Max(0, Cols - s.Length)) + s;
+            }
 
             var parts = new List<byte[]>();
 
-            // ========= CABEÇALHO =========
-
-            // Espaço em branco
+            // =========================
+            // CABEÇALHO
+            // =========================
             parts.Add(Encoding.ASCII.GetBytes(Line("")));
 
-            // Nome da loja (centralizado, em negrito)
             parts.Add(boldOn);
             parts.Add(Encoding.ASCII.GetBytes(Line(Center(ToAscii(lojaNome)))));
             parts.Add(boldOff);
 
-            // Espaço em branco
             parts.Add(Encoding.ASCII.GetBytes(Line("")));
 
-            // Endereço, telefone, data/hora (todos centralizados)
             parts.Add(Encoding.ASCII.GetBytes(Line(Center(ToAscii("Amaro Franco de Oliveira,560,Jardim Sol")))));
             parts.Add(Encoding.ASCII.GetBytes(Line(Center(ToAscii("(19) 98121-6227")))));
             parts.Add(Encoding.ASCII.GetBytes(Line(Center($"Data: {dataHora:dd/MM/yy HH:mm:ss}"))));
-
-            // Espaço em branco
             parts.Add(Encoding.ASCII.GetBytes(Line("")));
 
-            // CLIENTE: (NOME) - (CODIGO FICHARIO)
+            // CLIENTE: NOME - CODFICH
             string clienteLinha = "CLIENTE: " + ToAscii(clienteNome);
             if (!string.IsNullOrWhiteSpace(codigoFichario))
             {
@@ -105,123 +124,105 @@ namespace WebAppEstudo.Printing
             }
             parts.Add(Encoding.ASCII.GetBytes(Line(clienteLinha)));
 
-            // Espaço em branco
             parts.Add(Encoding.ASCII.GetBytes(Line("")));
-
-            // VENDEDOR:
             parts.Add(Encoding.ASCII.GetBytes(Line("VENDEDOR: " + ToAscii(vendedorNome))));
-
-            // Linha de separação
             parts.Add(Encoding.ASCII.GetBytes(Line(new string('-', Cols))));
 
-            // ========= ITENS =========
-
+            // =========================
+            // ITENS
+            // =========================
             var itensList = itens?.ToList() ?? new List<Item>();
 
-            if (itensList.Count == 0)
-            {
-                parts.Add(Encoding.ASCII.GetBytes(Line("SEM ITENS")));
-            }
-            else
+            if (itensList.Count > 0)
             {
                 if (isDinheiro)
                 {
-                    // Cabeçalho dos itens (dinheiro)
-                    // Qtde Descricao         Desc  Vlt Unit  Vlr Total
-                    parts.Add(Encoding.ASCII.GetBytes(Line("Qtde Descricao         Desc  Vlt Unit  Vlr Total")));
+                    // Cabeçalho: QTD DESCRICAO DESC UNIT TOTAL
+                    string header = string.Concat(
+                        FitLeft("QTD", 3), " ",
+                        FitLeft("DESCRICAO", 10), " ",
+                        FitLeft("DESC", 6), " ",
+                        FitLeft("UNIT", 8), " ",
+                        FitLeft("TOTAL", 9)
+                    );
+                    parts.Add(Encoding.ASCII.GetBytes(Line(header)));
 
                     foreach (var it in itensList)
                     {
-                        string desc = ToAscii(it.Desc ?? "");
-                        if (desc.Length > 14) desc = desc[..14];
+                        string desc = ToAscii(it.Desc);
+                        if (desc.Length > 10) desc = desc[..10];
 
-                        var totalItem = it.Unit * it.Qty - it.Discount;
+                        decimal totalItem = (it.Unit * it.Qty) - it.Discount;
                         if (totalItem < 0) totalItem = 0;
 
-                        // Colunas:
-                        // 3 dígitos qtd, 1 espaço,
-                        // 14 desc (esq),
-                        // 6 desconto, espaço,
-                        // 6 unit, espaço,
-                        // 8 total  -> soma ~ 40 colunas
-                        string linha =
-                            $"{it.Qty,3} " +
-                            $"{desc,-14}" +
-                            $"{Money(it.Discount),6} " +
-                            $"{Money(it.Unit),6} " +
-                            $"{Money(totalItem),8}";
+                        string linha = string.Concat(
+                            FitRight(it.Qty.ToString(), 3), " ",
+                            FitLeft(desc, 10), " ",
+                            FitRight(Money(it.Discount), 6), " ",
+                            FitRight(Money(it.Unit), 8), " ",
+                            FitRight(Money(totalItem), 9)
+                        );
 
                         parts.Add(Encoding.ASCII.GetBytes(Line(linha)));
                     }
+
+                    parts.Add(Encoding.ASCII.GetBytes(Line(new string('-', Cols))));
+                    parts.Add(Encoding.ASCII.GetBytes(Line(RightLine("DESCONTO: " + Money(totalDesconto)))));
+                    parts.Add(Encoding.ASCII.GetBytes(Line(RightLine("VALOR TOTAL: " + Money(totalFinal)))));
                 }
                 else
                 {
-                    // MARCAR: só quantidade + descrição
-                    parts.Add(Encoding.ASCII.GetBytes(Line("Qtde Descricao")));
+                    // MARCAR: apenas quantidade + descrição
+                    string header = string.Concat(
+                        FitRight("QTD", 3), " ",
+                        FitLeft("DESCRICAO", Cols - 4) // 3 + 1 + 36 = 40
+                    );
+                    parts.Add(Encoding.ASCII.GetBytes(Line(header)));
                     parts.Add(Encoding.ASCII.GetBytes(Line(new string('-', Cols))));
 
                     foreach (var it in itensList)
                     {
-                        string desc = ToAscii(it.Desc ?? "");
-                        if (desc.Length > 36) desc = desc[..36];
+                        string desc = ToAscii(it.Desc);
+                        if (desc.Length > (Cols - 4)) desc = desc[..(Cols - 4)];
 
-                        string linha = $"{it.Qty,3} {desc}";
+                        string linha = string.Concat(
+                            FitRight(it.Qty.ToString(), 3), " ",
+                            FitLeft(desc, Cols - 4)
+                        );
+
                         parts.Add(Encoding.ASCII.GetBytes(Line(linha)));
                     }
                 }
             }
-
-            // Linha de separação depois dos itens
-            parts.Add(Encoding.ASCII.GetBytes(Line(new string('-', Cols))));
-            // Espaço em branco
-            parts.Add(Encoding.ASCII.GetBytes(Line("")));
-
-            // ========= TOTAIS (APENAS DINHEIRO) =========
-
-            if (isDinheiro)
+            else
             {
-                // alinhando mais pra direita
-                string linhaDesc = $"           DESCONTO: {Money(totalDesconto)}";
-                string linhaTot  = $"        VALOR TOTAL: {Money(totalFinal)}";
-
-                parts.Add(Encoding.ASCII.GetBytes(Line(linhaDesc)));
-                parts.Add(Encoding.ASCII.GetBytes(Line(linhaTot)));
-                parts.Add(Encoding.ASCII.GetBytes(Line("")));
+                parts.Add(Encoding.ASCII.GetBytes(Line("SEM ITENS")));
             }
 
-            // ========= RODAPÉ / ASSINATURA =========
+            parts.Add(Encoding.ASCII.GetBytes("\r\n"));
 
-            // Linha em branco
-            parts.Add(Encoding.ASCII.GetBytes(Line("")));
-
-            // ____________________(CENTRALIZADO)
-            string linhaAss = "____________________";
-            parts.Add(Encoding.ASCII.GetBytes(Line(Center(linhaAss))));
-
-            // Nome do cliente (centralizado)
+            // =========================
+            // RODAPÉ / ASSINATURA
+            // =========================
+            parts.Add(Encoding.ASCII.GetBytes(Line(Center("____________________"))));
             parts.Add(Encoding.ASCII.GetBytes(Line(Center(ToAscii(clienteNome)))));
 
-            // DOC: (codigoMovimento) (centralizado)
-            string docText = "DOC:";
             if (codigoMovimento.HasValue)
             {
-                docText = $"DOC: {codigoMovimento.Value}";
+                string doc = $"DOC: {codigoMovimento.Value:D6}";
+                parts.Add(Encoding.ASCII.GetBytes(Line(Center(doc))));
             }
-            parts.Add(Encoding.ASCII.GetBytes(Line(Center(docText))));
 
-            // Espaço em branco
             parts.Add(Encoding.ASCII.GetBytes(Line("")));
+            parts.Add(Encoding.ASCII.GetBytes(Line(Center("O ELISEU AGRADECE A PREFERENCIA!!!"))));
+            parts.Add(Encoding.ASCII.GetBytes(Line(Center("VOLTE SEMPRE"))));
 
-            // Mensagens finais (centralizadas)
-            parts.Add(Encoding.ASCII.GetBytes(Line(Center(ToAscii("O ELISEU AGRADECE A PREFERENCIA!!!")))));
-            parts.Add(Encoding.ASCII.GetBytes(Line(Center(ToAscii("VOLTE SEMPRE")))));
-
-            // Espaços em branco finais (pra impressora destacar o papel)
-            parts.Add(Encoding.ASCII.GetBytes("\r\n\r\n\r\n\r\n\r\n"));
+            // espaço final pra guilhotina
+            parts.Add(Encoding.ASCII.GetBytes("\r\n\r\n\r\n\r\n"));
 
             // Junta tudo num único buffer
-            int totalLen = parts.Sum(p => p.Length);
-            var buf = new byte[totalLen];
+            int totalBytes = parts.Sum(p => p.Length);
+            var buf = new byte[totalBytes];
             int pos = 0;
             foreach (var p in parts)
             {
@@ -236,10 +237,7 @@ namespace WebAppEstudo.Printing
         {
             s ??= "";
             string n = s.Normalize(NormalizationForm.FormD);
-            var arr = n
-                .Where(c => System.Globalization.CharUnicodeInfo
-                    .GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
-                .ToArray();
+            var arr = n.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray();
             var ascii = new string(arr);
             return new string(ascii.Select(c => c <= 0x7F ? c : '?').ToArray());
         }
