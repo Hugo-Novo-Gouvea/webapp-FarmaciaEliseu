@@ -155,10 +155,34 @@ function wiringEventosContas() {
         });
         if (!respPrint.ok) {
           const txt = await respPrint.text();
-          alert('Erro ao imprimir cupom.' + (txt ? '\n' + txt : ''));
+          alert('Erro ao gerar cupom.' + (txt ? '\n' + txt : ''));
           break;
         }
-        querImprimir = confirm('Imprimir novamente?');
+
+        const dataPrint = await respPrint.json();
+        if (!dataPrint.cupomBase64) {
+          alert('Erro: cupom não foi gerado corretamente.');
+          break;
+        }
+
+        // Envia para o printAgent local
+        try {
+          const respLocal = await fetch('http://localhost:5005/print', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: dataPrint.cupomBase64 })
+          });
+
+          if (!respLocal.ok) {
+            alert('Erro ao enviar para a impressora local.\nVerifique se o PrintAgent está rodando.');
+            break;
+          }
+
+          querImprimir = confirm('Cupom impresso com sucesso!\nImprimir novamente?');
+        } catch (err) {
+          alert('Erro ao conectar com PrintAgent local.\nVerifique se o serviço está rodando na porta 5005.');
+          break;
+        }
       }
 
       // recarrega

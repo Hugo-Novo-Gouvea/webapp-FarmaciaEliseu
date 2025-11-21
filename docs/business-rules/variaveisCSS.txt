@@ -1,0 +1,13 @@
+/----------------------------------------/
+VARIAVEIS CSS
+/----------------------------------------/
+
+--cor-padrao_primaria: #F2E9D0
+--cor-padrao_secundaria: #EACEB4
+--cor-padrao_tercearia: #E79E85
+--cor-padrao_quaternaria: #BB5A5A
+--cor-padrao_quinaria: #c4a78d
+
+--botao-confirmar_cor: #1fa37a
+
+As demais variaveis que identificas nas regras de negocio adote um valor que achar correto

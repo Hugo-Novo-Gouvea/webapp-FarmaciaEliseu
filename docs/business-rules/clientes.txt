@@ -1,146 +1,339 @@
-Clientes
+/----------------------------------------/
+CLIENTES
+/----------------------------------------/
 
 Regras da Tela
 
 - Tela que controla o CRUD de clientes
-- Tabela que acessa o banco definido em configurações e a partir do endpoint da api recebe os valores de dbo.clientes onde ID diferente de 1 e deletado é false
-- Tabela apresenta os itens "nome", "endereço", "celular" e "codigoFichario" da tabela
-- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
-- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
-- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
-- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
-- Acima da tabela tem o botão Menu, select box de coluna e input de pesquisa
-- o Botão menu com seu emoji retorna para index.html
-- select box apresenta qual a coluna que será usada de guia para pesquisas, impedindo que retorne valores referentes a outras colunas, as colunas permitidas são "Nome", "Endereco" e "Codigo Fichario", mesmo celular estando na tabela ele fica de fora da pesquisa
-- input de pesquisa recebe um valor a ser pesquisado na tabela e retornado na hora, esse valor podendo estar presente em qualquer parte do item referente a coluna (exemplo: caso eu pesquisa Ado, ele pode retornar a posição ado em qualquer parte do nome)
-- Acima da área de pesquisa ficam os 4 botões do CRUD na ordem visualizar, Editar, Novo, Excluir com seus emojis
-- Apenas o botão novo fica habilitado caso nenhum item da coluna seja selecionado
-- ao selecionar ele habilita todos os botões
 
-Visualizar
-- retorna um modal com "nome", "endereço", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario", "dataCadastro" e "dataUltimoRegistro" preenchidos e sem a capacidade de ser alterados
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
 
-Editar
-- retorna um modal com "nome", "logradouro", "numero", "bairro", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario" preenchidos e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
-- regras de cada campo:
+- Titulo e Sub-Titulo
 
-	Nome: fornece valor para o campo "nome" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- Não pode ser nulo
+	- Titulo
+		- Texto: "Lista de Clientes"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
 
+	-Sub-Titulo
+		- Texto: "Tela de Controle dos Clientes"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
 
-	Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+- Menu de botões CRUD (Visualizar, editar, novo, excluir)
+- Após entrar na tela e enquanto nenhum item da tabela for selecionado apenas o botão "Novo" fica habilitado
+- Ao selecionar um item da tabela os botões (Visualizar, Editar e Excluir são Habilitados)
+- Botões do CRUD
 
-	Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "000"
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao-tercearia
+		- Texto: Visualizar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lupa
+		- Ação: Visualiza as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Editar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lapis
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	(endereco é concatenado como "Logradouro, Numero, Bairro")
+	- Novo
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Novo
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Sinal de Positivo
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	RG: fornece valor para o campo "rg" no dbo.clientes
-	- mascara apenas numeros no formato 00.000.000-0
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "00.000.000-0"
+	- Excluir
+		- cor de fundo: --botao-excluir_cor
+		- cor da borda: --botao-excluir_borda
+		- cor quando o mouse fica em cima: --botao-excluir_foco
+		- Texto: Excluir
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Lixeira
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	CPF: fornece valor para o campo "cpf" no dbo.clientes
-	- mascara apenas numeros no formato 000.000.000-00
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "000.000.000-00"
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Nome", "Endereco" e "Codigo Fichario" (Apenas esses 3, mesmo que tenha outros itens presentes na tabela)
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Nome"
+- Itens da navegação
 
-	Telefone: fornece valor para o campo "telefone" no dbo.clientes
-	- mascara apenas numeros no formato (00)0000-0000
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "(00)0000-0000"
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
 
-	Celular: fornece valor para o campo "celular" no dbo.clientes
-	- mascara apenas numeros no formato (00)00000-0000
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "(00)00000-0000"
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
 
-	Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
-	- mascara de data
-	- pode ser nulo
-	- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
 
-	Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
-	- campo aceita apenas números inteiros positivos começando em zero
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor 0
+- tabela com os itens do crud
+- banco farmaciaEliseu.clientes
+- campos na tabela (Nome, Endereco, Celular, Codigo Fichario)
 
-- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
-- botão cancelar para cancelar a operação
-- botão salvar para realizar a operação
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
 
-Novo
-- retorna um modal com "nome", "logradouro", "numero", bairro", "rg", "cpf", "telefone", "celular", "dataNascimento", "codigoFichario", "dataCadastro", "dataUltimoRegistro" em branco e com a capacidade de ser preenchido (Sendo endereco a concatenação de "logradouro, numero, bairro")
-- regras de cada campo:
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
 
-	Nome: fornece valor para o campo "nome" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- Não pode ser nulo
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
 
+Regras do CRUD
 
-	Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+Banco: farmaciaEliseu
+Tabela: dbo.clientes
+-------------------------------------------------
+clientesID        int              PK, NOT NULL
+nome              nvarchar(200)    NOT NULL
+endereco          nvarchar(200)    NULL
+rg                nvarchar(30)     NULL
+cpf               nvarchar(30)     NULL
+telefone          nvarchar(50)     NULL
+celular           nvarchar(50)     NULL
+dataNascimento    date             NULL
+codigoFichario    int              NULL
+dataCadastro      datetime2(0)     NULL (Controlado apenas pelo sistema)
+dataUltimoRegistro datetime2(0)    NULL (Controlado apenas pelo sistema)
+deletado          bit              NULL (Controlado apenas pelo sistema e no excluir)
 
-	Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "000"
+---VISUALIZAR---
 
-	Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- retorna um modal com as informações do clientes selecionado preenchidos e sem a capacidade de ser alterados
+		"nome",
+		"endereço",
+		"rg",
+		"cpf",
+		"telefone",
+		"celular",
+		"dataNascimento",
+		"codigoFichario",
+		"dataCadastro",
+		"dataUltimoRegistro" 
 
-	(endereco é concatenado como "Logradouro, Numero, Bairro")
+---EDITAR---
 
-	RG: fornece valor para o campo "rg" no dbo.clientes
-	- mascara apenas numeros no formato 00.000.000-0
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "00.000.000-0"
+	- retorna um modal preenchido com as informações de clientes e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+		"nome",
+		"logradouro",
+		"numero",
+		"bairro",
+		"rg",
+		"cpf",
+		"telefone",
+		"celular",
+		"dataNascimento",
+		"codigoFichario"
 
-	CPF: fornece valor para o campo "cpf" no dbo.clientes
-	- mascara apenas numeros no formato 000.000.000-00
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "000.000.000-00"
+	- regras de cada campo:
 
-	Telefone: fornece valor para o campo "telefone" no dbo.clientes
-	- mascara apenas numeros no formato (00)0000-0000
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "(00)0000-0000"
+		Nome: fornece valor para o campo "nome" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
 
-	Celular: fornece valor para o campo "celular" no dbo.clientes
-	- mascara apenas numeros no formato (00)00000-0000
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "(00)00000-0000"
+		Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
 
-	Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
-	- mascara de data
-	- pode ser nulo
-	- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+		Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000"
 
-	Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
-	- campo aceita apenas números inteiros positivos começando em zero
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor 0
+		Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
 
-- ao ser feito o registro no banco é atualizado o campo "dataCadastro" e "dataUltimoRegistro" com a data e horário atual e o campo deletado com valor false
-- botão cancelar para cancelar a operação
-- botão salvar para realizar a operação
+		(endereco é concatenado como "Logradouro, Numero, Bairro")
 
-Excluir
+		RG: fornece valor para o campo "rg" no dbo.clientes
+		- mascara apenas numeros no formato 00.000.000-0 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "00.000.000-0"
+		- Salva no banco com a mascara junta (00.000.000-0)
+
+		CPF: fornece valor para o campo "cpf" no dbo.clientes
+		- mascara apenas numeros no formato 000.000.000-00 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000.000.000-00"
+		- Salva no banco com a mascara junta (000.000.000-00)
+
+		Telefone: fornece valor para o campo "telefone" no dbo.clientes
+		- mascara apenas numeros no formato (00)0000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)0000-0000"
+		- Salva no banco com a mascara junta ( (00)0000-0000 )
+
+		Celular: fornece valor para o campo "celular" no dbo.clientes 
+		- mascara apenas numeros no formato (00)00000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)00000-0000"
+		- Salva no banco com a mascara junta ( (00)00000-0000 )
+
+		Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
+		- mascara de data
+		- pode ser nulo
+		- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+
+		Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
+		- campo aceita apenas números inteiros positivos começando em zero
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+	- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---NOVO---
+
+	- retorna um modal em branco com as informações de clientes e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+		"nome",
+		"logradouro",
+		"numero",
+		"bairro",
+		"rg",
+		"cpf",
+		"telefone",
+		"celular",
+		"dataNascimento",
+		"codigoFichario"
+
+	- regras de cada campo:
+
+		Nome: fornece valor para o campo "nome" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000"
+
+		Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		(endereco é concatenado como "Logradouro, Numero, Bairro")
+
+		RG: fornece valor para o campo "rg" no dbo.clientes
+		- mascara apenas numeros no formato 00.000.000-0 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "00.000.000-0"
+		- Salva no banco com a mascara junta (00.000.000-0)
+
+		CPF: fornece valor para o campo "cpf" no dbo.clientes
+		- mascara apenas numeros no formato 000.000.000-00 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000.000.000-00"
+		- Salva no banco com a mascara junta (000.000.000-00)
+
+		Telefone: fornece valor para o campo "telefone" no dbo.clientes
+		- mascara apenas numeros no formato (00)0000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)0000-0000"
+		- Salva no banco com a mascara junta ( (00)0000-0000 )
+
+		Celular: fornece valor para o campo "celular" no dbo.clientes 
+		- mascara apenas numeros no formato (00)00000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)00000-0000"
+		- Salva no banco com a mascara junta ( (00)00000-0000 )
+
+		Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
+		- mascara de data
+		- pode ser nulo
+		- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+
+		Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
+		- campo aceita apenas números inteiros positivos começando em zero
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+	- ao ser feito o registro no banco é atualizado os campos "dataCadastro" e "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---EXCLUIR---
 
 - soft delete
 - altera o deletado do item de false para true
+
+- MODAL 
+	- cor do Header do modal: --cor-padrao_tercearia
+	- cor do fundo do modal: --cor-padrao_primaria
+	- textos: --texto-padrao_cor

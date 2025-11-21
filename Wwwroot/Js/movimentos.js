@@ -216,10 +216,35 @@
         body: JSON.stringify({ filtro })
       });
       if (!resp.ok) {
-        console.warn('Falha ao imprimir movimento');
+        alert('Falha ao gerar cupom.');
+        return;
+      }
+
+      const data = await resp.json();
+      if (!data.cupomBase64) {
+        alert('Erro: cupom não foi gerado corretamente.');
+        return;
+      }
+
+      // Envia para o printAgent local
+      try {
+        const respPrint = await fetch('http://localhost:5005/print', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: data.cupomBase64 })
+        });
+
+        if (!respPrint.ok) {
+          alert('Erro ao enviar para a impressora local.\nVerifique se o PrintAgent está rodando.');
+          return;
+        }
+
+        alert('Cupom impresso com sucesso!');
+      } catch (err) {
+        alert('Erro ao conectar com PrintAgent local.\nVerifique se o serviço está rodando na porta 5005.');
       }
     } catch (e) {
-      console.warn('Erro de rede ao imprimir', e);
+      alert('Erro de rede ao gerar cupom: ' + e.message);
     }
   });
 

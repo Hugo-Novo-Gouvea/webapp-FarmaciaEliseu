@@ -1,136 +1,327 @@
-Produtos
+/----------------------------------------/
+PRODUTOS
+/----------------------------------------/
 
 Regras da Tela
 
 - Tela que controla o CRUD de produtos
-- Tabela que acessa o banco definido em configurações e a partir do endpoint da api recebe os valores de dbo.produtos onde ID diferente de 1 e deletado é false
-- Tabela apresenta os itens "codigoBarras", "descricao", "precoCompra", "precoVenda" e "generico" da tabela
-- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
-- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
-- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
-- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
-- Acima da tabela tem o botão Menu, select box de coluna e input de pesquisa
-- o Botão menu com seu emoji retorna para index.html
-- select box apresenta qual a coluna que será usada de guia para pesquisas, impedindo que retorne valores referentes a outras colunas, as colunas permitidas são "codigoBarras" e "Descricao", mesmo "precoCompra", "precoVenda" e "generico" estando na tabela eles ficam de fora da pesquisa
-- input de pesquisa recebe um valor a ser pesquisado na tabela e retornado na hora, esse valor podendo estar presente em qualquer parte do item referente a coluna (exemplo: caso eu pesquisa Ado, ele pode retornar a posição ado em qualquer parte do nome)
-- Acima da área de pesquisa ficam os 4 botões do CRUD na ordem visualizar, Editar, Novo, Excluir com seus emojis
-- Apenas o botão novo fica habilitado caso nenhum item da coluna seja selecionado
-- ao selecionar ele habilita todos os botões
 
-Visualizar
-- retorna um modal com "codigoBarras", "codigoProduto", "descricao", "unidadeMedida", "precoCompra", "precoVenda", "localizacao", "laboratorio", "principio", "generico", "dataCadastro" e "dataUltimoRegistro" preenchidos e sem a capacidade de ser alterados
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
 
-Editar
-- retorna um modal com "codigoBarras", "codigoProduto", "descricao", "unidadeMedida", "precoCompra", "precoVenda", "localizacao", "laboratorio", "principio" e "generico" preenchidos e com a capacidade de ser alterados
-- regras de cada campo:
+- Titulo e Sub-Titulo
 
-	Codigo de Barras: fornece valor para o campo "codigoBarras" no dbo.produtos
-	- mascara apenas numeros
-	- Não pode ser nulo
+	- Titulo
+		- Texto: "Lista de Produtos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
 
-	codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "000000000"
+	-Sub-Titulo
+		- Texto: "Tela de Controle dos Produtos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
 
-	Descrição: fornece valor para o campo "descricao" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- Não pode ser nulo
+- Menu de botões CRUD (Visualizar, editar, novo, excluir)
+- Após entrar na tela e enquanto nenhum item da tabela for selecionado apenas o botão "Novo" fica habilitado
+- Ao selecionar um item da tabela os botões (Visualizar, Editar e Excluir são Habilitados)
+- Botões do CRUD
 
-	Unidade de Medida: fornece valor para o campo "unidadeMedida" no dbo.produtos
-	- mascara apenas numeros
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor 0
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao-tercearia
+		- Texto: Visualizar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lupa
+		- Ação: Visualiza as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	Preço de Compra: fornece valor para o campo "precoCompra" no dbo.produtos
-	- mascara apenas numeros
-	- Não pode ser nulo
-	- mostrar o valor sempre com dois zeros depois da virgula
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Editar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lapis
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	Preço de Venda: fornece valor para o campo "precoVenda" no dbo.produtos
-	- mascara apenas numeros
-	- Não pode ser nulo
-	- mostrar o valor sempre com dois zeros depois da virgula
+	- Novo
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Novo
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Sinal de Positivo
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	Localização: fornece valor para o campo "localizacao" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- Excluir
+		- cor de fundo: --botao-excluir_cor
+		- cor da borda: --botao-excluir_borda
+		- cor quando o mouse fica em cima: --botao-excluir_foco
+		- Texto: Excluir
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Lixeira
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
 
-	Laboratorio: fornece valor para o campo "laboratorio" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Codigo de Barras", "Descrição" (Apenas esses 2, mesmo que tenha outros itens presentes na tabela)
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Codigo de Barras"
+- Itens da navegação
 
-	principio: fornece valor para o campo "principio" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
 
-	generico: fornece valor para o campo "generico" no dbo.produtos
-	- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
-	- não pode ser nulo
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
 
-- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
-- botão cancelar para cancelar a operação
-- botão salvar para realizar a operação
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
 
-Novo
-- retorna um modal com "codigoBarras", "codigoProduto", "descricao", "unidadeMedida", "precoCompra", "precoVenda", "localizacao", "laboratorio", "principio" e "generico" em branco e com a capacidade de ser preenchidos
-- regras de cada campo:
+- tabela com os itens do crud
+- banco farmaciaEliseu.produtos
+- campos na tabela (Codigo de Barras, Descrição, Preço de Compra, Preço de Venda, Generico)
 
-	Codigo de Barras: fornece valor para o campo "codigoBarras" no dbo.produtos
-	- mascara apenas numeros
-	- Não pode ser nulo
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
 
-	codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "000000000"
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
 
-	Descrição: fornece valor para o campo "descricao" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- Não pode ser nulo
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
 
-	Unidade de Medida: fornece valor para o campo "unidadeMedida" no dbo.produtos
-	- mascara apenas numeros
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor 0
+Regras do CRUD
 
-	Preço de Compra: fornece valor para o campo "precoCompra" no dbo.produtos
-	- mascara apenas numeros
-	- Não pode ser nulo
-	- mostrar o valor sempre com dois zeros depois da virgula
+Banco: farmaciaEliseu
+Tabela: dbo.produtos
+-------------------------------------------------
+produtosID        int               PK, NOT NULL
+descricao         nvarchar(200)     NOT NULL
+unidadeMedida     nvarchar(200)     NULL
+precoCompra       decimal(19,4)     NULL
+precoVenda        decimal(19,4)     NOT NULL
+localizacao       nvarchar(200)     NULL
+laboratorio       nvarchar(200)     NULL
+principio         nvarchar(200)     NULL
+generico          nvarchar(3)       NOT NULL
+codigoProduto     nvarchar(9)       NULL
+codigoBarras      nvarchar(50)      NULL
+dataCadastro      datetime2(0)      NULL
+dataUltimoRegistro datetime2(0)     NULL
+deletado          bit               NULL
 
-	Preço de Venda: fornece valor para o campo "precoVenda" no dbo.produtos
-	- mascara apenas numeros
-	- Não pode ser nulo
-	- mostrar o valor sempre com dois zeros depois da virgula
+---VISUALIZAR---
 
-	Localização: fornece valor para o campo "localizacao" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- retorna um modal com as informações do produto selecionado preenchidos e sem a capacidade de ser alterados 
+		"codigoBarras", 
+		"codigoProduto", 
+		"descricao", 
+		"unidadeMedida", 
+		"precoCompra", 
+		"precoVenda", 
+		"localizacao", 
+		"laboratorio", 
+		"principio", 
+		"generico", 
+		"dataCadastro", 
+		"dataUltimoRegistro"
 
-	Laboratorio: fornece valor para o campo "laboratorio" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+---EDITAR---
 
-	principio: fornece valor para o campo "principio" no dbo.produtos
-	- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
-	- pode ser nulo
-	- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+	- retorna um modal preenchido com as informações de produtos e com a capacidade de ser alterados
+		"codigoBarras", 
+		"codigoProduto", 
+		"descricao", 
+		"unidadeMedida", 
+		"precoCompra", 
+		"precoVenda", 
+		"localizacao", 
+		"laboratorio", 
+		"principio", 
+		"generico"
 
-	generico: fornece valor para o campo "generico" no dbo.produtos
-	- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
-	- não pode ser nulo
+	- regras de cada campo:
 
-- ao ser feito o registro no banco é atualizado o campo "dataCadastro" e "dataUltimoRegistro" com a data e horário atual e o campo deletado com valor false
-- botão cancelar para cancelar a operação
-- botão salvar para realizar a operação
+		Codigo de Barras: fornece valor para o campo "codigoBarras" no dbo.produtos
+		- tipo de campo é number
+		- Não pode ser nulo
 
-Excluir
+		codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000000000"
 
-- soft delete
-- altera o deletado do item de false para true
+		Descrição: fornece valor para o campo "descricao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Unidade de Medida: fornece valor para o campo "unidadeMedida" no dbo.produtos
+		- mascara apenas numeros
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+		Preço de Compra: fornece valor para o campo "precoCompra" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Preço de Venda: fornece valor para o campo "precoVenda" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Localização: fornece valor para o campo "localizacao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Laboratorio: fornece valor para o campo "laboratorio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		principio: fornece valor para o campo "principio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		generico: fornece valor para o campo "generico" no dbo.produtos
+		- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
+		- não pode ser nulo
+
+	- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---NOVO---
+
+	- retorna um modal em branco com as informações de produtos e com a capacidade de ser alterados
+		"codigoBarras", 
+		"codigoProduto", 
+		"descricao", 
+		"unidadeMedida", 
+		"precoCompra", 
+		"precoVenda", 
+		"localizacao", 
+		"laboratorio", 
+		"principio", 
+		"generico"
+
+	- regras de cada campo:
+
+		Codigo de Barras: fornece valor para o campo "codigoBarras" no dbo.produtos
+		- tipo de campo é number
+		- Não pode ser nulo
+
+		codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000000000"
+
+		Descrição: fornece valor para o campo "descricao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Unidade de Medida: fornece valor para o campo "unidadeMedida" no dbo.produtos
+		- mascara apenas numeros
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+		Preço de Compra: fornece valor para o campo "precoCompra" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Preço de Venda: fornece valor para o campo "precoVenda" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Localização: fornece valor para o campo "localizacao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Laboratorio: fornece valor para o campo "laboratorio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		principio: fornece valor para o campo "principio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		generico: fornece valor para o campo "generico" no dbo.produtos
+		- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
+		- não pode ser nulo
+
+	- ao ser feito o registro no banco é atualizado os campos "dataCadastro" e "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---EXCLUIR---
+
+	- soft delete
+	- altera o deletado do item de false para true
+
+- MODAL 
+	- cor do Header do modal: --cor-padrao_tercearia
+	- cor do fundo do modal: --cor-padrao_primaria
+	- textos: --texto-padrao_cor

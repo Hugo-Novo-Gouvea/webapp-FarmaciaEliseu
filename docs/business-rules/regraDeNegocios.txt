@@ -1,0 +1,1373 @@
+Regras de Negocio
+
+/----------------------------------------/
+CLIENTES
+/----------------------------------------/
+
+Regras da Tela
+
+- Tela que controla o CRUD de clientes
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Lista de Clientes"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Controle dos Clientes"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões CRUD (Visualizar, editar, novo, excluir)
+- Após entrar na tela e enquanto nenhum item da tabela for selecionado apenas o botão "Novo" fica habilitado
+- Ao selecionar um item da tabela os botões (Visualizar, Editar e Excluir são Habilitados)
+- Botões do CRUD
+
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao-tercearia
+		- Texto: Visualizar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lupa
+		- Ação: Visualiza as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Editar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lapis
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Novo
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Novo
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Sinal de Positivo
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Excluir
+		- cor de fundo: --botao-excluir_cor
+		- cor da borda: --botao-excluir_borda
+		- cor quando o mouse fica em cima: --botao-excluir_foco
+		- Texto: Excluir
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Lixeira
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Nome", "Endereco" e "Codigo Fichario" (Apenas esses 3, mesmo que tenha outros itens presentes na tabela)
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Nome"
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
+
+- tabela com os itens do crud
+- banco farmaciaEliseu.clientes
+- campos na tabela (Nome, Endereco, Celular, Codigo Fichario)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do CRUD
+
+Banco: farmaciaEliseu
+Tabela: dbo.clientes
+-------------------------------------------------
+clientesID        int              PK, NOT NULL
+nome              nvarchar(200)    NOT NULL
+endereco          nvarchar(200)    NULL
+rg                nvarchar(30)     NULL
+cpf               nvarchar(30)     NULL
+telefone          nvarchar(50)     NULL
+celular           nvarchar(50)     NULL
+dataNascimento    date             NULL
+codigoFichario    int              NULL
+dataCadastro      datetime2(0)     NULL (Controlado apenas pelo sistema)
+dataUltimoRegistro datetime2(0)    NULL (Controlado apenas pelo sistema)
+deletado          bit              NULL (Controlado apenas pelo sistema e no excluir)
+
+---VISUALIZAR---
+
+	- retorna um modal com as informações do clientes selecionado preenchidos e sem a capacidade de ser alterados
+		"nome",
+		"endereço",
+		"rg",
+		"cpf",
+		"telefone",
+		"celular",
+		"dataNascimento",
+		"codigoFichario",
+		"dataCadastro",
+		"dataUltimoRegistro" 
+
+---EDITAR---
+
+	- retorna um modal preenchido com as informações de clientes e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+		"nome",
+		"logradouro",
+		"numero",
+		"bairro",
+		"rg",
+		"cpf",
+		"telefone",
+		"celular",
+		"dataNascimento",
+		"codigoFichario"
+
+	- regras de cada campo:
+
+		Nome: fornece valor para o campo "nome" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000"
+
+		Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		(endereco é concatenado como "Logradouro, Numero, Bairro")
+
+		RG: fornece valor para o campo "rg" no dbo.clientes
+		- mascara apenas numeros no formato 00.000.000-0 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "00.000.000-0"
+		- Salva no banco com a mascara junta (00.000.000-0)
+
+		CPF: fornece valor para o campo "cpf" no dbo.clientes
+		- mascara apenas numeros no formato 000.000.000-00 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000.000.000-00"
+		- Salva no banco com a mascara junta (000.000.000-00)
+
+		Telefone: fornece valor para o campo "telefone" no dbo.clientes
+		- mascara apenas numeros no formato (00)0000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)0000-0000"
+		- Salva no banco com a mascara junta ( (00)0000-0000 )
+
+		Celular: fornece valor para o campo "celular" no dbo.clientes 
+		- mascara apenas numeros no formato (00)00000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)00000-0000"
+		- Salva no banco com a mascara junta ( (00)00000-0000 )
+
+		Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
+		- mascara de data
+		- pode ser nulo
+		- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+
+		Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
+		- campo aceita apenas números inteiros positivos começando em zero
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+	- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---NOVO---
+
+	- retorna um modal em branco com as informações de clientes e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+		"nome",
+		"logradouro",
+		"numero",
+		"bairro",
+		"rg",
+		"cpf",
+		"telefone",
+		"celular",
+		"dataNascimento",
+		"codigoFichario"
+
+	- regras de cada campo:
+
+		Nome: fornece valor para o campo "nome" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Logradouro: fornece o primeiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Numero: fornece o segundo valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000"
+
+		Bairro: fornece o terceiro valor da concatenação de endereço para o campo "endereco" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		(endereco é concatenado como "Logradouro, Numero, Bairro")
+
+		RG: fornece valor para o campo "rg" no dbo.clientes
+		- mascara apenas numeros no formato 00.000.000-0 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "00.000.000-0"
+		- Salva no banco com a mascara junta (00.000.000-0)
+
+		CPF: fornece valor para o campo "cpf" no dbo.clientes
+		- mascara apenas numeros no formato 000.000.000-00 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000.000.000-00"
+		- Salva no banco com a mascara junta (000.000.000-00)
+
+		Telefone: fornece valor para o campo "telefone" no dbo.clientes
+		- mascara apenas numeros no formato (00)0000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)0000-0000"
+		- Salva no banco com a mascara junta ( (00)0000-0000 )
+
+		Celular: fornece valor para o campo "celular" no dbo.clientes 
+		- mascara apenas numeros no formato (00)00000-0000 (não permite inserções além da mascara)
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "(00)00000-0000"
+		- Salva no banco com a mascara junta ( (00)00000-0000 )
+
+		Data de Nascimento: fornece valor para o campo "dataNascimento" no dbo.clientes
+		- mascara de data
+		- pode ser nulo
+		- caso seja nulo o banco recebe a data do dia atual do preenchimento do forms
+
+		Código Fichario: fornece valor para o campo "codigoFichario" no dbo.clientes
+		- campo aceita apenas números inteiros positivos começando em zero
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+	- ao ser feito o registro no banco é atualizado os campos "dataCadastro" e "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---EXCLUIR---
+
+- soft delete
+- altera o deletado do item de false para true
+
+- MODAL 
+	- cor do Header do modal: --cor-padrao_tercearia
+	- cor do fundo do modal: --cor-padrao_primaria
+	- textos: --texto-padrao_cor
+
+/----------------------------------------/
+PRODUTOS
+/----------------------------------------/
+
+Regras da Tela
+
+- Tela que controla o CRUD de produtos
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Lista de Produtos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Controle dos Produtos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões CRUD (Visualizar, editar, novo, excluir)
+- Após entrar na tela e enquanto nenhum item da tabela for selecionado apenas o botão "Novo" fica habilitado
+- Ao selecionar um item da tabela os botões (Visualizar, Editar e Excluir são Habilitados)
+- Botões do CRUD
+
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao-tercearia
+		- Texto: Visualizar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lupa
+		- Ação: Visualiza as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Editar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lapis
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Novo
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Novo
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Sinal de Positivo
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Excluir
+		- cor de fundo: --botao-excluir_cor
+		- cor da borda: --botao-excluir_borda
+		- cor quando o mouse fica em cima: --botao-excluir_foco
+		- Texto: Excluir
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Lixeira
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Codigo de Barras", "Descrição" (Apenas esses 2, mesmo que tenha outros itens presentes na tabela)
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Codigo de Barras"
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
+
+- tabela com os itens do crud
+- banco farmaciaEliseu.produtos
+- campos na tabela (Codigo de Barras, Descrição, Preço de Compra, Preço de Venda, Generico)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do CRUD
+
+Banco: farmaciaEliseu
+Tabela: dbo.produtos
+-------------------------------------------------
+produtosID        int               PK, NOT NULL
+descricao         nvarchar(200)     NOT NULL
+unidadeMedida     nvarchar(200)     NULL
+precoCompra       decimal(19,4)     NULL
+precoVenda        decimal(19,4)     NOT NULL
+localizacao       nvarchar(200)     NULL
+laboratorio       nvarchar(200)     NULL
+principio         nvarchar(200)     NULL
+generico          nvarchar(3)       NOT NULL
+codigoProduto     nvarchar(9)       NULL
+codigoBarras      nvarchar(50)      NULL
+dataCadastro      datetime2(0)      NULL
+dataUltimoRegistro datetime2(0)     NULL
+deletado          bit               NULL
+
+---VISUALIZAR---
+
+	- retorna um modal com as informações do produto selecionado preenchidos e sem a capacidade de ser alterados 
+		"codigoBarras", 
+		"codigoProduto", 
+		"descricao", 
+		"unidadeMedida", 
+		"precoCompra", 
+		"precoVenda", 
+		"localizacao", 
+		"laboratorio", 
+		"principio", 
+		"generico", 
+		"dataCadastro", 
+		"dataUltimoRegistro"
+
+---EDITAR---
+
+	- retorna um modal preenchido com as informações de produtos e com a capacidade de ser alterados
+		"codigoBarras", 
+		"codigoProduto", 
+		"descricao", 
+		"unidadeMedida", 
+		"precoCompra", 
+		"precoVenda", 
+		"localizacao", 
+		"laboratorio", 
+		"principio", 
+		"generico"
+
+	- regras de cada campo:
+
+		Codigo de Barras: fornece valor para o campo "codigoBarras" no dbo.produtos
+		- tipo de campo é number
+		- Não pode ser nulo
+
+		codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000000000"
+
+		Descrição: fornece valor para o campo "descricao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Unidade de Medida: fornece valor para o campo "unidadeMedida" no dbo.produtos
+		- mascara apenas numeros
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+		Preço de Compra: fornece valor para o campo "precoCompra" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Preço de Venda: fornece valor para o campo "precoVenda" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Localização: fornece valor para o campo "localizacao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Laboratorio: fornece valor para o campo "laboratorio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		principio: fornece valor para o campo "principio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		generico: fornece valor para o campo "generico" no dbo.produtos
+		- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
+		- não pode ser nulo
+
+	- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---NOVO---
+
+	- retorna um modal em branco com as informações de produtos e com a capacidade de ser alterados
+		"codigoBarras", 
+		"codigoProduto", 
+		"descricao", 
+		"unidadeMedida", 
+		"precoCompra", 
+		"precoVenda", 
+		"localizacao", 
+		"laboratorio", 
+		"principio", 
+		"generico"
+
+	- regras de cada campo:
+
+		Codigo de Barras: fornece valor para o campo "codigoBarras" no dbo.produtos
+		- tipo de campo é number
+		- Não pode ser nulo
+
+		codigoProduto: fornece valor para o campo "codigoProduto" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "000000000"
+
+		Descrição: fornece valor para o campo "descricao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+		Unidade de Medida: fornece valor para o campo "unidadeMedida" no dbo.produtos
+		- mascara apenas numeros
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor 0
+
+		Preço de Compra: fornece valor para o campo "precoCompra" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Preço de Venda: fornece valor para o campo "precoVenda" no dbo.produtos
+		- mascara apenas numeros
+		- Não pode ser nulo
+		- mostrar o valor sempre com dois zeros depois da virgula
+
+		Localização: fornece valor para o campo "localizacao" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		Laboratorio: fornece valor para o campo "laboratorio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		principio: fornece valor para o campo "principio" no dbo.produtos
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- pode ser nulo
+		- caso seja nulo o banco recebe o valor "NAO INFORMADO"
+
+		generico: fornece valor para o campo "generico" no dbo.produtos
+		- campo select box com valores "Selecione um valor", "SIM", "NAO", permitindo registro no banco apenas se valor diferente de "Selecione um valor"
+		- não pode ser nulo
+
+	- ao ser feito o registro no banco é atualizado os campos "dataCadastro" e "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---EXCLUIR---
+
+	- soft delete
+	- altera o deletado do item de false para true
+
+- MODAL 
+	- cor do Header do modal: --cor-padrao_tercearia
+	- cor do fundo do modal: --cor-padrao_primaria
+	- textos: --texto-padrao_cor
+
+/----------------------------------------/
+FUNCIONARIOS
+/----------------------------------------/
+
+Regras da Tela
+
+- Tela que controla o CRUD de funcionarios
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Lista de Funcionarios"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Controle dos Funcionarios"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões CRUD (Visualizar, editar, novo, excluir)
+- Após entrar na tela e enquanto nenhum item da tabela for selecionado apenas o botão "Novo" fica habilitado
+- Ao selecionar um item da tabela os botões (Visualizar, Editar e Excluir são Habilitados)
+- Botões do CRUD
+
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao-tercearia
+		- Texto: Visualizar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lupa
+		- Ação: Visualiza as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Visualizar
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Editar
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Lapis
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Novo
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Novo
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Sinal de Positivo
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+	- Excluir
+		- cor de fundo: --botao-excluir_cor
+		- cor da borda: --botao-excluir_borda
+		- cor quando o mouse fica em cima: --botao-excluir_foco
+		- Texto: Excluir
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Lixeira
+		- Ação: Permite editar as informações referentes ao item selecionado na tabela
+		- Sombra
+
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Nome"
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Nome"
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
+
+- tabela com os itens do crud
+- banco farmaciaEliseu.funcionarios
+- campos na tabela (Nome)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do CRUD
+
+Banco: farmaciaEliseu
+Tabela: dbo.funcionarios
+-------------------------------------------------
+funcionariosID      int             PK, NOT NULL
+nome                nvarchar(200)   NOT NULL
+dataCadastro        datetime2(0)    NOT NULL
+dataUltimoRegistro  datetime2(0)    NOT NULL
+deletado            bit             NOT NULL
+
+---VISUALIZAR---
+
+	- retorna um modal com as informações do funcionario selecionado preenchidos e sem a capacidade de ser alterados
+		"nome",
+
+---EDITAR---
+
+	- retorna um modal preenchido com as informações de funcionarios e com a capacidade de ser alterados
+		"nome"
+
+	- regras de cada campo:
+
+		Nome: fornece valor para o campo "nome" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+	- ao ser feito o registro no banco é atualizado o campo "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---NOVO---
+
+	- retorna um modal em branco com as informações de funcionarios e com a capacidade de ser alterados (Sendo endereco a concatenação de "logradouro, numero, bairro")
+		"nome"
+
+	- regras de cada campo:
+
+		Nome: fornece valor para o campo "nome" no dbo.clientes
+		- mesmo recebendo letras minusculas deve ser salvo no banco com todas as letras maiusculas
+		- Não pode ser nulo
+
+	- ao ser feito o registro no banco é atualizado os campos "dataCadastro" e "dataUltimoRegistro" com a data e horário atual
+	- botão cancelar para cancelar a operação
+	- botão salvar para realizar a operação
+
+---EXCLUIR---
+
+- soft delete
+- altera o deletado do item de false para true
+
+- MODAL 
+	- cor do Header do modal: --cor-padrao_tercearia
+	- cor do fundo do modal: --cor-padrao_primaria
+	- textos: --texto-padrao_cor
+
+/----------------------------------------/
+CLIENTES
+/----------------------------------------/
+
+Regras da Tela
+
+- Tela que apresenta os movimentos
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Informação dos Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões(Detalhes)
+- Ao selecionar um item da tabela os botão Detalhes é Habilitado
+
+    - Detalhes
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Detalhes
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Documento
+		- Ação: Permite a visualização de mais detalhes do movimento
+		- Sombra
+
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Cliente" e "Movimento" (Apenas esses 2, mesmo que tenha outros itens presentes na tabela)
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Cliente"
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
+
+- tabela com os itens movimentos
+- banco farmaciaEliseu.movimentos
+- campos na tabela (Movimento, Cliente, Data, Total)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do Movimento
+
+Banco: farmaciaEliseu
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL
+
+- Tela que apresenta os agrupamentos de movimentos
+- Tabela acessa o banco dbo.movimentos e cria um item na tabela por codigoMovimento mostrando "Movimento", "Cliente" (já q todos os itens com mesmo codigoMovimento tem o mesmo cliente), "Data (já q todos os itens com mesmo codigoMovimento tem o mesma Data sem ter hora), Total (Somatorio de todos os precoVendas dos itens que tem o codigoMovimento)"
+- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
+
+Detalhes
+- Cria um modal
+- Apresenta novamento as informações "Movimento", "Cliente", "Data (sem horario)", "Total"
+- Abaixo das informações apresenta outra tabela mostrando cada movimento daquele codigoMovimento, mostrando "produtoDescricao", "quantidade", "precoUnitarioAtual", "desconto", "precoTotalAtual", "deletado" (Deletado mostra (SIM ou NÃO))
+- os header da cabeça vão ser "Descricao", "Qtd", Vlr Unit", "Desconto", "Total", "Pago"
+- abaixo da tabela um campo Select com "Todos", "Pagos", "Não Pagos" e um botão imprimir(mesmo estilo do botão Detalhes)
+- O botão Imprimir apresenta um cupom com o corpo em Printing/receiptPrinter.cs onde caso selecione todos e Não pagos sai o modelo sem valor e caso selecione o pagos sai o modelo com valor, sendo não pagos apenas os deletado = false e os pagos deletado = true
+
+exemplo
+
+movimentosID,produtosID,produtosDescricao,produtosCodigoProduto,clientesID,clientesNome,funcionariosID,funcionariosNome,quantidade,precoUnitarioDiaVenda,precoTotalDiaVenda,precoUnitarioAtual,precoTotalAtual,valorPago,desconto,DataVenda,DataPagamento,codigoMovimento,dataCadastro,dataUltimoRegistro,deletado
+3,28605,LACTO PURGA - UN,OUTROSPRO,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,1,4.2000,4.2000,4.2000,4.2000,4.2000,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51,2025-11-06 15:34:51,1
+4,2926,MANTEIGA CACAU ZANPHY - SEM UNIDADE MEDIDA,00001810P,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,2,1.9900,3.9800,1.9900,3.9800,3.9800,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51,2025-11-06 15:34:51,1
+5,5153,DIPIRONA 500MG C/10 - SEM UNIDADE MEDIDA,00003115P,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,1,4.9900,4.9900,4.9900,4.9900,4.9900,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51, 2025-11-06 15:34:51,1
+6,32143,LISTERINE ZERO MENTA SUAVE 500ML - SEM UNIDADE MED,00005898P,2058,EDISLEI GONCALVES DE AZEVEDO,0,NÃƒO INFORMADO,1,22.9900,22.9900,22.9900,22.9900,22.9900,0.0000,2021-08-01 00:00:00,2021-08-28 00:00:00,6424,2025-11-06 15:34:51,2025-11-06 15:34:51,1
+
+Isso são 4 itens registrados em movimentos, perceba que eles tem o mesmo codigoMovimento, oq eu quero é q na tela eu vejo um item na tabela assim
+MOVIMENTO CLIENTE                      DATA                TOTAL
+6424      EDISLEI GONCALVES DE AZEVEDO 2021-08-01 00:00:00 30,69
+
+e quando eu clicar no Descrição, vai abrir um modal onde vai mostrar essas informações novamente e vai ter mais uma tabela, dessa vez mostrando todos os movimentos referentes a esse codigoMovimento, no caso 4 e os itens produtoDescricao                                   quantidade precoUnitarioAtual desconto Total ((precoUnitario x quantidade( - desconto) pago (deletado)
+LACTO PURGA - UN                                   1          4.2000             0.0000   4.2000                                          1
+MANTEIGA CACAU ZANPHY - SEM UNIDADE MEDIDA         2          1.9900             0.0000   3.9800                                          1
+DIPIRONA 500MG C/10 - SEM UNIDADE MEDIDA           1          4.9900             0.0000   4.9900                                          1
+LISTERINE ZERO MENTA SUAVE 500ML - SEM UNIDADE MED 1          22.9900            0.0000   22.9900                                         1
+
+/----------------------------------------/
+Contas a Pagar
+/----------------------------------------/
+
+Regras da Tela
+
+- Tela que apresenta os itens(movimentos) de cada cliente onde foi marcado (movimentos.deletado = false)
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Informação dos Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões(Registrar como Pago)
+- Ao selecionar um item da tabela os botão Detalhes é Habilitado
+
+    - Detalhes
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Registrar como Pago
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Correto
+		- Ação: Permite marcar um movimento que estava deletado = false para deletado = true
+		- Sombra
+
+- Menu de navegação (Menu, Cliente, Total)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Cliente" é uma mecanismo de busca onde ao digitar o nome de um cliente ele vai retornando abaixo do input opções de seleção dos clientes existentes em dbo.clientes que batem com o valor digitado
+- Total retorna o valor total somado de todos os valores de movimentos(precoTotalAtual) para que o usuario ja saiba a conta em aberta atual daquele cliente
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retorna ao menu principal
+		- Sombra
+
+	- Cliente
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: Cliente
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Seleciona o cliente que o usuario está pesquisando
+
+	- Total
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: TOTAL: R$ 
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Mostra o valor fiado atual do cliente
+
+- tabela com os itens movimentos
+- banco farmaciaEliseu.movimentos
+
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL
+
+- campos na tabela (Select box, Descrição, Quantidade, Data Venda, Valor)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+
+Regras do Movimento
+
+- Ao escolher um cliente o total será atualizado e as informações dos movimentos em aberto seram apresentados
+- Ao selecionar a select box ele vai realzar o soft delete daquele fiado, é possivel realizar mais de um ao mesmo tempo
+- Essa tabela não contem paginação ,precisa retornar todos os itens, mesmo não sendo uma boa pratica é necessarios q todos estejam na tela
+- Ao final da operção quando clicado em Registrar como Pago aparecera um confirm "Registro de Pagamento Realizado" "Deseja Imprimir o cupom?" e se sim imprimir um cupom termico com a estrutura presente em Printing/receiptPrinter.cs com valor manter o loop do confirm após a impressão para que o usuario faça quantas vias for e encerre com cancelar
+
+/----------------------------------------/
+VENDAS
+/----------------------------------------/
+
+Regras da Tela
+
+- Tela que realiza as vendas
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Vendas"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Vendas"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões(Realizar Venda)
+- Ao registrar um item na tabela o botão Realizar Venda é habilitado
+
+    - Detalhes
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Realizar Venda
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Lapis
+		- Ação: Realiza o registro em movimentos da venda
+		- Sombra
+
+- Menu de navegação (Menu, Cliente, Total)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retorna ao menu principal
+		- Sombra
+
+- tabela com os itens movimentos
+- banco farmaciaEliseu.movimentos
+
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL
+
+- Linha com as opções de venda em campos Select (Campos: TIPO DE VENDA, VENDEDOR, TIPO DE CLIENTE, TIPO DE PRODUTO, TIPO DE DESCONTO)
+
+    - TIPO DE VENDA
+        Selecione o tipo,
+        Marcar,
+        Dinheiro
+    Define se o deletado do movimento vai ser false ou true, sendo marcar false e dinheiro true
+
+    VENDEDOR
+        - Mostra "Selecione um Vendedor"
+        - Retorna todos os items em funcionarios e deixa o usuario selecionar um
+
+    - TIPO DE CLIENTE
+        Selecione o tipo,
+        Registrado,
+        Avulso
+    Caso Registrado: Cria uma nova linha com um campo input onde pode se procurar o cliente e abaixo do campo vai retornando valores semenlhantes aos digitados para auxiliar o usuario e ao lado o total que assim que escolhido o cliente mostra o fiado atual do cliente sendo a soma de todos os precoTotalAtual dos movimentos desse cliente onde deletado = false
+    Caso Avulso: Campo input para que o usuario digite o nome do cliente sem busca pois é um cliente fora do banco
+
+    - TIPO DE PRODUTO
+        Selecione o tipo,
+        Registrado,
+        Outras Vendas
+    Caso Registrado: 
+        - Cria uma nova linha com um campo input (Codigo de Barras/Descrição) onde o usuario pode informar a descrição ou codigo de barras de um produto e ao apertar enter ele move o foco para o campo quantidade que está ao lado datUltimoRegistro
+        - Se for digitado um valor em descrição e apertado Enter e não bater com nenhum codigo de barras existente deve ser retornado um modal com todos os itens com descrição(apenas descrição) semenlhante ao valor digitado e o usuario poderá selecionar um e apertar em confirmar ou cancelar no botão abaixo da tabelas de itens referente e então esse que será adicionado no campo Codigo de Barras/Descrição
+        - Campo quantidade é um campo do tipo number que só aceita de 1 para cima e ao apertar Enter muda o foco para o campo desconto que fica logo ao lado direito
+        - campo desconto começa em 0 tipo number e recebe valores quebrados(se tiver outras forma de tratar q n seja number n tem problema) e ao apertar Enter registra o item na tabela
+        - Botão Adicionar caso o usuario não queira apertar o Enter no desconto ele adicionar(mesmo estilo de Realizar Venda) na tabela
+    Caso Avulso: Campo input para que o usuario digite o nome do cliente sem busca pois é um cliente fora do banco
+
+    - TIPO DE DESCONTO
+        Porcentagem,
+        Fixo
+    Caso Porcentagem: o desconto digitado do item vai ser aplicado em porcentagem exemplo: se dititado 18 então é aplicado 18% de desconto
+    Caso Fixo: o desconto digitado do item vai ser aplicado em valor fixo exemplo: se dititado 18 então é aplicado 18 reais de desconto
+    
+        
+- campos na tabela (Produto, Quantidade, Valor, Desconto, Total (quantidade * valor) e Botão excluir na frente de cada item para retirnar da tabela se necessario (mesmo estilo do botão Realizar Venda))
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do Movimento
+
+- Tela que controla as vendas do cliente
+
+- Tabela
+
+- Realizar venda coloca em movimentos as informações referente aos produtos sendo
+
+movimentoID: PK
+produtosID: ID do produto ou se for avulso colocar 1
+produtosDescricao: descricao do produto escolhido no select box ou digitado no input de avulsos
+produtosCodigoProduto: codigoProduto do produto escolhido ou "000000000" se avulso
+clientesID: ID do cliente escolhido na select box ou 1 se cliente avulso
+clientesNome: nome do cliente escolhido na select box ou digitado no input se avulso
+funcionariosID: ID do funcionario escolhido no select box funcionarios
+funcionariosNome: Nome do funcionario escolhido no select box funcionarios
+quantidade: quantidade do produto digitado tanto em avulso quando registrado
+precoUnitarioDiaVenda: registro do precoVenda do produto feito no dia do registro
+precoTotalDiaVenda: registro do precoVenda x quantidade do produto feito no dia do registro
+precoUnitarioAtual: registro do precoVenda do produto feito no dia do registro (Sim é semelhante ao DiaVenda)
+precoTotalAtual: registro do precoVenda x quantidade do produto feito no dia do registro (Sim é semelhante ao DiaVenda)
+valorPago: se escolhido Dinheiro então recebe precoVenda x quantidad e se escolhido marcar recebe 0
+desconto: recebe o desconto digitado
+DataVenda: data atual do dia que foi criado o registro
+DataPagamento: Null se Marcado, Data atual do dia que foi criado se Dinheiro
+codigoMovimento: Esse é meio complicado, ele serve pra poder agrupar os movimentos em grupos de vendas, se eu vendi X,Y,Z remedio na mesma venda pra um cliente eles tem que ter o mesmo codigoMovimento e nunca pode repetir
+dataCadastro: Controlado pelo sistema, data atual e horario em que a venda foi feita
+datUltimoRegistro: Controlado pelo sistema, data atual e horario em que a venda foi feita
+deletado: Se escolher Marcar o deletado do movimento = false e se escolher dinheiro o deletado do movimento = true
+
+/----------------------------------------/
+VARIAVEIS CSS
+/----------------------------------------/
+
+--cor-padrao_primaria: #F2E9D0
+--cor-padrao_secundaria: #EACEB4
+--cor-padrao_tercearia: #E79E85
+--cor-padrao_quaternaria: #BB5A5A
+--cor-padrao_quinaria: #c4a78d
+
+--botao-confirmar_cor: #1fa37a
+
+As demais variaveis que identificas nas regras de negocio adote um valor que achar correto

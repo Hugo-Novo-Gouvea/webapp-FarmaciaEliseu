@@ -1,16 +1,122 @@
+/----------------------------------------/
 Contas a Pagar
+/----------------------------------------/
 
 Regras da Tela
 
-- Tela que apresenta os cliente com dividas
-- Tabela começa sem nenhum item
-- Acima da tabela botão de Voltar com emoji, Select Box cliente que mostra todos os clientes como deletado = false, input para auxiliar na pesquisa de um cliente, label de total em reais
-- ao escolher um cliente na select box a tabela acessa o banco dbo.movimentos e carrega todos os movimentos onde deletado = false
-- header da tabela caixa para selecionar, "Produto/Descrição", "Quantidade", "Data Venda", "Valor" usando os campos "produtosDescricao", "quantidade", "dataVenda", "precoAtualTotal"
-- o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
-- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
-- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
-- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
-- o Botão menu com seu emoji retorna para index.html
-- Acima do botão menu, botão "Marcar com Pago" que mostra uma pergunta confirm se deseja realmente marcar os itens selecionados na caixinha como pagos e se confirmado, mudar o deletado de false pra true
+- Tela que apresenta os itens(movimentos) de cada cliente onde foi marcado (movimentos.deletado = false)
 
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Informação dos Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões(Registrar como Pago)
+- Ao selecionar um item da tabela os botão Detalhes é Habilitado
+
+    - Detalhes
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Registrar como Pago
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Correto
+		- Ação: Permite marcar um movimento que estava deletado = false para deletado = true
+		- Sombra
+
+- Menu de navegação (Menu, Cliente, Total)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Cliente" é uma mecanismo de busca onde ao digitar o nome de um cliente ele vai retornando abaixo do input opções de seleção dos clientes existentes em dbo.clientes que batem com o valor digitado
+- Total retorna o valor total somado de todos os valores de movimentos(precoTotalAtual) para que o usuario ja saiba a conta em aberta atual daquele cliente
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retorna ao menu principal
+		- Sombra
+
+	- Cliente
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: Cliente
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Seleciona o cliente que o usuario está pesquisando
+
+	- Total
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: TOTAL: R$ 
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Mostra o valor fiado atual do cliente
+
+- tabela com os itens movimentos
+- banco farmaciaEliseu.movimentos
+
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL
+
+- campos na tabela (Select box, Descrição, Quantidade, Data Venda, Valor)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+
+Regras do Movimento
+
+- Ao escolher um cliente o total será atualizado e as informações dos movimentos em aberto seram apresentados
+- Ao selecionar a select box ele vai realzar o soft delete daquele fiado, é possivel realizar mais de um ao mesmo tempo
+- Essa tabela não contem paginação ,precisa retornar todos os itens, mesmo não sendo uma boa pratica é necessarios q todos estejam na tela
+- Ao final da operção quando clicado em Registrar como Pago aparecera um confirm "Registro de Pagamento Realizado" "Deseja Imprimir o cupom?" e se sim imprimir um cupom termico com a estrutura presente em Printing/receiptPrinter.cs com valor manter o loop do confirm após a impressão para que o usuario faça quantas vias for e encerre com cancelar

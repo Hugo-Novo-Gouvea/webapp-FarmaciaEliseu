@@ -1,25 +1,157 @@
-Movimentos
+/----------------------------------------/
+CLIENTES
+/----------------------------------------/
 
 Regras da Tela
+
+- Tela que apresenta os movimentos
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Informação dos Movimentos"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões(Detalhes)
+- Ao selecionar um item da tabela os botão Detalhes é Habilitado
+
+    - Detalhes
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Detalhes
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Documento
+		- Ação: Permite a visualização de mais detalhes do movimento
+		- Sombra
+
+- Menu de navegação (Menu, Coluna, Pesquisa)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+- "Coluna" é um Campo Select com os items "Cliente" e "Movimento" (Apenas esses 2, mesmo que tenha outros itens presentes na tabela)
+- O item selecionado no campo select em "Coluna" determina qual a coluna onde a pesquisa será feita
+- "Pesquisa" é um input que filtra no campo apenas os item onde tem presente o valor digitado referente a coluna escolhida em "Coluna" apresentando itens onde o valor está presente em qualquer parte do texto
+- Após entrar na tela a opção inicial no campo coluna é "Cliente"
+- Itens da navegação
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retrona ao menu principal
+		- Sombra
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: COLUNA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Selecionar a coluna onde a pesquisa será feita
+
+	- Coluna
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- Texto Guia a cima: PESQUISA
+		- cor do Texto: --texto-excluir_cor
+		- Ação: Recebe o valor da pesquisa
+
+- tabela com os itens movimentos
+- banco farmaciaEliseu.movimentos
+- campos na tabela (Movimento, Cliente, Data, Total)
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do Movimento
+
+Banco: farmaciaEliseu
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL
 
 - Tela que apresenta os agrupamentos de movimentos
 - Tabela acessa o banco dbo.movimentos e cria um item na tabela por codigoMovimento mostrando "Movimento", "Cliente" (já q todos os itens com mesmo codigoMovimento tem o mesmo cliente), "Data (já q todos os itens com mesmo codigoMovimento tem o mesma Data sem ter hora), Total (Somatorio de todos os precoVendas dos itens que tem o codigoMovimento)"
 - o header da tabela é mantido enquanto o scroll é usado para melhor orientação do cliente
-- Tabela tem paginação para evitar carregar vários itens e deixar o sistema pesado
-- abaixo da paginação a esquerda é apresentado o numero de itens atuais e o numero máximo de itens
-- abaixo da paginação a direita é apresentado os botões e avançar e voltar para navegar na paginação, ambos com seus emojis
-- Acima da tabela tem o botão Menu, select box de coluna e input de pesquisa
-- o Botão menu com seu emoji retorna para index.html
-- select box apresenta qual a coluna que será usada de guia para pesquisas, impedindo que retorne valores referentes a outras colunas, as colunas permitidas são "Cliente", "Movimento", mesmo celular estando na tabela ele fica de fora da pesquisa
-- input de pesquisa recebe um valor a ser pesquisado na tabela e retornado na hora, esse valor podendo estar presente em qualquer parte do item referente a coluna (exemplo: caso eu pesquisa Ado, ele pode retornar a posição ado em qualquer parte do nome)
-- Acima da área de pesquisa fica o botões de Detalhes com seu emoji
-- ao selecionar um item habilita o botão Detalhe
 
 Detalhes
 - Cria um modal
 - Apresenta novamento as informações "Movimento", "Cliente", "Data (sem horario)", "Total"
-- Abaixo das informações apresenta outra tabela mostrando cada movimento daquele codigoMovimento, mostrando "produtoDescricao", "quantidade", "precoUnitarioAtual", "desconto", "precoTotalAtual", "deletado"
+- Abaixo das informações apresenta outra tabela mostrando cada movimento daquele codigoMovimento, mostrando "produtoDescricao", "quantidade", "precoUnitarioAtual", "desconto", "precoTotalAtual", "deletado" (Deletado mostra (SIM ou NÃO))
 - os header da cabeça vão ser "Descricao", "Qtd", Vlr Unit", "Desconto", "Total", "Pago"
+- abaixo da tabela um campo Select com "Todos", "Pagos", "Não Pagos" e um botão imprimir(mesmo estilo do botão Detalhes)
+- O botão Imprimir apresenta um cupom com o corpo em Printing/receiptPrinter.cs onde caso selecione todos e Não pagos sai o modelo sem valor e caso selecione o pagos sai o modelo com valor, sendo não pagos apenas os deletado = false e os pagos deletado = true
 
 exemplo
 

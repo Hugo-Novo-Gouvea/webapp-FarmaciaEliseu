@@ -1,40 +1,169 @@
-Vendas
+/----------------------------------------/
+VENDAS
+/----------------------------------------/
 
 Regras da Tela
 
+- Tela que realiza as vendas
+
+	-Fundo
+		- cor de fundo: linear-gradient(180deg, var(--cor-padrao_quaternaria) 0%, #ffffff 35%, #eef2f5 100%)
+	
+	-Cartão
+		- cor do cartão: --cor-padrao_primaria
+		- Sombra: --cartao-sombra
+
+- Titulo e Sub-Titulo
+
+	- Titulo
+		- Texto: "Vendas"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-titulo_tamanho
+
+	-Sub-Titulo
+		- Texto: "Tela de Vendas"
+		- cor do Texto: --texto-padrao_cor
+		- Tamanho do Texto: --texto-subtitulo_tamanho
+
+- Menu de botões(Realizar Venda)
+- Ao registrar um item na tabela o botão Realizar Venda é habilitado
+
+    - Detalhes
+		- cor de fundo: --botao-confirmar_cor
+		- cor da borda: --botao-confirmar_borda
+		- cor quando o mouse fica em cima: --botao-confirmar_foco
+		- Texto: Realizar Venda
+		- cor do Texto: --texto-confirmar_cor
+		- Emoji: Lapis
+		- Ação: Realiza o registro em movimentos da venda
+		- Sombra
+
+- Menu de navegação (Menu, Cliente, Total)
+- Fundo estilizado
+- O botão Menu permite retornar para a tela principal
+
+	- Fundo
+		- fundo: -cor-padrao_secundaria
+		- borda: -cor-padrao_quinaria
+	
+	- Botão Menu
+		- cor de fundo: --cor-padrao_primaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Menu
+		- cor do Texto: --texto-excluir_cor
+		- Emoji: Seta apontando para a esquerda
+		- Ação: Retorna ao menu principal
+		- Sombra
+
+- tabela com os itens movimentos
+- banco farmaciaEliseu.movimentos
+
+Tabela: dbo.movimentos
+-------------------------------------------------
+movimentosID          int              PK, NOT NULL
+produtosID            int              NOT NULL
+produtosDescricao     nvarchar(200)    NOT NULL
+produtosCodigoProduto nvarchar(9)      NOT NULL
+clientesID            int              NOT NULL
+clientesNome          nvarchar(200)    NOT NULL
+funcionariosID        int              NOT NULL
+funcionariosNome      nvarchar(200)    NOT NULL
+quantidade            int              NOT NULL
+precoUnitarioDiaVenda decimal(19,4)    NOT NULL
+precoTotalDiaVenda    decimal(19,4)    NOT NULL
+precoUnitarioAtual    decimal(19,4)    NOT NULL
+precoTotalAtual       decimal(19,4)    NOT NULL
+valorPago             decimal(19,4)    NOT NULL
+desconto              decimal(19,4)    NOT NULL
+DataVenda             datetime2(0)     NOT NULL
+DataPagamento         datetime2(0)     NULL
+codigoMovimento       int              NOT NULL
+dataCadastro          datetime2(0)     NOT NULL
+dataUltimoRegistro    datetime2(0)     NOT NULL
+deletado              bit              NOT NULL
+
+- Linha com as opções de venda em campos Select (Campos: TIPO DE VENDA, VENDEDOR, TIPO DE CLIENTE, TIPO DE PRODUTO, TIPO DE DESCONTO)
+
+    - TIPO DE VENDA
+        Selecione o tipo,
+        Marcar,
+        Dinheiro
+    Define se o deletado do movimento vai ser false ou true, sendo marcar false e dinheiro true
+
+    VENDEDOR
+        - Mostra "Selecione um Vendedor"
+        - Retorna todos os items em funcionarios e deixa o usuario selecionar um
+
+    - TIPO DE CLIENTE
+        Selecione o tipo,
+        Registrado,
+        Avulso
+    Caso Registrado: Cria uma nova linha com um campo input onde pode se procurar o cliente e abaixo do campo vai retornando valores semenlhantes aos digitados para auxiliar o usuario e ao lado o total que assim que escolhido o cliente mostra o fiado atual do cliente sendo a soma de todos os precoTotalAtual dos movimentos desse cliente onde deletado = false
+    Caso Avulso: Campo input para que o usuario digite o nome do cliente sem busca pois é um cliente fora do banco
+
+    - TIPO DE PRODUTO
+        Selecione o tipo,
+        Registrado,
+        Outras Vendas
+    Caso Registrado: 
+        - Cria uma nova linha com um campo input (Codigo de Barras/Descrição) onde o usuario pode informar a descrição ou codigo de barras de um produto e ao apertar enter ele move o foco para o campo quantidade que está ao lado datUltimoRegistro
+        - Se for digitado um valor em descrição e apertado Enter e não bater com nenhum codigo de barras existente deve ser retornado um modal com todos os itens com descrição(apenas descrição) semenlhante ao valor digitado e o usuario poderá selecionar um e apertar em confirmar ou cancelar no botão abaixo da tabelas de itens referente e então esse que será adicionado no campo Codigo de Barras/Descrição
+        - Campo quantidade é um campo do tipo number que só aceita de 1 para cima e ao apertar Enter muda o foco para o campo desconto que fica logo ao lado direito
+        - campo desconto começa em 0 tipo number e recebe valores quebrados(se tiver outras forma de tratar q n seja number n tem problema) e ao apertar Enter registra o item na tabela
+        - Botão Adicionar caso o usuario não queira apertar o Enter no desconto ele adicionar(mesmo estilo de Realizar Venda) na tabela
+    Caso Avulso: Campo input para que o usuario digite o nome do cliente sem busca pois é um cliente fora do banco
+
+    - TIPO DE DESCONTO
+        Porcentagem,
+        Fixo
+    Caso Porcentagem: o desconto digitado do item vai ser aplicado em porcentagem exemplo: se dititado 18 então é aplicado 18% de desconto
+    Caso Fixo: o desconto digitado do item vai ser aplicado em valor fixo exemplo: se dititado 18 então é aplicado 18 reais de desconto
+    
+        
+- campos na tabela (Produto, Quantidade, Valor, Desconto, Total (quantidade * valor) e Botão excluir na frente de cada item para retirnar da tabela se necessario (mesmo estilo do botão Realizar Venda))
+
+	- Tabela
+		- Cor do Header: --cor-padrao_tercearia
+		- borda: --cor-padrao_quinaria
+		- Texto do Header: --texto-padrao_cor
+		- cor de fundo das celulas impares: --cor-padrao_primaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor de fundo das celulas pares: --cor-padr_secundaria
+		- borda das celulas impares: --cor-padrao_quinaria
+		- cor da celula com o mouse acima: --cor-padrao_tercearia
+		- Texto da celulas: --texto-padrao_cor
+	
+- Texto abaixo da tabela na região esquerda apresentando o numero dos itens atuais e o numero de itens maximos
+- Botõss Anterior e Próxima abaixo da tabela na região direita
+- Botões Anterior e Próxima auxiliam a navegar pelos itens da tabela
+
+	- Botão Anterior
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Anterior
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para esquerda
+		- Ação: Permite voltar paginas na paginação
+		- Sombra
+
+	- Botão Proxima
+		- cor de fundo: --cor-padrao_secundaria
+		- cor da borda: --cor-padrao_quinaria
+		- cor quando o mouse fica em cima: --cor-padrao_tercearia
+		- Texto: Proxima
+		- cor do Texto: --texto-padrao_cor
+		- Emoji: Seta apontando para direita
+		- Ação: Permite avançar paginas na paginação
+		- Sombra
+
+Regras do Movimento
+
 - Tela que controla as vendas do cliente
-- Linha com 4 Select box "Tipo de Vendas", "Vendedor", "Tipo de Cliente", "Tipo de Produto"
-
-    Tipo de Clientes
-
-    - "Selecione o tipo", "Registrado", "Avulso"
-    - Começa com "Selecione o tipo"
-    - é necessario que o cliente escolha entre "Registrado" e "Avulso" que vai registrar em dbo.movimentos o "clientesID" e o "clientesNome"
-    - Depois de escolher entre "Registrado" e "Avulso" uma nova linha abaixo é carregada
-    - Se selecionado "Registrado" a segunda linha vai ter uma select box "Cliente" que carrega todos os clientes em dbo.clientes onde id != 1 e deletado = 0 e do lado vai ter um input pesquisa que auxilia a encontrar um nome na select box e depois salva em "clientesID" e o "clientesNome" o id e nome do cliente selecionado
-    - Se selecionado "Avulso" a segunda linha vai um input em branco Cliente que registra em movimentos em "clientesID" e o "clientesNome" o id 1 e nome escrito no input
-
-    Tipo de Produto
-
-    - "Selecione o tipo", "Registrado", "Avulso"
-    - Começa com "Selecione o tipo"
-    - é necessario que o cliente escolha entre "Registrado" e "Avulso" que vai registrar em dbo.movimentos o "produtosID", "produtosDescricao" e "produtosCodigoProduto"
-    - Depois de escolher entre "Registrado" e "Avulso" uma nova linha abaixo da de clientes é carregada
-    - Se selecionado "Registrado" a terceira linha vai ter um input Codigo de Barras/Descricao onde o cliente pode passar o nome do produto ou codigo de barras dele, depois um campo quantidade que aceita apenas numeros inteiros de 1 pra cima, depois um campo desconto que aceita apenas numeros de 0 pra cima e por fim um botão Adicionar, registra no movimentos o "produtosID", "produtosDescricao" e "produtosCodigoProduto" referente ao produto selecionado 
-    - Se selecionado "Avulso" a terceira linha vai um campo input Nome do produto, preço de venda que recebe apenas numeros de 0 pra cima, depois um campo quantidade que aceita apenas numeros inteiros de 1 pra cima, depois um campo desconto que aceita apenas numeros de 0 pra cima e por fim um botão Adicionar, registra no movimentos o "produtosID" 1, "produtosDescricao" o nome escrito no input e "produtosCodigoProduto" "000000000"
-
-    Vendedor
-    - Seleciona o vendedor la no banco db.funcionarios os cliente com deletado = false para colocar em movimentos em "funcionariosID" e "funcionariosNome"
-
-    Tipo de Venda
-    - "Selecione o tipo", "Marcar", "Dinheiro"
-    - Só é permitido salvar se escolhido Marcar ou Dinheiro
-    - Se escolher Marcar o deletado do movimento = false e se escolher dinheiro o deletado do movimento = true
 
 - Tabela
 
-- Sempre que o usuario clicar no botão adicionar ou pressionar enter enquanto está com a barre codigo de barras/Descrição selecionado as informções do produto aparecer na tabela
-- "Descricao", "Quantidade", "valor"(referente ao valor de venda do produto), "desconto", "total" (sendo valor - desconto)
 - Realizar venda coloca em movimentos as informações referente aos produtos sendo
 
 movimentoID: PK
