@@ -90,6 +90,94 @@ public static class ProdutosEndpoints
             return produto is not null ? Results.Ok(produto) : Results.NotFound();
         });
 
+        // GET /api/produtos/busca-por-codigo/{valor} - Busca por c��digo de barras, c��digo interno ou ID
+        group.MapGet("/busca-por-codigo/{valor}", async (string valor, AppDbContext db) =>
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return Results.BadRequest("Valor Ǹ obrigat��rio.");
+
+            valor = valor.Trim();
+
+            var produto = await db.Produtos
+                .AsNoTracking()
+                .Where(p => (p.Deletado == null || p.Deletado == false) && p.ProdutosId != 1)
+                .Where(p =>
+                    p.CodigoBarras == valor ||
+                    p.CodigoProduto == valor ||
+                    p.ProdutosId.ToString() == valor
+                )
+                .Select(p => new
+                {
+                    p.ProdutosId,
+                    p.CodigoProduto,
+                    p.CodigoBarras,
+                    p.Descricao,
+                    p.PrecoVenda,
+                    tipo = p.Generico
+                })
+                .FirstOrDefaultAsync();
+
+            return produto is not null ? Results.Ok(produto) : Results.NotFound();
+        });
+
+        // GET /api/produtos/busca-por-descricao?filtro= - Lista produtos pelo texto da descri��ǜo
+        group.MapGet("/busca-por-descricao", async (string? filtro, AppDbContext db, int take = 30) =>
+        {
+            if (take < 1) take = 10;
+            if (take > 200) take = 200;
+
+            var query = db.Produtos
+                .AsNoTracking()
+                .Where(p => (p.Deletado == null || p.Deletado == false) && p.ProdutosId != 1);
+
+            if (!string.IsNullOrWhiteSpace(filtro))
+            {
+                filtro = filtro.Trim().ToUpper();
+                query = query.Where(p => p.Descricao != null && p.Descricao.Contains(filtro));
+            }
+
+            var itens = await query
+                .OrderBy(p => p.Descricao)
+                .Take(take)
+                .Select(p => new
+                {
+                    p.ProdutosId,
+                    p.CodigoProduto,
+                    p.CodigoBarras,
+                    p.Descricao,
+                    p.PrecoVenda,
+                    tipo = p.Generico
+                })
+                .ToListAsync();
+
+            return Results.Ok(itens);
+        });
+
+        // GET /api/produtos/lista-basica - Lista curta para o modal de busca de produtos
+        group.MapGet("/lista-basica", async (AppDbContext db, int take = 100) =>
+        {
+            if (take < 1) take = 10;
+            if (take > 300) take = 300;
+
+            var itens = await db.Produtos
+                .AsNoTracking()
+                .Where(p => (p.Deletado == null || p.Deletado == false) && p.ProdutosId != 1)
+                .OrderBy(p => p.Descricao)
+                .Take(take)
+                .Select(p => new
+                {
+                    p.ProdutosId,
+                    p.CodigoProduto,
+                    p.CodigoBarras,
+                    p.Descricao,
+                    p.PrecoVenda,
+                    tipo = p.Generico
+                })
+                .ToListAsync();
+
+            return Results.Ok(itens);
+        });
+
         // POST /api/produtos - Criar novo produto
         group.MapPost("/", async (Produto dto, AppDbContext db) =>
         {

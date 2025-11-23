@@ -12,29 +12,30 @@
       top: 100%;
       left: 0;
       right: 0;
-      background: rgba(255,255,255,0.98);
-      border: 1px solid rgba(0,0,0,.1);
+      background: var(--color-one);              /* mesma cor dos inputs da barra */
+      border: 1px solid var(--color-border-soft);
       z-index: 50;
       max-height: 220px;
       overflow-y: auto;
-      box-shadow: 0 8px 20px rgba(0,0,0,.12);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
     }
+
+    .suggest-list {
+      list-style: none;                           /* tira as bolinhas */
+      margin: 0;
+      padding: 0;
+    }
+
     .suggest-item {
       padding: .25rem .5rem;
       cursor: pointer;
       font-size: .75rem;
-      color: #333;
+      color: var(--color-text);
     }
+
     .suggest-item:hover {
-      background: rgba(0,0,0,.04);
-    }
-    /* modalzinho de lookup de produto */
-    .app-modal-xl {
-      max-width: 780px;
-    }
-    #produto-lookup-table th,
-    #produto-lookup-table td {
-      font-size: .7rem;
+      background: var(--color-three);
+      color: var(--color-heading);
     }
   </style>
 </head>
@@ -194,6 +195,11 @@
                 </tr>
               </tbody>
             </table>
+            <div class="vendas-total-bar">
+              <span id="vendas-total" class="vendas-total-label">
+                Total: R$ 0,00
+              </span>
+            </div>
           </div>
         </div>
 

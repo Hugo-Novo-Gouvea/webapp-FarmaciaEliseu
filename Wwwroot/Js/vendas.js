@@ -1,631 +1,587 @@
-// /js/vendas.js
-// vendas com:
-// - autocomplete de cliente
-// - total devido do cliente
-// - fluxo de ENTER: produto -> (modal se for descrição) -> quantidade -> desconto -> adiciona
-// - busca de produto APENAS no primeiro campo
-// - modal sem botão "escolher" por linha (seleciona linha + confirmar)
+const vendasState = {
+  clientes: [],
+  clienteSelecionado: null,
+  produtoSelecionado: null,
+  itens: []
+};
 
-let vendasClientesTodos = [];
-let vendasItens = [];
+const vendasEls = {};
 
-// cliente selecionado (autocomplete)
-let vendasClienteSelecionado = null;
-
-// produto selecionado (depois do enter no produto ou depois do modal)
-let vendasProdutoSelecionado = null;
-
-// elementos
-let vendasTipoVendaEl;
-let vendasTipoClienteEl;
-let vendasClienteAvulsoNomeEl;
-let vendasClienteRegistradoInputEl;
-let vendasClienteRegistradoSuggestEl;
-let vendasVendedorEl;
-let vendasTotalEl;
-
-let vendasProdutoInputEl;
-let vendasProdutoNomeEl;
-let vendasProdutoTipoEl;
-let vendasProdutoDescricaoEl;
-let vendasProdutoQtdEl;
-let vendasProdutoDescontoEl;
-let vendasProdutoPrecoEl;
-let vendasBtnAddItemEl;
-let vendasGridItensEl;
-let vendasTotalClienteEl;
-
-let vendasModalProdutoEl;
-let vendasModalProdutoTableBodyEl;
-let vendasModalProdutoBtnConfirmarEl;
-let vendasModalProdutoBtnFecharEl;
-
-let vendasBtnConfirmarVendaEl;
-let vendasBtnImprimirEl;
-
-// modal de busca de produto
-let vendasModalBuscaProdutoEl;
-let vendasBuscaProdutoInputEl;
-let vendasBuscaProdutoGridEl;
-let vendasBuscaProdutoBtnFecharEl;
-
-// inicialização
 document.addEventListener('DOMContentLoaded', async () => {
-  await vendasInit();
-});
-
-async function vendasInit() {
-  // pega elementos
-  vendasTipoVendaEl = document.getElementById('tipo-venda');
-  vendasTipoClienteEl = document.getElementById('tipo-cliente');
-  vendasClienteAvulsoNomeEl = document.getElementById('cliente-avulso-nome');
-  vendasClienteRegistradoInputEl = document.getElementById('cliente-registrado-input');
-  vendasClienteRegistradoSuggestEl = document.getElementById('cliente-registrado-suggest');
-  vendasVendedorEl = document.getElementById('vendedor');
-  vendasTotalEl = document.getElementById('vendas-total');
-
-  vendasProdutoInputEl = document.getElementById('produto-input');
-  vendasProdutoNomeEl = document.getElementById('produto-nome');
-  vendasProdutoTipoEl = document.getElementById('produto-tipo');
-  vendasProdutoDescricaoEl = document.getElementById('produto-descricao');
-  vendasProdutoQtdEl = document.getElementById('produto-qtd');
-  vendasProdutoDescontoEl = document.getElementById('produto-desconto');
-  vendasProdutoPrecoEl = document.getElementById('produto-preco');
-  vendasBtnAddItemEl = document.getElementById('btn-add-item');
-  vendasGridItensEl = document.getElementById('grid-itens-venda');
-  vendasTotalClienteEl = document.getElementById('total-cliente');
-
-  vendasModalProdutoEl = document.getElementById('modal-produto');
-  vendasModalProdutoTableBodyEl = document.querySelector('#modal-produto tbody');
-  vendasModalProdutoBtnConfirmarEl = document.getElementById('modal-produto-confirmar');
-  vendasModalProdutoBtnFecharEl = document.getElementById('modal-produto-fechar');
-
-  vendasBtnConfirmarVendaEl = document.getElementById('btn-confirmar-venda');
-  vendasBtnImprimirEl = document.getElementById('btn-imprimir');
-
-  vendasModalBuscaProdutoEl = document.getElementById('modal-busca-produto');
-  vendasBuscaProdutoInputEl = document.getElementById('busca-produto-input');
-  vendasBuscaProdutoGridEl = document.getElementById('grid-busca-produto');
-  vendasBuscaProdutoBtnFecharEl = document.getElementById('modal-busca-produto-fechar');
-
-  // carrega clientes e vendedores
-  await carregarClientes();
-  await carregarVendedores();
-
-  // listeners básicos
-  vendasTipoVendaEl?.addEventListener('change', () => {
-    atualizarStateBotaoVenda();
-  });
-
-  vendasTipoClienteEl?.addEventListener('change', () => {
-    atualizarTipoCliente();
-    atualizarStateBotaoVenda();
-  });
-
-  vendasClienteAvulsoNomeEl?.addEventListener('input', () => {
-    atualizarStateBotaoVenda();
-  });
-
-  // autocomplete de cliente
-  initAutocompleteCliente();
-
-  // fluxo de produto / ENTER / modal
-  initFluxoProduto();
-
-  // botões de venda
-  vendasBtnAddItemEl?.addEventListener('click', () => {
-    adicionarItemVenda();
-  });
-
-  vendasBtnConfirmarVendaEl?.addEventListener('click', () => {
-    realizarVenda(false);
-  });
-
-  vendasBtnImprimirEl?.addEventListener('click', () => {
-    realizarVenda(true);
-  });
-
-  // modal de busca de produto (atalho tipo F2 / botão)
-  initModalBuscaProduto();
-
-  // estado inicial
-  atualizarTipoCliente();
+  mapVendasElements();
+  bindVendasEvents();
+  await Promise.all([carregarClientes(), carregarVendedores()]);
+  atualizarBlocoCliente();
+  atualizarBlocoProduto();
   atualizarGridItens();
   atualizarTotalVenda();
-  atualizarStateBotaoVenda();
+  atualizarEstadoVenda();
+});
+
+function mapVendasElements() {
+  vendasEls.tipoVenda = document.getElementById('tipo-venda');
+  vendasEls.tipoCliente = document.getElementById('tipo-cliente');
+  vendasEls.tipoProduto = document.getElementById('tipo-produto');
+  vendasEls.tipoDesconto = document.getElementById('tipo-desconto');
+  vendasEls.vendedor = document.getElementById('vendedor');
+
+  vendasEls.clienteAvulso = document.getElementById('cliente-avulso');
+  vendasEls.clienteRegistradoInput = document.getElementById('cliente-registrado-input');
+  vendasEls.clienteRegistradoSuggest = document.getElementById('cliente-registrado-suggest');
+  vendasEls.totalCliente = document.getElementById('vendas-total-cliente');
+
+  vendasEls.produtoInput = document.getElementById('produto');
+  vendasEls.quantidade = document.getElementById('quantidade');
+  vendasEls.desconto = document.getElementById('desconto');
+  vendasEls.btnAddItem = document.getElementById('btn-add-item');
+
+  vendasEls.produtoNomeAvulso = document.getElementById('produto-nome');
+  vendasEls.produtoPrecoAvulso = document.getElementById('produto-preco');
+  vendasEls.quantidadeAvulso = document.getElementById('quantidade-avulso');
+  vendasEls.descontoAvulso = document.getElementById('desconto-avulso');
+  vendasEls.btnAddItemAvulso = document.getElementById('btn-add-item-avulso');
+
+  vendasEls.tabelaItensBody = document.querySelector('#tb-itens-venda tbody');
+  vendasEls.btnSell = document.getElementById('btn-sell');
+
+  vendasEls.blocoClienteRegistrado = document.getElementById('cliente-registrado-block');
+  vendasEls.blocoClienteAvulso = document.getElementById('cliente-avulso-block');
+  vendasEls.blocoProdutoRegistrado = document.getElementById('produto-registrado-block');
+  vendasEls.blocoProdutoAvulso = document.getElementById('produto-avulso-block');
+
+  vendasEls.labelDescReg = document.getElementById('label-desconto-reg');
+  vendasEls.labelDescAvulso = document.getElementById('label-desconto-avulso');
+
+  vendasEls.modalBackdrop = document.getElementById('produto-lookup-backdrop');
+  vendasEls.modalTbody = document.getElementById('produto-lookup-tbody');
+  vendasEls.modalClose = document.getElementById('produto-lookup-close');
+  vendasEls.modalCancel = document.getElementById('produto-lookup-cancel');
+  vendasEls.modalConfirm = document.getElementById('produto-lookup-confirm');
 }
 
-/* =========================================================
-   CARREGAMENTO DE CLIENTES / VENDEDORES
-   ========================================================= */
+function bindVendasEvents() {
+  vendasEls.tipoCliente?.addEventListener('change', () => {
+    vendasState.clienteSelecionado = null;
+    atualizarBlocoCliente();
+    atualizarEstadoVenda();
+  });
+
+  vendasEls.tipoProduto?.addEventListener('change', () => {
+    vendasState.produtoSelecionado = null;
+    atualizarBlocoProduto();
+  });
+
+  vendasEls.tipoDesconto?.addEventListener('change', atualizarLabelsDesconto);
+
+  vendasEls.tipoVenda?.addEventListener('change', atualizarEstadoVenda);
+  vendasEls.vendedor?.addEventListener('change', atualizarEstadoVenda);
+
+  vendasEls.clienteAvulso?.addEventListener('input', atualizarEstadoVenda);
+  initAutocompleteClientes();
+
+  vendasEls.produtoInput?.addEventListener('keydown', async (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      await buscarProdutoRegistrado();
+    }
+  });
+
+  vendasEls.quantidade?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      vendasEls.desconto?.focus();
+    }
+  });
+
+  vendasEls.desconto?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      adicionarItemRegistrado();
+    }
+  });
+
+  vendasEls.btnAddItem?.addEventListener('click', adicionarItemRegistrado);
+  vendasEls.btnAddItemAvulso?.addEventListener('click', adicionarItemAvulso);
+
+  vendasEls.btnSell?.addEventListener('click', realizarVenda);
+
+  vendasEls.modalClose?.addEventListener('click', fecharModalProdutos);
+  vendasEls.modalCancel?.addEventListener('click', fecharModalProdutos);
+  vendasEls.modalConfirm?.addEventListener('click', () => {
+    if (vendasState.produtoSelecionado) {
+      selecionarProduto(vendasState.produtoSelecionado);
+    }
+    fecharModalProdutos();
+  });
+}
+
 async function carregarClientes() {
   try {
-    const resp = await fetch('/api/clientes');
-    if (!resp.ok) {
-      console.error('Falha ao carregar clientes');
-      return;
+    let carregado = false;
+
+    // 1) tenta usar o endpoint de contas, que já traz todos os clientes não deletados
+    try {
+      const respContas = await fetch('/api/contas/clientes');
+      if (respContas.ok) {
+        const dataContas = await respContas.json();
+        const lista = Array.isArray(dataContas) ? dataContas : [];
+        vendasState.clientes = lista
+          .map(c => ({
+            clientesId: c.clientesId ?? c.ClientesId ?? c.id ?? c.Id ?? 0,
+            nome: c.nome ?? c.Nome ?? '',
+            codigoFichario: c.codigoFichario ?? c.CodigoFichario ?? null,
+            cpf: c.cpf ?? c.Cpf ?? null
+          }))
+          .filter(c => c.clientesId && c.nome);
+        carregado = true;
+      }
+    } catch (_) {
+      // se der erro, cai pro fallback abaixo
     }
 
-    const data = await resp.json();
+    // 2) fallback para /api/clientes caso o endpoint acima falhe
+    if (!carregado) {
+      const resp = await fetch('/api/clientes?pageSize=100000');
+      if (!resp.ok) {
+        vendasState.clientes = [];
+        return;
+      }
 
-    // A API retorna objeto paginado { total, page, pageSize, items }
-    // Garantimos que vendasClientesTodos seja sempre um array
-    const lista = Array.isArray(data) ? data : (data.items || []);
+      const data = await resp.json();
+      const arr = Array.isArray(data) ? data : (data.items || []);
 
-    vendasClientesTodos = lista;
-  } catch (e) {
-    console.error('Erro ao carregar clientes', e);
-    vendasClientesTodos = [];
+      vendasState.clientes = (arr || [])
+        .map(c => ({
+          clientesId: c.clientesId ?? c.ClientesId ?? c.id ?? c.Id ?? 0,
+          nome: c.nome ?? c.Nome ?? '',
+          codigoFichario: c.codigoFichario ?? c.CodigoFichario ?? null,
+          cpf: c.cpf ?? c.Cpf ?? null
+        }))
+        .filter(c => c.clientesId && c.nome);
+    }
+  } catch (err) {
+    console.error('Falha ao carregar clientes', err);
+    vendasState.clientes = [];
   }
 }
 
+
 async function carregarVendedores() {
   try {
-    const resp = await fetch('/api/funcionarios');
-    if (!resp.ok) {
-      console.error('Falha ao carregar vendedores');
-      return;
-    }
-
+    const resp = await fetch('/api/funcionarios?pageSize=200');
+    if (!resp.ok) return;
     const data = await resp.json();
-    const select = vendasVendedorEl;
-    if (!select) return;
-
-    // A API também é paginada aqui
     const lista = Array.isArray(data) ? data : (data.items || []);
-
-    select.innerHTML = '<option value="">Selecione...</option>';
+    if (!vendasEls.vendedor) return;
+    vendasEls.vendedor.innerHTML = '<option value="">Selecione o vendedor</option>';
     lista.forEach(v => {
       const opt = document.createElement('option');
       opt.value = v.funcionariosId;
       opt.textContent = v.nome;
-      select.appendChild(opt);
+      vendasEls.vendedor.appendChild(opt);
     });
-  } catch (e) {
-    console.error('Erro ao carregar vendedores', e);
+  } catch (err) {
+    console.error('Falha ao carregar vendedores', err);
   }
 }
 
-/* =========================================================
-   FLUXO DO CLIENTE
-   ========================================================= */
-function atualizarTipoCliente() {
-  const tipo = vendasTipoClienteEl?.value || 'avulso';
+function atualizarBlocoCliente() {
+  const tipo = vendasEls.tipoCliente?.value || '';
 
-  const blocoAvulso = document.getElementById('bloco-cliente-avulso');
-  const blocoRegistrado = document.getElementById('bloco-cliente-registrado');
-
-  if (tipo === 'avulso') {
-    blocoAvulso?.classList.remove('d-none');
-    blocoRegistrado?.classList.add('d-none');
+  if (tipo === 'registrado') {
+    vendasEls.blocoClienteRegistrado?.setAttribute('style', 'display:flex;');
+    vendasEls.blocoClienteAvulso?.setAttribute('style', 'display:none;');
+  } else if (tipo === 'avulso') {
+    vendasEls.blocoClienteRegistrado?.setAttribute('style', 'display:none;');
+    vendasEls.blocoClienteAvulso?.setAttribute('style', 'display:flex;');
   } else {
-    blocoAvulso?.classList.add('d-none');
-    blocoRegistrado?.classList.remove('d-none');
+    // "Selecione" → some tudo
+    vendasEls.blocoClienteRegistrado?.setAttribute('style', 'display:none;');
+    vendasEls.blocoClienteAvulso?.setAttribute('style', 'display:none;');
   }
 
-  // zera cliente selecionado se mudar o tipo
-  vendasClienteSelecionado = null;
-  if (vendasClienteRegistradoInputEl) vendasClienteRegistradoInputEl.value = '';
-  if (vendasClienteRegistradoSuggestEl) vendasClienteRegistradoSuggestEl.innerHTML = '';
-  atualizarStateBotaoVenda();
+  atualizarTotalCliente();
 }
 
-function initAutocompleteCliente() {
-  const cliInput = vendasClienteRegistradoInputEl;
-  const cliSuggest = vendasClienteRegistradoSuggestEl;
-  cliInput?.addEventListener('input', () => {
-    const txt = (cliInput.value || '').toLowerCase();
-    const lista = vendasClientesTodos.filter(c =>
-      c.nome.toLowerCase().includes(txt) ||
-      (c.cpf || '').toLowerCase().includes(txt) ||
-      (c.cnpj || '').toLowerCase().includes(txt) ||
-      (String(c.codigoFichario || '')).includes(txt)
-    );
+function atualizarBlocoProduto() {
+  const tipo = vendasEls.tipoProduto?.value || '';
 
-    renderSuggestClientes(lista.slice(0, 10));
+  if (tipo === 'registrado') {
+    // mostra só os campos de produto registrado
+    vendasEls.blocoProdutoRegistrado?.setAttribute('style', 'display:flex;');
+    vendasEls.blocoProdutoAvulso?.setAttribute('style', 'display:none;');
+  } else if (tipo === 'avulso') {
+    // mostra só os campos de produto avulso
+    vendasEls.blocoProdutoRegistrado?.setAttribute('style', 'display:none;');
+    vendasEls.blocoProdutoAvulso?.setAttribute('style', 'display:flex;');
+  } else {
+    // enquanto estiver em "Selecione", esconde tudo
+    vendasEls.blocoProdutoRegistrado?.setAttribute('style', 'display:none;');
+    vendasEls.blocoProdutoAvulso?.setAttribute('style', 'display:none;');
+  }
+
+  atualizarLabelsDesconto();
+}
+
+function atualizarLabelsDesconto() {
+  const tipo = vendasEls.tipoDesconto?.value || 'porcentagem';
+  const sufixo = tipo === 'fixo' ? ' (R$)' : ' (%)';
+  if (vendasEls.labelDescReg) vendasEls.labelDescReg.textContent = 'Desconto' + sufixo;
+  if (vendasEls.labelDescAvulso) vendasEls.labelDescAvulso.textContent = 'Desconto' + sufixo;
+}
+
+function initAutocompleteClientes() {
+  const input = vendasEls.clienteRegistradoInput;
+  const suggest = vendasEls.clienteRegistradoSuggest;
+  if (!input || !suggest) return;
+
+  input.addEventListener('input', () => {
+    const termo = (input.value || '').toLowerCase();
+    if (!termo || termo.length < 2) {
+      suggest.innerHTML = '';
+      suggest.style.display = 'none';
+      vendasState.clienteSelecionado = null;
+      atualizarEstadoVenda();
+      return;
+    }
+
+    const lista = vendasState.clientes.filter(c =>
+      (c.nome || '').toLowerCase().includes(termo) ||
+      (String(c.codigoFichario || '')).includes(termo) ||
+      (c.cpf || '').toLowerCase().includes(termo)
+    ).slice(0, 8);
+
+    renderSugestoesClientes(lista);
   });
 
-  cliInput?.addEventListener('blur', () => {
+  input.addEventListener('blur', () => {
     setTimeout(() => {
-      if (vendasClienteRegistradoSuggestEl) vendasClienteRegistradoSuggestEl.innerHTML = '';
+      suggest.innerHTML = '';
+      suggest.style.display = 'none';
     }, 200);
   });
 }
 
-function renderSuggestClientes(lista) {
-  const cliSuggest = vendasClienteRegistradoSuggestEl;
-  if (!cliSuggest) return;
-
-  cliSuggest.innerHTML = '';
-  if (!lista || lista.length === 0) return;
+function renderSugestoesClientes(lista) {
+  const suggest = vendasEls.clienteRegistradoSuggest;
+  if (!suggest) return;
+  suggest.innerHTML = '';
+  if (!lista || lista.length === 0) {
+    suggest.style.display = 'none';
+    return;
+  }
 
   const ul = document.createElement('ul');
   ul.className = 'suggest-list';
 
-  lista.forEach(c => {
+  lista.forEach(cli => {
     const li = document.createElement('li');
-    let label = c.nome;
-    if (c.codigoFichario) {
-      label += ` (Fichário: ${c.codigoFichario})`;
-    }
-    if (c.cpf) {
-      label += ` - CPF: ${c.cpf}`;
-    }
+    li.className = 'suggest-item';
+    let label = cli.nome;
+    if (cli.codigoFichario) label += ` (Fichario: ${cli.codigoFichario})`;
     li.textContent = label;
-
     li.addEventListener('click', () => {
-      vendasClienteSelecionado = c;
-      if (vendasClienteRegistradoInputEl) vendasClienteRegistradoInputEl.value = c.nome;
-      cliSuggest.innerHTML = '';
+      vendasState.clienteSelecionado = cli;
+      if (vendasEls.clienteRegistradoInput) vendasEls.clienteRegistradoInput.value = cli.nome;
+      suggest.innerHTML = '';
+      suggest.style.display = 'none';
       atualizarTotalCliente();
-      atualizarStateBotaoVenda();
+      atualizarEstadoVenda();
     });
-
     ul.appendChild(li);
   });
 
-  cliSuggest.appendChild(ul);
+  suggest.appendChild(ul);
+  suggest.style.display = 'block';
 }
 
 async function atualizarTotalCliente() {
+  const tipo = vendasEls.tipoCliente?.value || '';
+  if (tipo !== 'registrado' || !vendasState.clienteSelecionado) {
+    if (vendasEls.totalCliente) vendasEls.totalCliente.textContent = 'Total: R$ 0,00';
+    return;
+  }
+
   try {
-    const tipoCliente = vendasTipoClienteEl?.value || 'avulso';
-
-    if (tipoCliente !== 'registrado' || !vendasClienteSelecionado) {
-      if (vendasTotalClienteEl) vendasTotalClienteEl.textContent = 'R$ 0,00';
-      return;
-    }
-
-    const resp = await fetch(`/api/contas/total-cliente/${vendasClienteSelecionado.clientesId}`);
-    if (!resp.ok) {
-      console.error('Falha ao carregar total do cliente');
-      if (vendasTotalClienteEl) vendasTotalClienteEl.textContent = 'R$ 0,00';
-      return;
-    }
-
+    const id = vendasState.clienteSelecionado.clientesId;
+    const resp = await fetch(`/api/contas/total-cliente/${id}`);
+    if (!resp.ok) throw new Error('fail');
     const data = await resp.json();
     const total = data.total || 0;
-    if (vendasTotalClienteEl) vendasTotalClienteEl.textContent = formatarMoeda(total);
-  } catch (e) {
-    console.error('Erro ao carregar total do cliente', e);
-    if (vendasTotalClienteEl) vendasTotalClienteEl.textContent = 'R$ 0,00';
+    if (vendasEls.totalCliente) vendasEls.totalCliente.textContent = `Total: ${formatarMoeda(total)}`;
+  } catch (err) {
+    console.error('Falha ao buscar total do cliente', err);
+    if (vendasEls.totalCliente) vendasEls.totalCliente.textContent = 'Total: R$ 0,00';
   }
 }
 
-/* =========================================================
-   FLUXO DO PRODUTO / MODAL
-   ========================================================= */
-function initFluxoProduto() {
-  if (!vendasProdutoInputEl) return;
-
-  vendasProdutoInputEl.addEventListener('keydown', async (ev) => {
-    if (ev.key === 'Enter') {
-      ev.preventDefault();
-      await buscarProdutoPorCodigoOuDescricao();
-    }
-  });
-
-  vendasProdutoQtdEl?.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') {
-      ev.preventDefault();
-      vendasProdutoDescontoEl?.focus();
-    }
-  });
-
-  vendasProdutoDescontoEl?.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') {
-      ev.preventDefault();
-      adicionarItemVenda();
-    }
-  });
-}
-
-async function buscarProdutoPorCodigoOuDescricao() {
-  const valor = (vendasProdutoInputEl?.value || '').trim();
+async function buscarProdutoRegistrado() {
+  const valor = (vendasEls.produtoInput?.value || '').trim();
   if (!valor) return;
 
-  // se for só número, tenta direto o código de barras ou ID
+  let produto = null;
   if (/^\d+$/.test(valor)) {
-    const resp = await fetch(`/api/produtos/busca-por-codigo/${encodeURIComponent(valor)}`);
-    if (resp.ok) {
-      const prod = await resp.json();
-      if (prod) {
-        selecionarProduto(prod);
-        return;
-      }
-    }
+    produto = await fetchProdutoPorCodigo(valor);
   }
 
-  // caso contrário, abre modal de busca por descrição (o back já faz o filtro)
-  await abrirModalProdutos(valor);
+  if (produto) {
+    selecionarProduto(produto);
+    return;
+  }
+
+  const lista = await fetchProdutosPorDescricao(valor);
+  if (!lista || lista.length === 0) {
+    alert('Produto nao encontrado.');
+    return;
+  }
+
+  abrirModalProdutos(lista);
+}
+
+async function fetchProdutoPorCodigo(valor) {
+  try {
+    const resp = await fetch(`/api/produtos/busca-por-codigo/${encodeURIComponent(valor)}`);
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch {
+    return null;
+  }
+}
+
+async function fetchProdutosPorDescricao(filtro) {
+  try {
+    const resp = await fetch(`/api/produtos/busca-por-descricao?filtro=${encodeURIComponent(filtro)}`);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return Array.isArray(data) ? data : (data.items || []);
+  } catch {
+    return [];
+  }
+}
+
+function abrirModalProdutos(lista) {
+  if (!vendasEls.modalBackdrop || !vendasEls.modalTbody) return;
+
+  vendasEls.modalTbody.innerHTML = '';
+  vendasState.produtoSelecionado = null;
+
+  lista.forEach((p, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.descricao || ''}</td>
+      <td>${p.codigoBarras || ''}</td>
+      <td>${p.codigoProduto || ''}</td>
+      <td>${formatarMoeda(p.precoVenda || 0)}</td>
+    `;
+    tr.addEventListener('click', () => {
+      vendasEls.modalTbody?.querySelectorAll('tr').forEach(r => r.classList.remove('table-active'));
+      tr.classList.add('table-active');
+      vendasState.produtoSelecionado = p;
+    });
+    if (idx === 0) {
+      tr.classList.add('table-active');
+      vendasState.produtoSelecionado = p;
+    }
+    vendasEls.modalTbody.appendChild(tr);
+  });
+
+  vendasEls.modalBackdrop.style.display = 'flex';
+}
+
+function fecharModalProdutos() {
+  if (vendasEls.modalBackdrop) vendasEls.modalBackdrop.style.display = 'none';
 }
 
 function selecionarProduto(prod) {
-  vendasProdutoSelecionado = prod;
-
-  if (vendasProdutoNomeEl) vendasProdutoNomeEl.value = prod.descricao || '';
-  if (vendasProdutoTipoEl) vendasProdutoTipoEl.value = prod.tipo || '';
-  if (vendasProdutoDescricaoEl) vendasProdutoDescricaoEl.value = prod.observacao || '';
-  if (vendasProdutoPrecoEl) vendasProdutoPrecoEl.value = formatarMoeda(prod.precoVenda || 0);
-  if (vendasProdutoQtdEl) vendasProdutoQtdEl.value = '1';
-  if (vendasProdutoDescontoEl) vendasProdutoDescontoEl.value = '0,00';
-
-  vendasProdutoQtdEl?.focus();
+  vendasState.produtoSelecionado = prod;
+  if (vendasEls.produtoInput) vendasEls.produtoInput.value = prod.codigoBarras || prod.codigoProduto || '';
+  if (vendasEls.quantidade) vendasEls.quantidade.value = '1';
+  if (vendasEls.desconto) vendasEls.desconto.value = '0';
+  vendasEls.quantidade?.focus();
 }
 
-async function abrirModalProdutos(filtroDescricao) {
-  if (!vendasModalProdutoEl || !vendasModalProdutoTableBodyEl) return;
-
-  try {
-    const resp = await fetch(`/api/produtos/busca-por-descricao?filtro=${encodeURIComponent(filtroDescricao)}`);
-    if (!resp.ok) {
-      console.error('Falha ao buscar produtos');
-      return;
-    }
-
-    const data = await resp.json();
-    const itens = Array.isArray(data) ? data : (data.items || []);
-
-    vendasModalProdutoTableBodyEl.innerHTML = '';
-    itens.forEach(prod => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${prod.codigoProduto || ''}</td>
-        <td>${prod.descricao || ''}</td>
-        <td>${prod.tipo || ''}</td>
-        <td>${formatarMoeda(prod.precoVenda || 0)}</td>
-      `;
-      tr.addEventListener('click', () => {
-        vendasModalProdutoTableBodyEl.querySelectorAll('tr').forEach(r => r.classList.remove('table-active'));
-        tr.classList.add('table-active');
-        vendasProdutoSelecionado = prod;
-      });
-      vendasModalProdutoTableBodyEl.appendChild(tr);
-    });
-
-    // abrir modal (bootstrap)
-    const bsModal = bootstrap.Modal.getOrCreateInstance(vendasModalProdutoEl);
-    vendasModalProdutoBtnConfirmarEl?.addEventListener('click', () => {
-      if (!vendasProdutoSelecionado) return;
-      selecionarProduto(vendasProdutoSelecionado);
-      bsModal.hide();
-    });
-
-    vendasModalProdutoBtnFecharEl?.addEventListener('click', () => {
-      bsModal.hide();
-    });
-
-    bsModal.show();
-  } catch (e) {
-    console.error('Erro ao abrir modal de produtos', e);
-  }
-}
-
-/* =========================================================
-   MODAL DE BUSCA DE PRODUTO (LISTA COMPLETA)
-   ========================================================= */
-function initModalBuscaProduto() {
-  const btnAbrir = document.getElementById('btn-busca-produto');
-  if (!btnAbrir || !vendasModalBuscaProdutoEl) return;
-
-  btnAbrir.addEventListener('click', async () => {
-    await abrirModalBuscaProduto();
-  });
-
-  vendasBuscaProdutoBtnFecharEl?.addEventListener('click', () => {
-    const bsModal = bootstrap.Modal.getOrCreateInstance(vendasModalBuscaProdutoEl);
-    bsModal.hide();
-  });
-
-  vendasBuscaProdutoInputEl?.addEventListener('input', () => {
-    filtrarGridBuscaProduto();
-  });
-}
-
-async function abrirModalBuscaProduto() {
-  if (!vendasModalBuscaProdutoEl || !vendasBuscaProdutoGridEl) return;
-
-  try {
-    const resp = await fetch('/api/produtos/lista-basica');
-    if (!resp.ok) {
-      console.error('Falha ao carregar lista de produtos');
-      return;
-    }
-
-    const data = await resp.json();
-    const itens = Array.isArray(data) ? data : (data.items || []);
-
-    vendasBuscaProdutoGridEl.innerHTML = '';
-    itens.forEach(prod => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${prod.codigoProduto || ''}</td>
-        <td>${prod.descricao || ''}</td>
-        <td>${prod.tipo || ''}</td>
-        <td>${formatarMoeda(prod.precoVenda || 0)}</td>
-      `;
-      tr.addEventListener('click', () => {
-        vendasProdutoSelecionado = prod;
-        selecionarProduto(prod);
-        const bsModal = bootstrap.Modal.getOrCreateInstance(vendasModalBuscaProdutoEl);
-        bsModal.hide();
-      });
-      vendasBuscaProdutoGridEl.appendChild(tr);
-    });
-
-    const bsModal = bootstrap.Modal.getOrCreateInstance(vendasModalBuscaProdutoEl);
-    bsModal.show();
-  } catch (e) {
-    console.error('Erro ao abrir modal de busca de produto', e);
-  }
-}
-
-function filtrarGridBuscaProduto() {
-  if (!vendasBuscaProdutoGridEl || !vendasBuscaProdutoInputEl) return;
-
-  const filtro = (vendasBuscaProdutoInputEl.value || '').toLowerCase();
-  vendasBuscaProdutoGridEl.querySelectorAll('tr').forEach(tr => {
-    const texto = (tr.textContent || '').toLowerCase();
-    tr.style.display = texto.includes(filtro) ? '' : 'none';
-  });
-}
-
-/* =========================================================
-   ITENS DA VENDA / GRID
-   ========================================================= */
-function adicionarItemVenda() {
-  if (!vendasProdutoSelecionado) {
-    alert('Selecione um produto primeiro.');
+function adicionarItemRegistrado() {
+  if ((vendasEls.tipoProduto?.value || '') === 'avulso') return;
+  if (!vendasState.produtoSelecionado) {
+    alert('Selecione ou busque um produto.');
     return;
   }
 
-  const qtd = parseInt((vendasProdutoQtdEl?.value || '1').replace(/\D/g, ''), 10) || 1;
-  let descStr = vendasProdutoDescontoEl?.value || '0';
-  descStr = descStr.replace(/\./g, '').replace(',', '.');
-  const desconto = parseFloat(descStr) || 0;
+  const qtd = Math.max(1, parseInt(vendasEls.quantidade?.value || '1', 10) || 1);
+  const descontoInput = parseMoeda(vendasEls.desconto?.value || '0');
+  const precoUnit = Number(vendasState.produtoSelecionado.precoVenda) || 0;
+  const descontoValor = calcularDesconto(descontoInput, qtd, precoUnit);
+  const totalBruto = qtd * precoUnit;
+  const totalLiquido = Math.max(0, totalBruto - descontoValor);
 
-  const precoVenda = vendasProdutoSelecionado.precoVenda || 0;
-  const totalBruto = qtd * precoVenda;
-  let totalLiquido = totalBruto - desconto;
-  if (totalLiquido < 0) totalLiquido = 0;
-
-  vendasItens.push({
-    produtoId: vendasProdutoSelecionado.produtosId,
-    descricao: vendasProdutoSelecionado.descricao,
+  vendasState.itens.push({
+    produtoId: vendasState.produtoSelecionado.produtosId,
+    descricao: vendasState.produtoSelecionado.descricao,
     quantidade: qtd,
-    precoUnit: precoVenda,
-    desconto: desconto,
+    precoUnit: precoUnit,
+    desconto: descontoValor,
     total: totalLiquido
   });
 
-  // limpa campos de produto
-  if (vendasProdutoInputEl) vendasProdutoInputEl.value = '';
-  if (vendasProdutoNomeEl) vendasProdutoNomeEl.value = '';
-  if (vendasProdutoTipoEl) vendasProdutoTipoEl.value = '';
-  if (vendasProdutoDescricaoEl) vendasProdutoDescricaoEl.value = '';
-  if (vendasProdutoQtdEl) vendasProdutoQtdEl.value = '1';
-  if (vendasProdutoDescontoEl) vendasProdutoDescontoEl.value = '0,00';
-  if (vendasProdutoPrecoEl) vendasProdutoPrecoEl.value = 'R$ 0,00';
-  vendasProdutoSelecionado = null;
-
+  limparCamposProdutoRegistrado();
   atualizarGridItens();
   atualizarTotalVenda();
-  atualizarStateBotaoVenda();
-
-  vendasProdutoInputEl?.focus();
+  atualizarEstadoVenda();
 }
 
-function atualizarGridItens() {
-  if (!vendasGridItensEl) return;
+function adicionarItemAvulso() {
+  if ((vendasEls.tipoProduto?.value || '') !== 'avulso') return;
 
-  vendasGridItensEl.innerHTML = '';
-
-  if (!vendasItens || vendasItens.length === 0) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="6" class="text-muted text-center" style="font-size:.8rem;">Nenhum item adicionado</td>`;
-    vendasGridItensEl.appendChild(tr);
+  const nome = (vendasEls.produtoNomeAvulso?.value || '').trim();
+  if (!nome || nome.length < 3) {
+    alert('Informe o nome do produto avulso.');
     return;
   }
 
-  vendasItens.forEach((it, idx) => {
+  const preco = parseMoeda(vendasEls.produtoPrecoAvulso?.value || '0');
+  if (preco <= 0) {
+    alert('Informe um preco valido.');
+    return;
+  }
+
+  const qtd = Math.max(1, parseInt(vendasEls.quantidadeAvulso?.value || '1', 10) || 1);
+  const descontoInput = parseMoeda(vendasEls.descontoAvulso?.value || '0');
+  const descontoValor = calcularDesconto(descontoInput, qtd, preco);
+  const totalBruto = qtd * preco;
+  const totalLiquido = Math.max(0, totalBruto - descontoValor);
+
+  vendasState.itens.push({
+    produtoId: 0,
+    descricao: nome.toUpperCase(),
+    quantidade: qtd,
+    precoUnit: preco,
+    desconto: descontoValor,
+    total: totalLiquido
+  });
+
+  limparCamposProdutoAvulso();
+  atualizarGridItens();
+  atualizarTotalVenda();
+  atualizarEstadoVenda();
+}
+
+function limparCamposProdutoRegistrado() {
+  vendasState.produtoSelecionado = null;
+  if (vendasEls.produtoInput) vendasEls.produtoInput.value = '';
+  if (vendasEls.quantidade) vendasEls.quantidade.value = '1';
+  if (vendasEls.desconto) vendasEls.desconto.value = '0';
+}
+
+function limparCamposProdutoAvulso() {
+  if (vendasEls.produtoNomeAvulso) vendasEls.produtoNomeAvulso.value = '';
+  if (vendasEls.produtoPrecoAvulso) vendasEls.produtoPrecoAvulso.value = '0';
+  if (vendasEls.quantidadeAvulso) vendasEls.quantidadeAvulso.value = '1';
+  if (vendasEls.descontoAvulso) vendasEls.descontoAvulso.value = '0';
+}
+
+function atualizarGridItens() {
+  const tbody = vendasEls.tabelaItensBody;
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (!vendasState.itens.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="6" class="text-center text-muted">Nenhum item adicionado...</td>';
+    tbody.appendChild(tr);
+    return;
+  }
+
+  vendasState.itens.forEach((it, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${idx + 1}</td>
       <td>${it.descricao || ''}</td>
       <td>${it.quantidade}</td>
       <td>${formatarMoeda(it.precoUnit || 0)}</td>
       <td>${formatarMoeda(it.desconto || 0)}</td>
       <td>${formatarMoeda(it.total || 0)}</td>
-      <td>
-        <button type="button" class="btn btn-sm btn-link text-danger" data-idx="${idx}">remover</button>
-      </td>
+      <td><button class="btn-modern danger small" data-idx="${idx}">remover</button></td>
     `;
-
-    const btnRemover = tr.querySelector('button[data-idx]');
-    btnRemover?.addEventListener('click', () => {
-      const index = parseInt(btnRemover.getAttribute('data-idx'), 10);
-      if (!isNaN(index)) {
-        vendasItens.splice(index, 1);
-        atualizarGridItens();
-        atualizarTotalVenda();
-        atualizarStateBotaoVenda();
-      }
+    tr.querySelector('button')?.addEventListener('click', () => {
+      vendasState.itens.splice(idx, 1);
+      atualizarGridItens();
+      atualizarTotalVenda();
+      atualizarEstadoVenda();
     });
-
-    vendasGridItensEl.appendChild(tr);
+    tbody.appendChild(tr);
   });
 }
 
 function atualizarTotalVenda() {
-  const total = vendasItens.reduce((acc, it) => acc + (it.total || 0), 0);
-  if (vendasTotalEl) vendasTotalEl.textContent = formatarMoeda(total);
+  const total = vendasState.itens.reduce((acc, it) => acc + (it.total || 0), 0);
+  const totalEl = document.getElementById('vendas-total');
+  if (totalEl) totalEl.textContent = formatarMoeda(total);
 }
 
-/* =========================================================
-   CONFIRMAR VENDA / IMPRIMIR
-   ========================================================= */
-function atualizarStateBotaoVenda() {
-  const tipoVenda = vendasTipoVendaEl?.value || 'dinheiro';
-  const tipoCliente = vendasTipoClienteEl?.value || 'avulso';
+function atualizarEstadoVenda() {
+  const tipoCliente = vendasEls.tipoCliente?.value || '';
+  const tipoVenda = vendasEls.tipoVenda?.value || '';
+  const vendedorOk = !!(vendasEls.vendedor?.value);
+  const temItens = vendasState.itens.length > 0;
 
   let clienteOk = false;
-
-  if (tipoCliente === 'avulso') {
-    const nome = (vendasClienteAvulsoNomeEl?.value || '').trim();
-    clienteOk = nome.length >= 3;
+  if (tipoCliente === 'registrado') {
+    clienteOk = !!vendasState.clienteSelecionado;
   } else {
-    clienteOk = !!vendasClienteSelecionado;
+    const nome = (vendasEls.clienteAvulso?.value || '').trim();
+    clienteOk = nome.length >= 3;
   }
 
-  const vendedorSelecionado = vendasVendedorEl?.value || '';
-  const temItens = vendasItens.length > 0;
-
-  const podeVender = clienteOk && vendedorSelecionado && temItens;
-
-  if (vendasBtnConfirmarVendaEl) vendasBtnConfirmarVendaEl.disabled = !podeVender;
-  if (vendasBtnImprimirEl) vendasBtnImprimirEl.disabled = !podeVender;
+  const pode = clienteOk && tipoVenda && vendedorOk && temItens;
+  if (vendasEls.btnSell) vendasEls.btnSell.disabled = !pode;
 }
 
-async function realizarVenda(apenasImprimir) {
-  const tipoVenda = vendasTipoVendaEl?.value || 'dinheiro';
-  const tipoCliente = vendasTipoClienteEl?.value || 'avulso';
+function calcularDesconto(valorDigitado, quantidade, precoUnit) {
+  const tipo = vendasEls.tipoDesconto?.value || 'porcentagem';
+  const totalBruto = quantidade * precoUnit;
+  if (tipo === 'fixo') {
+    return Math.min(Math.max(valorDigitado, 0), totalBruto);
+  }
+  const perc = Math.max(valorDigitado, 0) / 100;
+  return Math.min(totalBruto * perc, totalBruto);
+}
+
+function parseMoeda(v) {
+  if (typeof v === 'number') return v;
+  const clean = (v || '').replace(/\./g, '').replace(',', '.');
+  return parseFloat(clean) || 0;
+}
+
+async function realizarVenda() {
+  const tipoVenda = vendasEls.tipoVenda?.value || '';
+  const tipoCliente = vendasEls.tipoCliente?.value || '';
 
   let clienteId = null;
   let clienteNome = null;
-
-  if (tipoCliente === 'avulso') {
-    const nome = (vendasClienteAvulsoNomeEl?.value || '').trim();
-    if (!nome || nome.length < 3) {
-      alert('Informe o nome do cliente avulso (mínimo 3 caracteres).');
-      return;
-    }
-    clienteNome = nome;
-  } else {
-    if (!vendasClienteSelecionado) {
+  if (tipoCliente === 'registrado') {
+    if (!vendasState.clienteSelecionado) {
       alert('Selecione um cliente registrado.');
       return;
     }
-    clienteId = vendasClienteSelecionado.clientesId;
+    clienteId = vendasState.clienteSelecionado.clientesId;
+  } else {
+    const nome = (vendasEls.clienteAvulso?.value || '').trim();
+    if (!nome || nome.length < 3) {
+      alert('Informe o nome do cliente avulso.');
+      return;
+    }
+    clienteNome = nome;
   }
 
-  const vendedorId = parseInt((vendasVendedorEl?.value || '0'), 10);
+  const vendedorId = parseInt(vendasEls.vendedor?.value || '0', 10);
   if (!vendedorId) {
-    alert('Selecione um vendedor.');
+    alert('Selecione o vendedor.');
     return;
   }
 
-  if (!vendasItens || vendasItens.length === 0) {
-    alert('Adicione pelo menos um item na venda.');
+  if (!vendasState.itens.length) {
+    alert('Adicione pelo menos um item.');
     return;
   }
-
-  const itensPayload = vendasItens.map(it => ({
-    produtoId: it.produtoId,
-    quantidade: it.quantidade,
-    desconto: it.desconto,
-    descricao: it.descricao,
-    precoUnit: it.precoUnit
-  }));
 
   const payload = {
     tipoVenda,
@@ -633,26 +589,26 @@ async function realizarVenda(apenasImprimir) {
     clienteId,
     clienteNome,
     vendedorId,
-    itens: itensPayload
+    itens: vendasState.itens.map(it => ({
+      produtoId: it.produtoId,
+      descricao: it.descricao,
+      quantidade: it.quantidade,
+      precoUnit: it.precoUnit,
+      desconto: it.desconto
+    }))
   };
 
   try {
-    if (!apenasImprimir) {
-      const resp = await fetch('/api/vendas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!resp.ok) {
-        const erroTxt = await resp.text();
-        console.error('Falha ao registrar venda', erroTxt);
-        alert('Falha ao registrar venda.');
-        return;
-      }
-
-      const data = await resp.json();
-      console.log('Venda registrada:', data);
+    const resp = await fetch('/api/vendas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      console.error('Falha ao registrar venda', txt);
+      alert('Falha ao registrar venda.');
+      return;
     }
 
     const respCupom = await fetch('/api/vendas/imprimir', {
@@ -661,64 +617,49 @@ async function realizarVenda(apenasImprimir) {
       body: JSON.stringify(payload)
     });
 
-    if (!respCupom.ok) {
-      console.error('Falha ao gerar cupom');
+    if (respCupom.ok) {
+      const { cupomBase64 } = await respCupom.json();
+      await enviarCupomParaPrintAgent(cupomBase64);
+    } else {
+      console.error('Venda salva, mas falha ao gerar cupom');
       alert('Venda registrada, mas falhou ao gerar cupom.');
-      return;
     }
 
-    const { cupomBase64 } = await respCupom.json();
-    await enviarCupomParaPrintAgent(cupomBase64);
-
-    // limpa venda atual
-    vendasItens = [];
-    vendasClienteSelecionado = null;
-    if (vendasClienteRegistradoInputEl) vendasClienteRegistradoInputEl.value = '';
-    if (vendasClienteRegistradoSuggestEl) vendasClienteRegistradoSuggestEl.innerHTML = '';
-    if (vendasClienteAvulsoNomeEl) vendasClienteAvulsoNomeEl.value = '';
-
+    vendasState.itens = [];
+    vendasState.clienteSelecionado = null;
+    if (vendasEls.clienteRegistradoInput) vendasEls.clienteRegistradoInput.value = '';
+    if (vendasEls.clienteAvulso) vendasEls.clienteAvulso.value = '';
+    limparCamposProdutoRegistrado();
+    limparCamposProdutoAvulso();
     atualizarGridItens();
     atualizarTotalVenda();
-    atualizarTotalCliente();
-    atualizarStateBotaoVenda();
-  } catch (e) {
-    console.error('Erro ao realizar venda', e);
+    atualizarEstadoVenda();
+  } catch (err) {
+    console.error('Erro ao realizar venda', err);
     alert('Erro ao realizar venda.');
   }
 }
 
-/* =========================================================
-   ENVIO AO PRINTAGENT (IMPRESSÃO LOCAL)
-   ========================================================= */
 async function enviarCupomParaPrintAgent(cupomBase64) {
+  if (!cupomBase64) return;
   try {
-    // cada máquina cliente roda seu próprio printAgent em localhost:5101 (por exemplo)
-    const resp = await fetch('http://localhost:5101/api/print/receipt', {
+    const resp = await fetch('http://localhost:5005/print/cupom', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conteudoBase64: cupomBase64 })
+      body: JSON.stringify({ base64: cupomBase64 })
     });
 
     if (!resp.ok) {
       const txt = await resp.text();
-      console.error('Falha ao enviar cupom para printAgent', txt);
-      alert('Venda registrada, mas falhou ao enviar para impressora local.');
-      return;
+      console.error('Falha ao enviar para impressora local', txt);
+      alert('Cupom gerado, mas nao foi possivel enviar para impressora local.');
     }
-
-    console.log('Cupom enviado para impressão local com sucesso.');
-  } catch (e) {
-    console.error('Erro ao enviar cupom para printAgent', e);
-    alert('Venda registrada, mas não foi possível comunicar com a impressora local.');
+  } catch (err) {
+    console.error('Erro ao enviar cupom para printAgent', err);
+    alert('Cupom gerado, mas nao foi possivel comunicar com a impressora local.');
   }
 }
 
-/* =========================================================
-   UTILITÁRIOS
-   ========================================================= */
 function formatarMoeda(valor) {
-  return valor.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }

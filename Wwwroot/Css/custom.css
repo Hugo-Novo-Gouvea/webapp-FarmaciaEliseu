@@ -407,27 +407,32 @@
 /* =========================================================
    7.1 CAMPOS DE FORMULÁRIO NOS MODAIS
    ========================================================= */
-.app-modal-body input[type="text"],
-.app-modal-body input[type="number"],
-.app-modal-body input[type="date"],
-.app-modal-body input[type="tel"],
-.app-modal-body input[type="email"],
-.app-modal-body input[type="password"],
-.app-modal-body textarea,
-.app-modal-body select {
-  background: var(--color-two);
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  color: var(--color-text);
-}
+  .app-modal-body input[type="text"],
+  .app-modal-body input[type="number"],
+  .app-modal-body input[type="date"],
+  .app-modal-body input[type="tel"],
+  .app-modal-body input[type="email"],
+  .app-modal-body input[type="password"],
+  .app-modal-body textarea,
+  .app-modal-body select {
+    background: var(--color-two);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    color: var(--color-text);
+  }
 
-/* foco bonitinho nos campos do modal */
-.app-modal-body input:focus,
-.app-modal-body textarea:focus,
-.app-modal-body select:focus {
-  outline: none;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
-  border-color: rgba(37, 99, 235, 0.8);
-}
+  .app-modal-body select option {
+    background: var(--color-two);
+    color: var(--color-text);
+  }
+
+  /* foco bonitinho nos campos do modal */
+  .app-modal-body input:focus,
+  .app-modal-body textarea:focus,
+  .app-modal-body select:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
+    border-color: rgba(37, 99, 235, 0.8);
+  }
 
 /* =========================================================
    8. BARRA DE AÇÕES
@@ -604,4 +609,21 @@
   .vendas-itens-row .vendas-qtd input,
   .vendas-itens-row .vendas-desc input { min-width: 0; }
   .vendas-itens-row .vendas-add { width: auto; }
+}
+
+/* barra de total da venda, abaixo da tabela */
+.vendas-total-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.vendas-total-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  background: var(--color-two);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--color-border-soft);
 }

@@ -22,10 +22,24 @@ public static class ContasPagarEndpoints
             return Results.Ok(clientes);
         });
 
+        // GET /api/contas/total-cliente/{id} - Total em aberto (deletado = false) do cliente
+        group.MapGet("/total-cliente/{clienteId:int}", async (int clienteId, AppDbContext db) =>
+        {
+            if (clienteId <= 0)
+                return Results.BadRequest("clienteId invalido.");
+
+            var total = await db.Movimentos
+                .AsNoTracking()
+                .Where(m => m.ClientesId == clienteId && m.Deletado == false)
+                .SumAsync(m => (decimal?)(m.PrecoTotalAtual - m.Desconto)) ?? 0m;
+
+            return Results.Ok(new { clienteId, total });
+        });
+
         // GET /api/contas/movimentos - Listar movimentos de um cliente
         group.MapGet("/movimentos", async (AppDbContext db, int clienteId) =>
         {
-            if (clienteId <= 0) return Results.BadRequest("clienteId inválido.");
+            if (clienteId <= 0) return Results.BadRequest("clienteId invalido.");
 
             var movimentos = await db.Movimentos
                 .AsNoTracking()

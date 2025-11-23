@@ -20,47 +20,48 @@ public static class VendasEndpoints
 
             var tipoVenda = (payload.TipoVenda ?? "").Trim().ToLower();
             if (tipoVenda != "marcar" && tipoVenda != "dinheiro")
-                return Results.BadRequest("Tipo de venda inválido.");
+                return Results.BadRequest("Tipo de venda invalido.");
 
             var tipoCliente = (payload.TipoCliente ?? "").Trim().ToLower();
             if (tipoCliente != "registrado" && tipoCliente != "avulso")
-                return Results.BadRequest("Tipo de cliente inválido.");
+                return Results.BadRequest("Tipo de cliente invalido.");
 
             if (payload.VendedorId <= 0)
-                return Results.BadRequest("Vendedor é obrigatório.");
+                return Results.BadRequest("Vendedor e obrigatorio.");
 
             var vendedor = await db.Funcionarios.FindAsync(payload.VendedorId);
             if (vendedor is null)
-                return Results.BadRequest("Vendedor não encontrado.");
+                return Results.BadRequest("Vendedor nao encontrado.");
 
             int clienteId;
             string clienteNome;
+            string? codigoFichario = null;
 
             if (tipoCliente == "registrado")
             {
                 if (payload.ClienteId is null)
-                    return Results.BadRequest("Cliente é obrigatório para cliente registrado.");
+                    return Results.BadRequest("Cliente e obrigatorio para cliente registrado.");
 
                 var cliente = await db.Clientes.FindAsync(payload.ClienteId.Value);
                 if (cliente is null)
-                    return Results.BadRequest("Cliente não encontrado.");
+                    return Results.BadRequest("Cliente nao encontrado.");
 
                 clienteId = cliente.ClientesId;
                 clienteNome = cliente.Nome;
+                if (cliente.CodigoFichario.HasValue)
+                    codigoFichario = cliente.CodigoFichario.Value.ToString();
             }
             else
             {
                 var nome = (payload.ClienteNome ?? "").Trim();
                 if (string.IsNullOrWhiteSpace(nome))
-                    return Results.BadRequest("Nome do cliente é obrigatório para venda avulsa.");
+                    return Results.BadRequest("Nome do cliente e obrigatorio para venda avulsa.");
 
-                // assumindo que existe um "CLIENTE AVULSO" no ID 1
-                // se for outro ID na sua base, você ajusta aqui
-                clienteId = 1;
+                clienteId = 1; // cliente generico avulso
                 clienteNome = nome.ToUpper();
             }
 
-            // código de movimento (agrupador da venda)
+            // codigo de movimento (agrupador da venda)
             int novoCodigoMovimento = 1;
             var maxCodigo = await db.Movimentos.MaxAsync(m => (int?)m.CodigoMovimento);
             if (maxCodigo is not null)
@@ -71,71 +72,77 @@ public static class VendasEndpoints
 
             foreach (var it in payload.Itens)
             {
-                var prod = await db.Produtos.FindAsync(it.produtoId);
-                if (prod is null)
-                    return Results.BadRequest($"Produto {it.produtoId} não encontrado.");
+                var isAvulso = it.produtoId <= 0;
+                Produto? prod = null;
+                if (!isAvulso)
+                {
+                    prod = await db.Produtos.FindAsync(it.produtoId);
+                    if (prod is null)
+                        return Results.BadRequest($"Produto {it.produtoId} nao encontrado.");
+                }
 
                 var quantidade = it.quantidade <= 0 ? 1 : it.quantidade;
-                var precoUnit = it.precoUnit ?? prod.PrecoVenda;
-                var desconto = it.desconto;
-                var valorBruto = quantidade * precoUnit;
+                var precoUnitInformado = it.precoUnit ?? (prod?.PrecoVenda ?? 0m);
+                var desconto = it.desconto < 0 ? 0 : it.desconto;
+
+                var valorBruto = quantidade * precoUnitInformado;
+                if (desconto > valorBruto) desconto = valorBruto;
                 var valorLiquido = valorBruto - desconto;
 
-                if (valorLiquido < 0) valorLiquido = 0;
-                if (desconto < 0) desconto = 0;
+                var prodDescricao = !string.IsNullOrWhiteSpace(it.descricao)
+                    ? it.descricao!.ToUpper()
+                    : (isAvulso ? "PRODUTO AVULSO" : (prod?.Descricao ?? string.Empty));
 
-                totalGeral += valorLiquido;
+                var codigoProduto = isAvulso ? "000000000" : (prod?.CodigoProduto ?? "000000000");
+                var produtoIdPersistir = isAvulso ? 1 : prod!.ProdutosId;
 
-                var prodDescricao = string.IsNullOrWhiteSpace(it.descricao)
-                    ? (prod.Descricao ?? string.Empty)
-                    : it.descricao!.ToUpper();
+                var precoUnitarioDia = precoUnitInformado;
+                var precoTotalDia = valorBruto;
+                var precoUnitarioAtual = isAvulso ? precoUnitInformado : prod!.PrecoVenda;
+                var precoTotalAtual = quantidade * precoUnitarioAtual;
 
-                // regras de situação da conta
-                bool deletado;          // true = pago, false = em aberto
+                bool deletado;
                 decimal valorPago;
                 DateTime? dataPagamento;
 
                 if (tipoVenda == "dinheiro")
                 {
-                    deletado = true;            // já nasce como pago -> não entra em Contas a Receber
-                    valorPago = valorLiquido;   // o que entrou em caixa
+                    deletado = true;            // pago
+                    valorPago = valorLiquido;   // entra no caixa o liquido (ja com desconto)
                     dataPagamento = agora;
                 }
                 else
                 {
-                    deletado = false;           // fiado / marcar -> em aberto
+                    deletado = false;           // fiado
                     valorPago = 0m;
                     dataPagamento = null;
                 }
 
-                var mov = new Movimento
+                totalGeral += valorLiquido;
+
+                itensMovimento.Add(new Movimento
                 {
                     CodigoMovimento = novoCodigoMovimento,
-                    ProdutosId = prod.ProdutosId,
+                    ProdutosId = produtoIdPersistir,
                     ProdutosDescricao = prodDescricao,
-                    ProdutosCodigoProduto = prod.CodigoProduto ?? string.Empty,
+                    ProdutosCodigoProduto = codigoProduto,
                     ClientesId = clienteId,
                     ClientesNome = clienteNome,
                     FuncionariosId = vendedor.FuncionariosId,
-                    FuncionariosNome = vendedor!.Nome,
+                    FuncionariosNome = vendedor.Nome,
                     Quantidade = quantidade,
-                    PrecoUnitarioDiaVenda = precoUnit,
-                    PrecoTotalDiaVenda = valorLiquido,
-                    PrecoUnitarioAtual = prod.PrecoVenda,
-                    PrecoTotalAtual = quantidade * prod.PrecoVenda,
+                    PrecoUnitarioDiaVenda = precoUnitarioDia,
+                    PrecoTotalDiaVenda = precoTotalDia,
+                    PrecoUnitarioAtual = precoUnitarioAtual,
+                    PrecoTotalAtual = precoTotalAtual,
                     ValorPago = valorPago,
                     Desconto = desconto,
                     DataVenda = agora,
                     DataPagamento = dataPagamento,
                     DataCadastro = agora,
                     DataUltimoRegistro = agora,
-                    // REGRA IMPORTANTE:
-                    // - dinheiro  -> já nasce como "pago" (não aparece em Contas a Receber)
-                    // - marcar    -> em aberto (vai para Contas a Receber)
                     Deletado = deletado
-                };
-
-                itensMovimento.Add(mov);
+                });
             }
 
             db.Movimentos.AddRange(itensMovimento);
@@ -143,11 +150,12 @@ public static class VendasEndpoints
 
             return Results.Ok(new
             {
-                message = "Venda registrado com sucesso.",
+                message = "Venda registrada com sucesso.",
                 total = totalGeral,
-                vendedor = vendedor!.Nome,
+                vendedor = vendedor.Nome,
                 cliente = clienteNome,
-                codigoMovimento = novoCodigoMovimento
+                codigoMovimento = novoCodigoMovimento,
+                codigoFichario
             });
         });
 
@@ -158,18 +166,18 @@ public static class VendasEndpoints
 
             var tipoVenda = (payload.TipoVenda ?? "").Trim().ToLower();
             if (tipoVenda != "marcar" && tipoVenda != "dinheiro")
-                return Results.BadRequest("Tipo de venda inválido.");
+                return Results.BadRequest("Tipo de venda invalido.");
 
             var tipoCliente = (payload.TipoCliente ?? "").Trim().ToLower();
             if (tipoCliente != "registrado" && tipoCliente != "avulso")
-                return Results.BadRequest("Tipo de cliente inválido.");
+                return Results.BadRequest("Tipo de cliente invalido.");
 
             if (payload.Itens == null || payload.Itens.Count == 0)
                 return Results.BadRequest("Lista de itens vazia.");
 
             var vendedor = await db.Funcionarios.FindAsync(payload.VendedorId);
             if (vendedor is null)
-                return Results.BadRequest("Vendedor não encontrado.");
+                return Results.BadRequest("Vendedor nao encontrado.");
 
             string clienteNome;
             string? codigoFichario = null;
@@ -177,20 +185,21 @@ public static class VendasEndpoints
             if (tipoCliente == "registrado")
             {
                 if (payload.ClienteId is null)
-                    return Results.BadRequest("Cliente é obrigatório para cliente registrado.");
+                    return Results.BadRequest("Cliente e obrigatorio para cliente registrado.");
 
                 var cliente = await db.Clientes.FindAsync(payload.ClienteId.Value);
                 if (cliente is null)
-                    return Results.BadRequest("Cliente não encontrado.");
+                    return Results.BadRequest("Cliente nao encontrado.");
 
                 clienteNome = cliente.Nome;
-                codigoFichario = cliente.CodigoFichario?.ToString();
+                if (cliente.CodigoFichario.HasValue)
+                    codigoFichario = cliente.CodigoFichario.Value.ToString();
             }
             else
             {
                 var nome = (payload.ClienteNome ?? "").Trim();
                 if (string.IsNullOrWhiteSpace(nome))
-                    return Results.BadRequest("Nome do cliente é obrigatório para venda avulsa.");
+                    return Results.BadRequest("Nome do cliente e obrigatorio para venda avulsa.");
 
                 clienteNome = nome.ToUpper();
             }
@@ -203,25 +212,28 @@ public static class VendasEndpoints
 
             foreach (var it in payload.Itens)
             {
-                var prod = await db.Produtos.FindAsync(it.produtoId);
-                if (prod is null)
-                    return Results.BadRequest($"Produto {it.produtoId} não encontrado.");
+                var isAvulso = it.produtoId <= 0;
+                Produto? prod = null;
+                if (!isAvulso)
+                {
+                    prod = await db.Produtos.FindAsync(it.produtoId);
+                    if (prod is null)
+                        return Results.BadRequest($"Produto {it.produtoId} nao encontrado.");
+                }
 
                 var quantidade = it.quantidade <= 0 ? 1 : it.quantidade;
-                var precoUnit = it.precoUnit ?? prod.PrecoVenda;
-                var desconto = it.desconto;
+                var precoUnit = it.precoUnit ?? (prod?.PrecoVenda ?? 0m);
+                var desconto = it.desconto < 0 ? 0 : it.desconto;
                 var valorBruto = quantidade * precoUnit;
+                if (desconto > valorBruto) desconto = valorBruto;
                 var valorLiquido = valorBruto - desconto;
-
-                if (valorLiquido < 0) valorLiquido = 0;
-                if (desconto < 0) desconto = 0;
 
                 totalFinal += valorLiquido;
                 totalDesconto += desconto;
 
-                var prodDescricao = string.IsNullOrWhiteSpace(it.descricao)
-                    ? (prod.Descricao ?? string.Empty)
-                    : it.descricao!.ToUpper();
+                var prodDescricao = !string.IsNullOrWhiteSpace(it.descricao)
+                    ? it.descricao!.ToUpper()
+                    : (isAvulso ? "PRODUTO AVULSO" : (prod?.Descricao ?? string.Empty));
 
                 itensCupom.Add(new ReceiptPrinter.Item(
                     Qty: quantidade,
