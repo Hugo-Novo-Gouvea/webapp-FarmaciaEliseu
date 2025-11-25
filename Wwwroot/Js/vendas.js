@@ -296,8 +296,6 @@ function initAutocompleteClientes() {
       return;
     }
 
-    // ANTES: includes em nome/codigoFichario/cpf
-    // AGORA: começa com (prefixo)
     const lista = vendasState.clientes
       .filter(c => {
         const nome = (c.nome || '').toLowerCase();
@@ -591,7 +589,7 @@ function atualizarEstadoVenda() {
   let clienteOk = false;
   if (tipoCliente === 'registrado') {
     clienteOk = !!vendasState.clienteSelecionado;
-  } else {
+  } else if (tipoCliente === 'avulso') {
     const nome = (vendasEls.clienteAvulso?.value || '').trim();
     clienteOk = nome.length >= 3;
   }
@@ -668,11 +666,156 @@ function parseMoeda(v) {
 }
 
 async function realizarVenda() {
-  // (mantém igual ao seu arquivo atual)
+  const tipoVenda = (vendasEls.tipoVenda?.value || '').trim().toLowerCase();
+  const tipoCliente = (vendasEls.tipoCliente?.value || '').trim().toLowerCase();
+  const vendedorId = parseInt(vendasEls.vendedor?.value || '0', 10) || 0;
+
+  if (!tipoVenda || (tipoVenda !== 'marcar' && tipoVenda !== 'dinheiro')) {
+    alert('Selecione um tipo de venda válido.');
+    return;
+  }
+
+  if (!tipoCliente || (tipoCliente !== 'registrado' && tipoCliente !== 'avulso')) {
+    alert('Selecione um tipo de cliente válido.');
+    return;
+  }
+
+  if (!vendedorId) {
+    alert('Selecione o vendedor.');
+    return;
+  }
+
+  if (!vendasState.itens.length) {
+    alert('Adicione ao menos um item à venda.');
+    return;
+  }
+
+  let clienteId = null;
+  let clienteNome = null;
+
+  if (tipoCliente === 'registrado') {
+    if (!vendasState.clienteSelecionado) {
+      alert('Selecione o cliente registrado.');
+      return;
+    }
+    clienteId = vendasState.clienteSelecionado.clientesId;
+  } else if (tipoCliente === 'avulso') {
+    const nome = (vendasEls.clienteAvulso?.value || '').trim();
+    if (!nome) {
+      alert('Informe o nome do cliente avulso.');
+      return;
+    }
+    clienteNome = nome;
+  }
+
+  const payload = {
+    tipoVenda,
+    tipoCliente,
+    vendedorId,
+    clienteId,
+    clienteNome,
+    itens: vendasState.itens.map(it => ({
+      produtoId: it.produtoId,
+      descricao: it.descricao,
+      quantidade: it.quantidade,
+      precoUnit: it.precoUnit,
+      desconto: it.desconto
+    }))
+  };
+
+  if (vendasEls.btnSell) {
+    vendasEls.btnSell.disabled = true;
+    vendasEls.btnSell.textContent = 'Processando...';
+  }
+
+  try {
+    // 1) registra a venda no banco
+    const resp = await fetch('/api/vendas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resp.ok) {
+      const txt = await resp.text();
+      alert('Erro ao registrar venda.\n' + (txt || ''));
+      return;
+    }
+
+    const data = await resp.json();
+    const mensagem = data.message || 'Venda registrada com sucesso.';
+    const totalNum = typeof data.total === 'number' ? data.total : null;
+    const totalFmt = totalNum !== null ? formatarMoeda(totalNum) : '';
+
+    alert(totalFmt ? `${mensagem}\nTotal: ${totalFmt}` : mensagem);
+
+    // 2) pergunta se deseja imprimir cupom
+    let desejaImprimir = confirm('Deseja imprimir o cupom desta venda agora?');
+
+    while (desejaImprimir) {
+      const respImp = await fetch('/api/vendas/imprimir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!respImp.ok) {
+        const txtImp = await respImp.text();
+        alert('Erro ao gerar cupom.\n' + (txtImp || ''));
+        break;
+      }
+
+      const dataImp = await respImp.json();
+      const base64 = dataImp.cupomBase64;
+      if (!base64) {
+        alert('Cupom não retornado pelo servidor.');
+        break;
+      }
+
+      const okPrint = await enviarCupomParaPrintAgent(base64);
+      if (!okPrint) break;
+
+      desejaImprimir = confirm('Cupom enviado para impressão.\nImprimir novamente?');
+    }
+
+    // 3) limpa itens da venda e atualiza tela
+    vendasState.itens = [];
+    vendasState.produtoSelecionado = null;
+    atualizarGridItens();
+    atualizarTotalVenda();
+    atualizarPreviewItem();
+    atualizarEstadoVenda();
+  } catch (err) {
+    console.error('Falha ao realizar venda', err);
+    alert('Erro inesperado ao realizar venda. Verifique a conexão e tente novamente.');
+  } finally {
+    if (vendasEls.btnSell) {
+      vendasEls.btnSell.disabled = false;
+      vendasEls.btnSell.textContent = '✏️ Realizar venda';
+    }
+  }
 }
 
 async function enviarCupomParaPrintAgent(cupomBase64) {
-  // (mantém igual ao seu arquivo atual)
+  try {
+    const resp = await fetch('http://localhost:5005/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: cupomBase64 })
+    });
+
+    if (!resp.ok) {
+      const txt = await resp.text();
+      alert('Erro ao enviar cupom para impressora local.\n' + (txt || ''));
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Erro ao conectar com PrintAgent', err);
+    alert('Erro ao conectar com o serviço de impressão (PrintAgent).\nVerifique se o serviço está rodando na porta 5005.');
+    return false;
+  }
 }
 
 function formatarMoeda(valor) {

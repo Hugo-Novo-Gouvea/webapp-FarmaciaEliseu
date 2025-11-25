@@ -226,12 +226,19 @@
 .table-modern tbody tr:nth-child(odd)  { background: var(--cor-padrao_primaria);  }
 .table-modern tbody tr:nth-child(even) { background: var(--cor-padrao_secundaria); }
 
+/* Linhas clicáveis (ex: modal de produto) */
+.table-modern tbody tr {
+  cursor: pointer;
+}
+
 /* Hover + seleção */
 .table-modern tbody tr:hover {
   background: var(--cor-padrao_tercearia) !important;
   transition: background 120ms ease-out;
 }
 
+/* Seleção persistente (usado pelo .table-active do modal) */
+.table-modern tbody tr.table-active,
 .table-modern tr.selected {
   background: var(--cor-padrao_tercearia) !important;
   outline: 1px solid var(--cor-padrao_quinaria);
