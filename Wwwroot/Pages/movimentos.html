@@ -1,28 +1,47 @@
 ﻿<!doctype html>
 <html lang="pt-BR">
 <head>
+  <!-- Metadados básicos -->
   <meta charset="utf-8" />
   <title>Movimentos - Farmácia Eliseu</title>
+
+  <!-- CSS base (Bootstrap) + tema do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
+
 <body class="app-body app-body-gradient">
   <main class="app-main">
     <div class="container">
+      <!-- Card principal da tela de movimentos -->
       <div class="list-shell" id="movimentos-shell">
+        <!-- Cabeçalho da página -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Movimentos</h2>
-          <p class="text-muted" style="font-size:.7rem;">todas as vendas agrupadas por movimento</p>
+          <p class="text-muted small">
+            todas as vendas agrupadas por movimento
+          </p>
         </div>
 
-        <div class="action-bar">
-          <button id="btn-details" class="action-btn success" disabled>📄 Detalhes</button>
-        </div>
-
+        <!-- Barra de ações + filtros (fundo COR 2 via .list-filter) -->
         <div class="list-filter">
-          <div class="list-filter-action">
-            <a href="/" class="btn-modern small">◀ Menu</a>
+          <!-- Ações principais da tela -->
+          <div class="action-bar">
+            <button
+              id="btn-details"
+              class="action-btn success"
+              disabled
+            >
+              📄 Detalhes
+            </button>
           </div>
+
+          <!-- Voltar para o menu principal -->
+          <div class="list-filter-action">
+            <a href="/" class="btn-modern small">⬅️Menu</a>
+          </div>
+
+          <!-- Filtro por coluna (Cliente / Movimento) -->
           <div class="list-filter-field">
             <label for="filter-column">Coluna</label>
             <select id="filter-column">
@@ -30,12 +49,19 @@
               <option value="movimento">Movimento</option>
             </select>
           </div>
+
+          <!-- Campo de texto para pesquisa -->
           <div class="list-filter-input">
             <label for="filter-text">Pesquisa</label>
-            <input id="filter-text" type="text" placeholder="digite para filtrar..." />
+            <input
+              id="filter-text"
+              type="text"
+              placeholder="digite para filtrar..."
+            />
           </div>
         </div>
 
+        <!-- Tabela de movimentos (agrupamento de vendas) -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-movimentos">
@@ -48,38 +74,75 @@
                 </tr>
               </thead>
               <tbody>
+                <!-- Estado inicial antes do carregamento via JS -->
                 <tr>
-                  <td colspan="4" class="text-center text-muted">Carregando movimentos...</td>
+                  <td colspan="4" class="text-center text-muted">
+                    Carregando movimentos...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Paginação dos movimentos -->
           <div class="table-pager">
-            <div class="table-pager-info" id="movimentos-pg-info">Mostrando 0-0 de 0</div>
+            <div
+              class="table-pager-info"
+              id="movimentos-pg-info"
+            >
+              Mostrando 0-0 de 0
+            </div>
+
             <div class="table-pager-group">
-              <button class="pager-btn is-disabled" id="movimentos-pg-prev">
-                <span>◀</span><span>Anterior</span>
+              <button
+                class="pager-btn is-disabled"
+                id="movimentos-pg-prev"
+              >
+                <span>⬅️</span><span>Anterior</span>
               </button>
-              <button class="pager-btn is-disabled" id="movimentos-pg-next">
-                <span>Próxima</span><span>▶</span>
+
+              <button
+                class="pager-btn is-disabled"
+                id="movimentos-pg-next"
+              >
+                <span>Próxima</span><span>➡️</span>
               </button>
             </div>
           </div>
         </div>
+        <!-- /tabela -->
       </div>
+      <!-- /list-shell -->
     </div>
+    <!-- /container -->
 
-    <!-- MODAL DETALHES MOVIMENTO -->
+    <!-- MODAL: detalhes de um movimento específico -->
     <div class="app-modal-backdrop" id="movimento-modal-backdrop">
+      <!-- app-modal-lg é só uma classe a mais para diferenciar se quiser no CSS -->
       <div class="app-modal app-modal-lg">
         <div class="app-modal-header">
-          <h2 class="h6 mb-0" id="mov-modal-title">Detalhes do movimento</h2>
-          <button type="button" class="app-modal-close" id="mov-modal-close">&times;</button>
+          <h2 class="h6 mb-0" id="mov-modal-title">
+            Detalhes do movimento
+          </h2>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="mov-modal-close"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
-          <dl class="app-modal-dl" id="mov-modal-header-info">
+          <!-- Cabeçalho com informações gerais do movimento (cliente, data, etc.) -->
+          <dl
+            class="app-modal-dl"
+            id="mov-modal-header-info"
+          >
+            <!-- Preenchido dinamicamente via JS -->
           </dl>
 
+          <!-- Tabela com os itens do movimento -->
           <div class="table-responsive app-table-wrapper mt-3">
             <table class="table-modern" id="tb-movimento-itens">
               <thead>
@@ -94,26 +157,39 @@
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="6" class="text-center text-muted">Carregando...</td>
+                  <td colspan="6" class="text-center text-muted">
+                    Carregando...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
+          <!-- Filtros para impressão e botão de imprimir -->
           <div class="mt-3 d-flex gap-2">
-            <select id="mov-print-filter" class="form-select form-select-sm" style="max-width: 180px;">
+            <select
+              id="mov-print-filter"
+              class="form-select form-select-sm"
+            >
               <option value="todos">Todos</option>
               <option value="pagos">Pagos</option>
               <option value="naoPagos">Não Pagos</option>
             </select>
-            <button id="mov-print-btn" class="btn-modern primary small">🖨 Imprimir</button>
-          </div>
 
+            <button
+              id="mov-print-btn"
+              class="btn-modern primary small"
+            >
+              🖨 Imprimir
+            </button>
+          </div>
         </div>
       </div>
     </div>
-
+    <!-- /MODAL detalhes movimento -->
   </main>
+
+  <!-- JS responsável por carregar e controlar a tela de Movimentos -->
   <script src="/js/movimentos.js"></script>
 </body>
 </html>

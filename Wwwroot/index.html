@@ -1,89 +1,96 @@
 ﻿<!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <title>Menu principal - Farmácia Eliseu</title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/custom.css">
-  </head>
-  <body class="app-body app-body-gradient">
-    <main class="app-main">
-      <div class="container d-flex justify-content-center">
-        <div class="menu-card menu-card-floating" style="width:100%;max-width:880px;">
-          <h2 class="h5 mb-2">Menu principal</h2>
-          <p class="text-muted mb-4">Escolha uma área do sistema.</p>
+<head>
+  <meta charset="utf-8" />
+  <title>Menu principal - Farmácia Eliseu</title>
 
-          <!-- BLOCO 1: CONTROLE -->
-          <h3 class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.4rem;">Controle</h3>
-          <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-md-3">
-              <a href="/pages/clientes.html" class="menu-tile">
-                <div class="menu-tile-icon icon-green">👤</div>
-                <div class="menu-tile-body">
-                  <h3 class="menu-tile-title">Clientes</h3>
-                  <p class="menu-tile-text">cadastro, dados</p>
-                </div>
-              </a>
-            </div>
+  <!-- CSS base (Bootstrap) + tema do sistema -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
 
-            <div class="col-12 col-sm-6 col-md-3">
-              <a href="/pages/produtos.html" class="menu-tile">
-                <div class="menu-tile-icon icon-purple">📦</div>
-                <div class="menu-tile-body">
-                  <h3 class="menu-tile-title">Produtos</h3>
-                  <p class="menu-tile-text">estoque e itens</p>
-                </div>
-              </a>
-            </div>
+<body class="app-body app-body-gradient">
+  <main class="app-main">
+    <div class="container d-flex justify-content-center">
+      <!-- card central do menu principal -->
+      <div class="menu-card menu-card-floating menu-card-wide">
+        <h2 class="h5 mb-2">Menu principal</h2>
+        <p class="text-muted mb-4">Escolha uma área do sistema.</p>
 
-            <div class="col-12 col-sm-6 col-md-3">
-              <a href="/pages/funcionarios.html" class="menu-tile">
-                <div class="menu-tile-icon icon-blue">👥</div>
-                <div class="menu-tile-body">
-                  <h3 class="menu-tile-title">Funcionários</h3>
-                  <p class="menu-tile-text">controle interno</p>
-                </div>
-              </a>
-            </div>
-
-            <div class="col-12 col-sm-6 col-md-3">
-              <a href="/pages/movimentos.html" class="menu-tile">
-                <div class="menu-tile-icon icon-green">🧮</div>
-                <div class="menu-tile-body">
-                  <h3 class="menu-tile-title">Movimentos</h3>
-                  <p class="menu-tile-text">vendas agrupadas</p>
-                </div>
-              </a>
-            </div>
+        <!-- BLOCO 1: CONTROLE -->
+        <h3 class="text-muted menu-section-title">Controle</h3>
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-sm-6 col-md-3">
+            <a href="/pages/clientes.html" class="menu-tile">
+              <div class="menu-tile-icon icon-green">👤</div>
+              <div class="menu-tile-body">
+                <h3 class="menu-tile-title">Clientes</h3>
+                <p class="menu-tile-text">cadastro, dados</p>
+              </div>
+            </a>
           </div>
 
-          <!-- BLOCO 2: PONTO DE VENDA -->
-          <h3 class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.4rem;">Ponto de Venda</h3>
-          <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-md-3">
-              <a href="/pages/contasPagar.html" class="menu-tile">
-                <div class="menu-tile-icon icon-orange">💸</div>
-                <div class="menu-tile-body">
-                  <h3 class="menu-tile-title">Contas a receber</h3>
-                  <p class="menu-tile-text">marcar recebidos</p>
-                </div>
-              </a>
-            </div>
-
-            <div class="col-12 col-sm-6 col-md-3">
-              <a href="/pages/vendas.html" class="menu-tile">
-                <div class="menu-tile-icon icon-pink">🧾</div>
-                <div class="menu-tile-body">
-                  <h3 class="menu-tile-title">Vendas</h3>
-                  <p class="menu-tile-text">atendimento rápido</p>
-                </div>
-              </a>
-            </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <a href="/pages/produtos.html" class="menu-tile">
+              <div class="menu-tile-icon icon-purple">📦</div>
+              <div class="menu-tile-body">
+                <h3 class="menu-tile-title">Produtos</h3>
+                <p class="menu-tile-text">estoque e itens</p>
+              </div>
+            </a>
           </div>
 
-          <p class="text-muted small mt-4 mb-0">v1.1 • Sistema WebApp</p>
+          <div class="col-12 col-sm-6 col-md-3">
+            <a href="/pages/funcionarios.html" class="menu-tile">
+              <div class="menu-tile-icon icon-blue">👥</div>
+              <div class="menu-tile-body">
+                <h3 class="menu-tile-title">Funcionários</h3>
+                <p class="menu-tile-text">controle interno</p>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-sm-6 col-md-3">
+            <a href="/pages/movimentos.html" class="menu-tile">
+              <div class="menu-tile-icon icon-green">🧮</div>
+              <div class="menu-tile-body">
+                <h3 class="menu-tile-title">Movimentos</h3>
+                <p class="menu-tile-text">vendas agrupadas</p>
+              </div>
+            </a>
+          </div>
         </div>
+
+        <!-- BLOCO 2: PONTO DE VENDA -->
+        <h3 class="text-muted menu-section-title">Ponto de Venda</h3>
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-sm-6 col-md-3">
+            <a href="/pages/contasPagar.html" class="menu-tile">
+              <div class="menu-tile-icon icon-orange">💸</div>
+              <div class="menu-tile-body">
+                <h3 class="menu-tile-title">Contas a receber</h3>
+                <p class="menu-tile-text">marcar recebidos</p>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-sm-6 col-md-3">
+            <a href="/pages/vendas.html" class="menu-tile">
+              <div class="menu-tile-icon icon-pink">🧾</div>
+              <div class="menu-tile-body">
+                <h3 class="menu-tile-title">Vendas</h3>
+                <p class="menu-tile-text">atendimento rápido</p>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- versão / rodapé do card -->
+        <p class="text-muted small mt-4 mb-0">
+          v2.0 • Sistema WebApp
+        </p>
       </div>
-    </main>
-  </body>
+    </div>
+  </main>
+</body>
 </html>

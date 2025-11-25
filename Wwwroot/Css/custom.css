@@ -2,42 +2,26 @@
    0. VARIÁVEIS DE TEMA (60 / 30 / 10)
    ========================================================= */
 :root {
-  /* Paleta principal controlável */
-  --color-one: #F2E9D0;    /* superfícies: blocos, botão Menu, linhas odd */
-  --color-two: #EACEB4;    /* superfícies: linhas even e barra de busca */
-  --color-three: #E79E85;  /* cabeçalho da tabela, seleção/hover de linhas, hovers */
-  --color-four: #BB5A5A;   /* fundo do app (gradiente) */
-  --color-five: #c4a78d;   /* bordas das linhas (odd e even) */
+  /* Paleta principal (COR 1..6) */
+  --cor-padrao_primaria:   #F2E9D0; /* fundo de cards, linhas ímpares, itens de ação, modais */
+  --cor-padrao_secundaria: #EACEB4; /* filtros/menus, linhas pares, paginação, campos modal */
+  --cor-padrao_tercearia:  #E79E85; /* header tabela/modal, hover, seleção */
+  --cor-padrao_quaternaria:#BB5A5A; /* topo do gradiente de fundo */
+  --cor-padrao_quinaria:   #c4a78d; /* bordas em geral */
+  --cor-padrao_sucesso:    #1fa37a; /* ações positivas (novo, salvar, confirmar) */
 
-  /* ações principais (Novo / Salvar) */
-  --color-six: #1fa37a;
-
-  /* Tabela */
-  --tEven: var(--color-two);
-  --tOdd: var(--color-one);
-  --tHover: var(--color-three);
-  --tHead: var(--color-three);
-  --tHeadSticky: var(--color-three);
-
-  /* Botão Menu base */
-  --btn-menu-bg: var(--color-one);
-  --btn-menu-border: rgba(148, 163, 184, 0.35);
-
-  /* neutros e textos */
-  --color-border: rgba(15, 23, 42, 0.04);
-  --color-border-soft: rgba(148, 163, 184, 0.25);
+  /* Neutros e textos */
+  --color-border:        rgba(15, 23, 42, 0.04);
+  --color-border-soft:   rgba(148, 163, 184, 0.25);
   --color-border-softer: rgba(148, 163, 184, 0.14);
-  --color-text: #1f2933;
-  --color-text-muted: #52616f;
-  --color-heading: #0f172a;
+  --color-text:          #1f2933;
+  --color-text-muted:    #52616f;
+  --color-heading:       #0f172a;
 
-  /* estados e superfícies auxiliares */
-  --color-danger: #b91c1c;
+  /* Estados e auxiliares */
+  --color-danger:      #b91c1c;
   --color-danger-soft: rgba(248, 113, 113, 0.35);
-  --color-primary: #2563eb;
-
-  /* Fundo da barra de pesquisa agora é color-two */
-  --color-surface-alt: var(--color-two);
+  --color-primary:     #2563eb;
 }
 
 /* =========================================================
@@ -50,7 +34,12 @@
 }
 
 .app-body-gradient {
-  background: linear-gradient(180deg, var(--color-four) 0%, #ffffff 35%, #eef2f5 100%);
+  background: linear-gradient(
+    180deg,
+    var(--cor-padrao_quaternaria) 0%,
+    #ffffff 35%,
+    #eef2f5 100%
+  );
   background-attachment: fixed;
 }
 
@@ -60,16 +49,18 @@
 }
 
 /* =========================================================
-   2. CABEÇALHO (se usar)
+   2. CABEÇALHO (opcional)
    ========================================================= */
 .app-header {
-  background: var(--color-one);
+  background: var(--cor-padrao_primaria);
   color: var(--color-text);
   margin-bottom: 0;
   border-bottom: 1px solid var(--color-border);
 }
 
-.app-header-blur { backdrop-filter: none; }
+.app-header-blur {
+  backdrop-filter: none;
+}
 
 .app-title {
   font-size: 1rem;
@@ -84,10 +75,10 @@
 }
 
 /* =========================================================
-   3. CARD DO MENU PRINCIPAL (index)
+   3. CARD DO MENU PRINCIPAL
    ========================================================= */
 .menu-card {
-  background: var(--color-one);
+  background: var(--cor-padrao_primaria);
   border-radius: 1rem;
   padding: 2rem;
   width: 100%;
@@ -99,59 +90,87 @@
   border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
+/* Variante mais larga usada no index */
+.menu-card-wide {
+  width: 100%;
+  max-width: 880px;
+}
+
+/* Títulos de seções do menu (Controle, Ponto de Venda, etc.) */
+.menu-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+}
+
 /* =========================================================
-   4. MENU TILES (index)
+   4. MENU TILES (index) - ESTILO BOTÃO
    ========================================================= */
 .menu-tile {
   display: flex;
-  gap: 0.75rem;
   align-items: center;
-  background: var(--color-one);
-  border: 1px solid rgba(15, 23, 42, 0.03);
-  border-radius: 0.9rem;
-  padding: 0.7rem 0.9rem;
+  justify-content: center;
+  gap: 0.5rem;
+
+  background: var(--cor-padrao_secundaria);
+  border: 1px solid var(--cor-padrao_quinaria);
+  border-radius: 9999px;
+  padding: 0.55rem 1rem;
+
   text-decoration: none;
+  min-height: 3rem;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.03);
   transition: all 0.12s ease-out;
-  min-height: 3.5rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
 }
 
 .menu-tile:hover {
-  border-color: rgba(59, 130, 246, 0.28);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
-  background: #f8fafc;
+  background: var(--cor-padrao_tercearia);
+  border-color: var(--cor-padrao_quinaria);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
 }
 
 .menu-tile-icon {
-  width: 42px; height: 42px;
-  border-radius: 0.85rem;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.35rem; background: #e2e8f0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.30);
 }
 
-.menu-tile-body { line-height: 1.1; }
+.menu-tile-body {
+  line-height: 1.1;
+}
 
 .menu-tile-title {
-  font-size: 0.9rem; margin: 0;
-  color: var(--color-heading); font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0;
+  color: var(--color-heading);
+  font-weight: 600;
 }
 
 .menu-tile-text {
-  font-size: 0.7rem; margin: 0.15rem 0 0 0; color: #94a3b8;
+  font-size: 0.7rem;
+  margin: 0.15rem 0 0 0;
+  color: #4b5563;
 }
 
-.icon-green { background: rgba(16,185,129,0.12); }
-.icon-purple { background: rgba(139,92,246,0.12); }
-.icon-blue   { background: rgba(59,130,246,0.12); }
-.icon-orange { background: rgba(251,146,60,0.12); }
-.icon-pink   { background: rgba(244,63,94,0.12); }
+/* variação de cor por ícone */
+.icon-green  { background: rgba(16, 185, 129, 0.12); }
+.icon-purple { background: rgba(139, 92, 246, 0.12); }
+.icon-blue   { background: rgba(59, 130, 246, 0.12); }
+.icon-orange { background: rgba(251, 146, 60, 0.12); }
+.icon-pink   { background: rgba(244, 63, 94, 0.12); }
 
 /* =========================================================
-   5. CONTAINER DE LISTA (páginas de CRUD)
+   5. CONTAINER DE LISTA (páginas CRUD)
    ========================================================= */
 .list-shell {
-  background: var(--color-one);
+  background: var(--cor-padrao_primaria);
   border: 1px solid rgba(15, 23, 42, 0.03);
   border-radius: 0.9rem;
   padding: 1.25rem 1.25rem 1rem;
@@ -159,11 +178,15 @@
   margin-bottom: 1.5rem;
 }
 
+.list-shell .list-subtitle {
+  font-size: 0.7rem;
+}
+
 /* =========================================================
    6. TABELA MODERNA
    ========================================================= */
 .table-shell {
-  background: var(--color-one);
+  background: var(--cor-padrao_primaria);
   border-radius: 0.75rem;
   border: 1px solid rgba(15, 23, 42, 0.02);
   overflow: hidden;
@@ -173,70 +196,87 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: var(--color-one);
+  background: var(--cor-padrao_primaria);
   font-size: 0.825rem;
 }
 
-/* cabeçalho com color-three */
-.table-modern thead { background: var(--tHead); }
+/* Cabeçalho com COR 3 */
+.table-modern thead {
+  background: var(--cor-padrao_tercearia);
+}
 
-/* células com borda em color-five */
+/* Células com borda COR 5 */
 .table-modern th,
 .table-modern td {
   padding: 0.6rem 0.75rem;
   vertical-align: middle;
-  border-bottom: 1px solid var(--color-five);
+  border-bottom: 1px solid var(--cor-padrao_quinaria);
   white-space: nowrap;
 }
 
 .table-modern th {
-  font-weight: 600; color: var(--color-heading);
-  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--color-heading);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* zebra */
-.table-modern tbody tr:nth-child(odd)  { background: var(--tOdd);  }
-.table-modern tbody tr:nth-child(even) { background: var(--tEven); }
+/* Zebra */
+.table-modern tbody tr:nth-child(odd)  { background: var(--cor-padrao_primaria);  }
+.table-modern tbody tr:nth-child(even) { background: var(--cor-padrao_secundaria); }
 
-/* hover e seleção em color-three */
+/* Hover + seleção */
 .table-modern tbody tr:hover {
-  background: var(--tHover) !important;
+  background: var(--cor-padrao_tercearia) !important;
   transition: background 120ms ease-out;
 }
 
 .table-modern tr.selected {
-  background: var(--color-three) !important;
-  outline: 1px solid var(--color-five);
+  background: var(--cor-padrao_tercearia) !important;
+  outline: 1px solid var(--cor-padrao_quinaria);
   outline-offset: -1px;
 }
 
 .table-modern th:first-child,
-.table-modern td:first-child { padding-left: 1rem; }
-.table-modern th:last-child,
-.table-modern td:last-child  { padding-right: 1rem; }
+.table-modern td:first-child {
+  padding-left: 1rem;
+}
 
-/* thead grudado: fundo color-three + divisória cor-five */
+.table-modern th:last-child,
+.table-modern td:last-child {
+  padding-right: 1rem;
+}
+
+/* Cabeçalho grudado (sticky) */
 .app-table-wrapper .table-modern thead th {
-  position: sticky; top: 0; z-index: 5;
-  background: var(--tHeadSticky);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--cor-padrao_tercearia);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--color-five);
+  border-bottom: 1px solid var(--cor-padrao_quinaria);
   box-shadow: 0 6px 12px -6px rgba(15, 23, 42, 0.08);
 }
 
-/* fallback para UA que aplicam borda no THEAD */
-.table-modern thead { border-bottom: 1px solid var(--color-five); }
+/* Fallback de borda no thead */
+.table-modern thead {
+  border-bottom: 1px solid var(--cor-padrao_quinaria);
+}
 
-/* garante borda superior da 1ª linha do corpo se necessário */
-.table-modern tbody tr:first-child td { border-top: 1px solid var(--color-five); }
+/* Borda no início do tbody */
+.table-modern tbody tr:first-child td {
+  border-top: 1px solid var(--cor-padrao_quinaria);
+}
 
 .badge-soft-success {
   background: rgba(22, 163, 74, 0.1);
   color: #166534;
   border-radius: 9999px;
   padding: 0.15rem 0.6rem;
-  font-size: 0.65rem; font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 500;
 }
 
 .badge-soft-danger {
@@ -244,123 +284,200 @@
   color: #b91c1c;
   border-radius: 9999px;
   padding: 0.15rem 0.6rem;
-  font-size: 0.65rem; font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 500;
 }
 
-.app-table-wrapper { max-height: 60vh; overflow-y: auto; }
-.col-hidden { display: none; }
+.app-table-wrapper {
+  max-height: 60vh;
+  overflow-y: auto;
+}
 
-/* rodapé da tabela / paginação */
+.col-hidden {
+  display: none;
+}
+
+/* Rodapé alternativo – se usar */
 .table-footer {
-  background: var(--color-one);
-  display: flex; justify-content: flex-start; align-items: center;
-  gap: 0.5rem; padding: 0.45rem 0.75rem;
+  background: var(--cor-padrao_primaria);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
 }
 
 .table-footer .pager-info {
-  font-size: 0.65rem; color: var(--color-text);
+  font-size: 0.65rem;
+  color: var(--color-text);
   background: #fff;
   border: 1px solid rgba(15, 23, 42, 0.02);
-  border-radius: 0.5rem; padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
 }
 
-#clientes-pg-info { order: -1; margin-right: auto; }
+/* Exceção de layout para paginação de clientes */
+#clientes-pg-info {
+  order: -1;
+  margin-right: auto;
+}
 
 /* =========================================================
    6.1 PAGINAÇÃO (table-pager)
    ========================================================= */
 .table-pager {
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 0.75rem; padding: 0.45rem 0.75rem 0.6rem;
-  background: var(--color-one);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.75rem 0.6rem;
+  background: var(--cor-padrao_primaria);
 }
 
 .table-pager-info {
-  font-size: 0.65rem; color: var(--color-text);
-  background: var(--color-one);
+  font-size: 0.65rem;
+  color: var(--color-text);
+  background: var(--cor-padrao_primaria);
   border: 1px solid rgba(15, 23, 42, 0.02);
-  border-radius: 0.5rem; padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
 }
 
-.table-pager-group { display: flex; gap: 0.5rem; }
+.table-pager-group {
+  display: flex;
+  gap: 0.5rem;
+}
 
 .table-pager .pager-btn {
-  background: var(--color-two);
+  background: var(--cor-padrao_secundaria);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
-  font-size: 0.72rem; padding: 0.35rem 0.85rem;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem;
-  color: var(--color-text); transition: all 120ms ease-out;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text);
+  transition: all 120ms ease-out;
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.03);
 }
 
 .table-pager .pager-btn:hover:not(.is-disabled) {
-  background: var(--color-three);
+  background: var(--cor-padrao_tercearia);
   border-color: rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
 }
 
-.table-pager .pager-btn.is-disabled { opacity: 0.4; cursor: not-allowed; }
+.table-pager .pager-btn.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* =========================================================
    7. MODAL
    ========================================================= */
 .app-modal-backdrop {
-  position: fixed; inset: 0; background: rgba(15,23,42,0.35);
-  display: none; align-items: center; justify-content: center;
-  padding: 1rem; z-index: 999;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 999;
 }
-.app-modal-backdrop.show { display: flex; }
+
+.app-modal-backdrop.show {
+  display: flex;
+}
 
 .app-modal {
-  background: var(--color-one);
-  border-radius: 0.75rem; width: min(540px, 100%);
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2); overflow: hidden;
+  background: var(--cor-padrao_primaria);
+  border-radius: 0.75rem;
+  width: min(540px, 100%);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  overflow: hidden;
 }
 
 .app-modal-header {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-five);
-  background: var(--color-three);
+  border-bottom: 1px solid var(--cor-padrao_quinaria);
+  background: var(--cor-padrao_tercearia);
 }
 
 .app-modal-body {
-  padding: 1rem 1rem 1.25rem; max-height: 70vh; overflow-y: auto;
+  padding: 1rem 1rem 1.25rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .app-modal-close {
-  background: transparent; border: none;
-  font-size: 1.5rem; line-height: 1; cursor: pointer; color: #475569;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #475569;
 }
 
 .app-modal-dl {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
 }
+
 .app-modal-dl dt {
-  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.03em;
-  color: #94a3b8; margin-bottom: 0.15rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #94a3b8;
+  margin-bottom: 0.15rem;
 }
+
 .app-modal-dl dd {
-  margin: 0; font-size: 0.8rem; color: var(--color-text); word-break: break-word;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text);
+  word-break: break-word;
 }
 
 .edit-form-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 0.9rem;
 }
+
 .edit-form-grid label {
-  display: flex; flex-direction: column; gap: 0.25rem;
-  font-size: 0.7rem; color: #475569;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: #475569;
 }
-.edit-form-grid input, .edit-form-grid select { font-size: 0.75rem; }
+
+.edit-form-grid input,
+.edit-form-grid select {
+  font-size: 0.75rem;
+}
 
 .modal-actions {
-  display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
+/* Botões genéricos (dentro e fora de modal) */
 .btn-modern {
-  border-radius: 0.55rem; font-size: 0.7rem;
-  padding: 0.35rem 0.85rem; border: 1px solid transparent; cursor: pointer;
+  border-radius: 0.55rem;
+  font-size: 0.7rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .btn-modern.secondary {
@@ -370,35 +487,38 @@
 }
 
 .btn-modern.primary {
-  background: var(--color-six);
+  background: var(--cor-padrao_sucesso);
   color: #fff;
   border-color: #158455;
   box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
 }
 
-/* hover do botão Salvar (primary) */
 .btn-modern.primary:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
 }
 
-/* botão pequeno */
+/* Versão pequena */
 .btn-modern.small {
   font-size: 0.68rem;
   padding: 0.25rem 0.6rem;
   line-height: 1.1;
 }
 
-/* Botão Cancelar dentro dos modais */
+/* Botão "cancelar" específico dentro de modal */
 .app-modal .btn-modern.secondary {
-  background: var(--color-two);
+  background: var(--cor-padrao_secundaria);
   border-color: rgba(148, 163, 184, 0.45);
   color: var(--color-text);
-  transition: background 120ms ease-out, transform 120ms ease-out, box-shadow 120ms ease-out, border-color 120ms ease-out;
+  transition:
+    background 120ms ease-out,
+    transform 120ms ease-out,
+    box-shadow 120ms ease-out,
+    border-color 120ms ease-out;
 }
 
 .app-modal .btn-modern.secondary:hover {
-  background: var(--color-three);
+  background: var(--cor-padrao_tercearia);
   border-color: rgba(148, 163, 184, 0.7);
   transform: translateY(-1px);
   box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
@@ -407,102 +527,152 @@
 /* =========================================================
    7.1 CAMPOS DE FORMULÁRIO NOS MODAIS
    ========================================================= */
-  .app-modal-body input[type="text"],
-  .app-modal-body input[type="number"],
-  .app-modal-body input[type="date"],
-  .app-modal-body input[type="tel"],
-  .app-modal-body input[type="email"],
-  .app-modal-body input[type="password"],
-  .app-modal-body textarea,
-  .app-modal-body select {
-    background: var(--color-two);
-    border: 1px solid rgba(148, 163, 184, 0.45);
-    color: var(--color-text);
-  }
+.app-modal-body input[type="text"],
+.app-modal-body input[type="number"],
+.app-modal-body input[type="date"],
+.app-modal-body input[type="tel"],
+.app-modal-body input[type="email"],
+.app-modal-body input[type="password"],
+.app-modal-body textarea,
+.app-modal-body select {
+  background: var(--cor-padrao_secundaria);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: var(--color-text);
+}
 
-  .app-modal-body select option {
-    background: var(--color-two);
-    color: var(--color-text);
-  }
+.app-modal-body select option {
+  background: var(--cor-padrao_secundaria);
+  color: var(--color-text);
+}
 
-  /* foco bonitinho nos campos do modal */
-  .app-modal-body input:focus,
-  .app-modal-body textarea:focus,
-  .app-modal-body select:focus {
-    outline: none;
-    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
-    border-color: rgba(37, 99, 235, 0.8);
-  }
+.app-modal-body input:focus,
+.app-modal-body textarea:focus,
+.app-modal-body select:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
+  border-color: rgba(37, 99, 235, 0.8);
+}
 
 /* =========================================================
-   8. BARRA DE AÇÕES
+   8. BARRA DE AÇÕES / FILTROS
    ========================================================= */
 .action-bar {
-  display: flex; gap: 0.6rem; margin-bottom: 1rem;
-  background: transparent; border: none; padding: 0;
-  flex-wrap: wrap; align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* bloco de filtros com fundo COR 2 */
+.list-filter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background: var(--cor-padrao_secundaria);
+  border: 1px solid var(--color-border-softer);
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* action-bar ocupa linha inteira dentro do filtro */
+.list-filter > .action-bar {
+  flex: 1 1 100%;
+  margin-bottom: 0.4rem;
 }
 
 .action-btn {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  border-radius: 0.5rem; height: 2.1rem; padding: 0 0.75rem;
-  font-size: 0.75rem; font-weight: 500; white-space: nowrap; min-width: 7.5rem;
-  justify-content: center; border: 1px solid rgba(148,163,184,0.35);
-  background: var(--color-one); color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  height: 2.1rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 7.5rem;
+  justify-content: center;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: var(--cor-padrao_primaria);
+  color: var(--color-text);
 }
 
 .action-btn.primary {
-  background: var(--color-one);
+  background: var(--cor-padrao_primaria);
   color: var(--color-text);
 }
 
 .action-btn.success {
-  background: var(--color-six);
-  border-color: var(--color-six);
+  background: var(--cor-padrao_sucesso);
+  border-color: var(--cor-padrao_sucesso);
   color: #fff;
   box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
 }
 
-.action-btn.danger  {
-  background: var(--color-one);
+.action-btn.danger {
+  background: var(--cor-padrao_primaria);
   color: var(--color-danger);
   border-color: var(--color-danger-soft);
 }
 
-.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
-/* hover do botão Novo (success) */
 .action-btn.success:hover:not(:disabled) {
   filter: brightness(1.05);
   transform: translateY(-1px);
 }
 
-/* hover para Visualizar / Editar / Excluir */
 .action-btn.primary:hover:not(:disabled),
 .action-btn.danger:hover:not(:disabled) {
-  background: var(--color-two);
+  background: var(--cor-padrao_secundaria);
   border-color: rgba(148, 163, 184, 0.7);
   transform: translateY(-1px);
   box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
 }
 
-/* =========================================================
-   9. BARRA DE BUSCA
-   ========================================================= */
-.list-filter {
-  display: flex; gap: 1rem; margin-bottom: 1rem;
-  background: var(--color-surface-alt); /* color-two */
-  border: 1px solid var(--color-border-softer);
-  border-radius: 0.75rem; padding: 0.6rem 0.8rem;
-  flex-wrap: wrap; align-items: flex-end;
+/* filtros (labels e campos) */
+.list-filter-field,
+.list-filter-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-/* Botão “Menu” com hover animado */
+.list-filter label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.list-filter select,
+.list-filter input {
+  background: var(--cor-padrao_primaria);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 0.4rem;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.45rem;
+  min-width: 180px;
+}
+
+.list-filter input::placeholder {
+  color: rgba(82, 97, 111, 0.35);
+}
+
+/* Botão "Menu" dentro da barra de filtros */
 .list-filter > .list-filter-action > a.btn-modern.small {
-  display: inline-flex !important; align-items: center !important; justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center;
   gap: 0.35rem;
-  background: var(--btn-menu-bg) !important;
-  border: 1px solid var(--btn-menu-border) !important;
+  background: var(--cor-padrao_primaria) !important;
+  border: 1px solid rgba(148, 163, 184, 0.35) !important;
   color: var(--color-text) !important;
   border-radius: 0.55rem !important;
   font-size: 0.68rem !important;
@@ -511,107 +681,95 @@
   height: 38px !important;
   text-decoration: none !important;
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.03);
-  transition: background 120ms ease-out, transform 120ms ease-out,
-              box-shadow 120ms ease-out, border-color 120ms ease-out;
+  transition:
+    background 120ms ease-out,
+    transform 120ms ease-out,
+    box-shadow 120ms ease-out,
+    border-color 120ms ease-out;
 }
 
 .list-filter > .list-filter-action > a.btn-modern.small:hover {
-  background: var(--color-three) !important;
+  background: var(--cor-padrao_tercearia) !important;
   border-color: rgba(148, 163, 184, 0.7) !important;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
 }
 
-.list-filter-field, .list-filter-input { display: flex; flex-direction: column; gap: 0.25rem; }
-
-.list-filter label {
-  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.02em; color: var(--color-text-muted);
-}
-
-.list-filter select, .list-filter input {
-  background: var(--color-one);
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 0.4rem; color: var(--color-text);
-  font-size: 0.75rem; padding: 0.35rem 0.45rem; min-width: 180px;
-}
-
-/* bloco de totalizador à direita da barra */
+/* bloco de totalizador na barra de filtros */
 .list-filter-total {
-  display: flex; flex-direction: row; align-items: center; gap: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
 }
+
 .list-filter-total label {
-  text-transform: none; letter-spacing: normal; font-size: 0.7rem; white-space: nowrap; color: var(--color-text-muted);
-}
-.list-filter-total .table-pager-info { white-space: nowrap; font-size: 1rem; font-weight: 600; }
-
-/* Contas a Pagar: manter select 2x largura do input */
-#contas-pagar-shell #filter-text { width: 220px; }
-#contas-pagar-shell #filter-person { width: 440px; min-width: 440px; }
-
-/* Vendas: cliente registrado com largura fixa */
-#vendas-shell #cliente-pesquisa { width: 220px; }
-#vendas-shell #cliente-registrado {
-  width: 440px; min-width: 440px; max-width: 440px;
-}
-#vendas-shell #cliente-registrado-block .list-filter-field {
-  flex: 0 0 440px; width: 440px; min-width: 440px; max-width: 440px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  color: var(--color-text-muted);
 }
 
-.list-filter input::placeholder { color: rgba(82, 97, 111, 0.35); }
+.list-filter-total .table-pager-info {
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 600;
+}
 
-/* botão pastilha reutilizável */
+/* botão tipo "chip" */
 .btn-chip {
-  background: #fff; border: 1px solid rgba(148,163,184,0.25);
-  border-radius: 9999px; padding: 0.28rem 0.75rem; font-size: 0.68rem; color: var(--color-text);
-  display: inline-flex; gap: 0.35rem; align-items: center;
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.68rem;
+  color: var(--color-text);
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
 }
-.btn-chip:hover { background: #f1f5f9; }
 
-/* ===== Ajustes específicos da tela de vendas ===== */
-.vendas-itens-row { flex-wrap: nowrap; gap: 0.75rem; }
-.vendas-itens-row .vendas-produto { flex: 1 1 320px; }
-.vendas-itens-row .vendas-qtd,
-.vendas-itens-row .vendas-desc { flex: 0 0 90px; }
-.vendas-itens-row .vendas-qtd input,
-.vendas-itens-row .vendas-desc input { min-width: 0; }
-.vendas-itens-row .vendas-add { flex: 0 0 auto; }
-.vendas-itens-row .vendas-add .action-btn { min-width: 105px; }
+.btn-chip:hover {
+  background: #f1f5f9;
+}
 
 /* =========================================================
-   10. RESPONSIVO
+   9. ÁREA ITENS DE VENDA / TOTAL
    ========================================================= */
-@media (max-width: 980px) {
-  .vendas-itens-row { flex-wrap: wrap; }
-  .vendas-itens-row .vendas-produto { flex: 1 1 100%; }
-  .vendas-itens-row .vendas-qtd,
-  .vendas-itens-row .vendas-desc { flex: 0 0 120px; }
-  .vendas-itens-row .vendas-add { flex: 0 0 auto; }
+.vendas-itens-row {
+  flex-wrap: nowrap;
+  gap: 0.75rem;
 }
 
-@media (max-width: 576px) {
-  .menu-card { padding: 1.25rem; }
-  .app-title { font-size: 0.9rem; }
-  .table-modern th, .table-modern td { white-space: nowrap; }
-  .menu-tile { padding: 0.65rem 0.75rem; }
-  .menu-tile-title { font-size: 0.85rem; }
-  .action-btn { flex: 1 1 100%; justify-content: center; }
-  .app-modal-dl, .edit-form-grid { grid-template-columns: 1fr; }
-  .list-filter { flex-direction: column; align-items: stretch; }
-  .list-filter select, .list-filter input { width: 100%; min-width: 0; }
-  .table-footer { justify-content: center; }
-
-  .vendas-itens-row {
-    flex-wrap: wrap; flex-direction: column; align-items: flex-start;
-  }
-  .vendas-itens-row .vendas-produto,
-  .vendas-itens-row .vendas-qtd,
-  .vendas-itens-row .vendas-desc { width: 100%; max-width: 100%; }
-  .vendas-itens-row .vendas-qtd input,
-  .vendas-itens-row .vendas-desc input { min-width: 0; }
-  .vendas-itens-row .vendas-add { width: auto; }
+.vendas-itens-row .vendas-produto {
+  flex: 1 1 320px;
 }
 
-/* barra de total da venda, abaixo da tabela */
+.vendas-itens-row .vendas-qtd,
+.vendas-itens-row .vendas-desc {
+  flex: 0 0 90px;
+}
+
+.vendas-itens-row .vendas-qtd input,
+.vendas-itens-row .vendas-desc input {
+  min-width: 0;
+}
+
+.vendas-itens-row .vendas-add {
+  flex: 0 0 auto;
+}
+
+.vendas-itens-row .vendas-add .action-btn {
+  min-width: 105px;
+}
+
+/* coluna de preço no bloco avulso */
+.vendas-itens-row .vendas-preco {
+  flex: 0 0 120px;
+}
+
+/* barra com total da venda */
 .vendas-total-bar {
   display: flex;
   justify-content: flex-end;
@@ -622,8 +780,165 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-heading);
-  background: var(--color-two);
+  background: var(--cor-padrao_secundaria);
   border-radius: 999px;
   padding: 0.25rem 0.75rem;
   border: 1px solid var(--color-border-soft);
+}
+
+/* =========================================================
+   10. AUTOCOMPLETE (contas a receber / vendas)
+   ========================================================= */
+
+/* wrapper do input com sugestão */
+.list-filter-input-suggest {
+  position: relative;
+  min-width: 280px;
+}
+
+/* caixa de sugestões (lista de clientes/produtos) */
+.suggest-box {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: none;
+  background: var(--cor-padrao_primaria);
+  border: 1px solid var(--color-border-soft);
+  z-index: 50;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+}
+
+.suggest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.suggest-item {
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+.suggest-item:hover {
+  background: var(--cor-padrao_tercearia);
+  color: var(--color-heading);
+}
+
+/* =========================================================
+   11. VENDAS - BLOCO CONDICIONAL E LARGURAS
+   ========================================================= */
+
+/* blocos condicionais controlados por JS */
+#cliente-registrado-block,
+#cliente-avulso-block,
+#produto-registrado-block,
+#produto-avulso-block,
+.list-filter.hidden-row {
+  display: none;
+}
+
+/* utilitários de largura */
+.list-filter-input-280 {
+  min-width: 280px;
+}
+
+.list-filter-input-260 {
+  min-width: 260px;
+}
+
+/* =========================================================
+   12. RESPONSIVO
+   ========================================================= */
+@media (max-width: 980px) {
+  .vendas-itens-row {
+    flex-wrap: wrap;
+  }
+
+  .vendas-itens-row .vendas-produto {
+    flex: 1 1 100%;
+  }
+
+  .vendas-itens-row .vendas-qtd,
+  .vendas-itens-row .vendas-desc {
+    flex: 0 0 120px;
+  }
+
+  .vendas-itens-row .vendas-add {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .menu-card {
+    padding: 1.25rem;
+  }
+
+  .app-title {
+    font-size: 0.9rem;
+  }
+
+  .table-modern th,
+  .table-modern td {
+    white-space: nowrap;
+  }
+
+  .menu-tile {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .menu-tile-title {
+    font-size: 0.85rem;
+  }
+
+  .action-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .app-modal-dl,
+  .edit-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .list-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .list-filter select,
+  .list-filter input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table-footer {
+    justify-content: center;
+  }
+
+  .vendas-itens-row {
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vendas-itens-row .vendas-produto,
+  .vendas-itens-row .vendas-qtd,
+  .vendas-itens-row .vendas-desc {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .vendas-itens-row .vendas-qtd input,
+  .vendas-itens-row .vendas-desc input {
+    min-width: 0;
+  }
+
+  .vendas-itens-row .vendas-add {
+    width: auto;
+  }
 }

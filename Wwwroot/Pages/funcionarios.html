@@ -1,47 +1,88 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+  <!-- Metadados básicos da página -->
   <meta charset="utf-8" />
   <title>Funcionários - Farmácia Eliseu</title>
+
+  <!-- CSS base (Bootstrap) + estilo customizado do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
+
 <body class="app-body app-body-gradient">
   <main class="app-main">
     <div class="container">
+      <!-- Card principal de listagem -->
       <div class="list-shell">
-        <!-- título -->
+        <!-- Cabeçalho da tela -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Lista de Funcionários</h2>
-          <p class="text-muted" style="font-size:.7rem;">cadastro de funcionários/vendedores</p>
+          <p class="text-muted small">cadastro de funcionários/vendedores</p>
         </div>
         
-        <!-- barra de ações -->
-        <div class="action-bar">
-          <button id="btn-view" class="action-btn primary" disabled>🔍 Visualizar</button>
-          <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
-          <button id="btn-new" class="action-btn success" disabled>➕ Novo</button>
-          <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
-        </div>
-
-        <!-- filtros -->
+        <!-- Barra de ações + filtros (fundo COR 2 via .list-filter) -->
         <div class="list-filter">
-          <div class="list-filter-action">
-            <a href="/" class="btn-modern small">◀ Menu</a>
+          <!-- Ações: visualizar, editar, novo, excluir -->
+          <div class="action-bar">
+            <button
+              id="btn-view"
+              class="action-btn primary"
+              disabled
+            >
+              🔍 Visualizar
+            </button>
+
+            <button
+              id="btn-edit"
+              class="action-btn primary"
+              disabled
+            >
+              ✏️ Editar
+            </button>
+
+            <button
+              id="btn-new"
+              class="action-btn success"
+              disabled
+            >
+              ➕ Novo
+            </button>
+
+            <button
+              id="btn-delete"
+              class="action-btn danger"
+              disabled
+            >
+              🗑️ Excluir
+            </button>
           </div>
+
+          <!-- Link para voltar ao menu principal -->
+          <div class="list-filter-action">
+            <a href="/" class="btn-modern small">⬅️ Menu</a>
+          </div>
+
+          <!-- Combobox de coluna para filtro (por enquanto só Nome) -->
           <div class="list-filter-field">
             <label for="filter-column">Coluna</label>
             <select id="filter-column">
               <option value="nome">Nome</option>
             </select>
           </div>
+
+          <!-- Input de texto para buscar funcionários -->
           <div class="list-filter-input">
             <label for="filter-text">Pesquisa</label>
-            <input id="filter-text" type="text" placeholder="Digite para filtrar..." />
+            <input
+              id="filter-text"
+              type="text"
+              placeholder="Digite para filtrar..."
+            />
           </div>
         </div>
 
-        <!-- tabela -->
+        <!-- Tabela de funcionários -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-funcionarios">
@@ -51,34 +92,62 @@
                 </tr>
               </thead>
               <tbody>
+                <!-- Estado inicial antes de carregar dados via JS -->
                 <tr>
-                  <td colspan="1" class="text-center text-muted">Carregando...</td>
+                  <td colspan="1" class="text-center text-muted">
+                    Carregando...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Paginação (preenchida/controlada via JS) -->
           <div class="table-pager">
-            <div class="table-pager-info" id="funcionarios-pg-info">Mostrando 0-0 de 0</div>
+            <div
+              class="table-pager-info"
+              id="funcionarios-pg-info"
+            >
+              Mostrando 0-0 de 0
+            </div>
+
             <div class="table-pager-group">
-              <button class="pager-btn is-disabled" id="funcionarios-pg-prev">
-                <span>◀</span><span>Anterior</span>
+              <button
+                class="pager-btn is-disabled"
+                id="funcionarios-pg-prev"
+              >
+                <span>⬅️</span><span>Anterior</span>
               </button>
-              <button class="pager-btn is-disabled" id="funcionarios-pg-next">
-                <span>Próxima</span><span>▶</span>
+
+              <button
+                class="pager-btn is-disabled"
+                id="funcionarios-pg-next"
+              >
+                <span>Próxima</span><span>➡️</span>
               </button>
             </div>
           </div>
         </div>
+        <!-- /tabela -->
       </div>
+      <!-- /list-shell -->
     </div>
+    <!-- /container -->
 
-    <!-- modal detalhes -->
+    <!-- MODAL: detalhes do funcionário -->
     <div class="app-modal-backdrop" id="funcionario-modal-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0" id="modal-title">Detalhes do funcionário</h2>
-          <button type="button" class="app-modal-close" id="modal-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="modal-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
           <dl class="app-modal-dl">
             <div>
@@ -90,48 +159,99 @@
       </div>
     </div>
 
-    <!-- modal editar -->
+    <!-- MODAL: editar funcionário -->
     <div class="app-modal-backdrop" id="funcionario-edit-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0">Editar funcionário</h2>
-          <button type="button" class="app-modal-close" id="edit-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="edit-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
           <form id="edit-form" class="edit-form-grid">
+            <!-- ID interno da linha -->
             <input type="hidden" id="e-id" />
 
             <label>
               <span>Nome *</span>
-              <input type="text" id="e-nome" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="e-nome"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
+            <!-- Ações do modal (Cancelar / Salvar) -->
             <div class="modal-actions">
-              <button type="button" class="btn-modern secondary" id="edit-cancel-btn">Cancelar</button>
-              <button type="submit" class="btn-modern primary">Salvar</button>
+              <button
+                type="button"
+                class="btn-modern secondary"
+                id="edit-cancel-btn"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                class="btn-modern primary"
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- modal novo -->
+    <!-- MODAL: novo funcionário -->
     <div class="app-modal-backdrop" id="funcionario-new-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0">Novo funcionário</h2>
-          <button type="button" class="app-modal-close" id="new-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="new-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
           <form id="new-form" class="edit-form-grid">
             <label>
               <span>Nome *</span>
-              <input type="text" id="n-nome" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="n-nome"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
+            <!-- Ações do modal (Cancelar / Salvar) -->
             <div class="modal-actions">
-              <button type="button" class="btn-modern secondary" id="new-cancel-btn">Cancelar</button>
-              <button type="submit" class="btn-modern primary">Salvar</button>
+              <button
+                type="button"
+                class="btn-modern secondary"
+                id="new-cancel-btn"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                class="btn-modern primary"
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </div>
@@ -139,7 +259,9 @@
     </div>
   </main>
 
+  <!-- JS genérico de CRUD (seleção de linhas, paginação, etc.) -->
   <script src="/js/crudList.js"></script>
+  <!-- JS específico de funcionários (carregar dados, salvar, etc.) -->
   <script src="/js/funcionarios.js"></script>
 </body>
 </html>

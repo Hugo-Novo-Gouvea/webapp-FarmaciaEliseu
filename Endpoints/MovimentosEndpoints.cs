@@ -4,13 +4,20 @@ using WebAppEstudo.Printing;
 
 namespace WebAppEstudo.Endpoints;
 
+/// <summary>
+/// Endpoints de consulta e impressão de movimentos de venda.
+/// </summary>
 public static class MovimentosEndpoints
 {
+    /// <summary>
+    /// Registra os endpoints de movimentos no pipeline da aplicação.
+    /// </summary>
     public static void MapMovimentosEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/movimentos").WithTags("Movimentos");
 
-        // GET /api/movimentos - Listar movimentos agrupados por codigoMovimento
+        // GET /api/movimentos
+        // Lista movimentos agrupados por CodigoMovimento com paginação e filtro.
         group.MapGet("/", async (
             AppDbContext db,
             int page = 1,
@@ -19,28 +26,37 @@ public static class MovimentosEndpoints
             string? column = null
         ) =>
         {
+            // Sanitiza paginação
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 50;
             if (pageSize > 200) pageSize = 200;
 
+            // Query base: todos os movimentos (sem tracking)
             var baseQuery = db.Movimentos
                 .AsNoTracking()
                 .AsQueryable();
 
+            // Filtro opcional
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim();
 
                 if (column == "cliente")
                 {
-                    baseQuery = baseQuery.Where(m => m.ClientesNome != null && m.ClientesNome.Contains(search));
+                    baseQuery = baseQuery.Where(m =>
+                        m.ClientesNome != null &&
+                        m.ClientesNome.Contains(search)
+                    );
                 }
                 else if (column == "movimento")
                 {
-                    baseQuery = baseQuery.Where(m => m.CodigoMovimento.ToString().Contains(search));
+                    baseQuery = baseQuery.Where(m =>
+                        m.CodigoMovimento.ToString().Contains(search)
+                    );
                 }
                 else
                 {
+                    // Filtro "solto": tenta por cliente ou código do movimento
                     baseQuery = baseQuery.Where(m =>
                         (m.ClientesNome != null && m.ClientesNome.Contains(search)) ||
                         m.CodigoMovimento.ToString().Contains(search)
@@ -48,16 +64,19 @@ public static class MovimentosEndpoints
                 }
             }
 
+            // Projeção leve antes de agrupar
             var linhas = await baseQuery
                 .Select(m => new
                 {
                     m.CodigoMovimento,
                     m.ClientesNome,
                     m.DataVenda,
+                    // Valor corrente (atual) do item, já somado/descontado
                     valorCalculado = m.PrecoTotalAtual - m.Desconto
                 })
                 .ToListAsync();
 
+            // Agrupa por código de movimento para montar o "cabeçalho"
             var agrupados = linhas
                 .GroupBy(x => x.CodigoMovimento)
                 .Select(g => new
@@ -67,7 +86,7 @@ public static class MovimentosEndpoints
                     dataVenda = g.Max(x => x.DataVenda),
                     valorTotal = g.Sum(x => x.valorCalculado)
                 })
-                .OrderByDescending(x => x.dataVenda)
+                .OrderByDescending(x => x.dataVenda) // últimos movimentos primeiro
                 .ToList();
 
             var total = agrupados.Count;
@@ -86,7 +105,8 @@ public static class MovimentosEndpoints
             });
         });
 
-        // GET /api/movimentos/{codigoMovimento} - Detalhes de um movimento
+        // GET /api/movimentos/{codigoMovimento}
+        // Retorna detalhes de um movimento específico (itens + cabeçalho).
         group.MapGet("/{codigoMovimento:int}", async (int codigoMovimento, AppDbContext db) =>
         {
             var itens = await db.Movimentos
@@ -95,7 +115,8 @@ public static class MovimentosEndpoints
                 .OrderBy(m => m.MovimentosId)
                 .ToListAsync();
 
-            if (itens.Count == 0) return Results.NotFound();
+            if (itens.Count == 0)
+                return Results.NotFound();
 
             var header = new
             {
@@ -113,6 +134,7 @@ public static class MovimentosEndpoints
                 desconto = m.Desconto,
                 valorItem = m.PrecoTotalAtual - m.Desconto,
                 pago = m.ValorPago,
+                // Deletado = true significa "pago" nesse modelo
                 deletado = m.Deletado
             });
 
@@ -123,7 +145,11 @@ public static class MovimentosEndpoints
             });
         });
 
-        // POST /api/movimentos/{codigoMovimento}/imprimir - Imprimir movimento
+        // POST /api/movimentos/{codigoMovimento}/imprimir
+        // Gera o cupom de um movimento em três modos:
+        // - filtro = "pagos": imprime só itens pagos, com total
+        // - filtro = "naoPagos"/"não pagos": imprime só itens em aberto, sem total
+        // - outro/sem filtro: imprime todos os itens, sem total (modelo neutro)
         group.MapPost("/{codigoMovimento:int}/imprimir", async (int codigoMovimento, AppDbContext db, MovimentoPrintRequest req) =>
         {
             var filtro = (req?.filtro ?? "todos").Trim().ToLower();
@@ -140,15 +166,18 @@ public static class MovimentosEndpoints
             var vendedorNome = movimentos.First().FuncionariosNome;
             var data = movimentos.Max(m => m.DataVenda);
 
+            // Tenta buscar o código de fichário do cliente, se existir
             string? codigoFichario = null;
             var clienteId = movimentos.First().ClientesId;
             var cliente = await db.Clientes.FindAsync(clienteId);
             if (cliente is not null && cliente.CodigoFichario.HasValue)
                 codigoFichario = cliente.CodigoFichario.Value.ToString();
 
+            // Nesse modelo, Deletado = true é considerado "pago"
             var pagos = movimentos.Where(m => m.Deletado == true).ToList();
             var naoPagos = movimentos.Where(m => m.Deletado == false).ToList();
 
+            // Helper para converter Movimento -> Item de cupom
             List<ReceiptPrinter.Item> ToItems(List<Movimento> list) =>
                 list.Select(m => new ReceiptPrinter.Item(
                     m.Quantidade,
@@ -159,6 +188,7 @@ public static class MovimentosEndpoints
 
             try
             {
+                // Somente pagos, com total financeiro
                 if (filtro == "pagos")
                 {
                     if (pagos.Count == 0)
@@ -180,9 +210,11 @@ public static class MovimentosEndpoints
                         codigoFichario: codigoFichario,
                         codigoMovimento: codigoMovimento
                     );
+
                     var cupomBase64 = Convert.ToBase64String(bytes);
                     return Results.Ok(new { cupomBase64, message = "Cupom gerado com sucesso." });
                 }
+                // Somente itens em aberto, sem totais (recibo "pendente")
                 else if (filtro == "naopagos" || filtro == "não pagos" || filtro == "nao pagos")
                 {
                     if (naoPagos.Count == 0)
@@ -202,10 +234,12 @@ public static class MovimentosEndpoints
                         codigoFichario: codigoFichario,
                         codigoMovimento: codigoMovimento
                     );
+
                     var cupomBase64 = Convert.ToBase64String(bytes);
                     return Results.Ok(new { cupomBase64, message = "Cupom gerado com sucesso." });
                 }
-                else // TODOS -> usar modelo sem valor, com todos os itens
+                // "todos" ou qualquer outra coisa → imprime tudo, sem totais
+                else
                 {
                     var itens = ToItems(movimentos);
 
@@ -221,12 +255,14 @@ public static class MovimentosEndpoints
                         codigoFichario: codigoFichario,
                         codigoMovimento: codigoMovimento
                     );
+
                     var cupomBase64 = Convert.ToBase64String(bytes);
                     return Results.Ok(new { cupomBase64, message = "Cupom gerado com sucesso." });
                 }
             }
             catch (Exception ex)
             {
+                // Log simples de fallback. Se quiser ficar mais fino, aqui é o ponto de plugar um logger profissional.
                 Console.WriteLine("Falha ao gerar cupom: " + ex.Message);
                 return Results.Problem("Falha ao gerar cupom.");
             }
@@ -234,7 +270,16 @@ public static class MovimentosEndpoints
     }
 }
 
+/// <summary>
+/// Payload usado para impressão de movimento.
+/// </summary>
 public class MovimentoPrintRequest
 {
+    /// <summary>
+    /// Filtro de impressão:
+    /// - "pagos"
+    /// - "naoPagos" / "não pagos"
+    /// - null / outro → imprime todos.
+    /// </summary>
     public string? filtro { get; set; }
 }

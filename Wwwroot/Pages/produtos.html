@@ -3,32 +3,68 @@
 <head>
   <meta charset="utf-8" />
   <title>Produtos - Farmácia Eliseu</title>
+
+  <!-- CSS base (Bootstrap) + tema do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
+
 <body class="app-body app-body-gradient">
   <main class="app-main">
     <div class="container">
+      <!-- Card principal da tela de produtos -->
       <div class="list-shell">
-        <!-- título -->
+        <!-- Cabeçalho da página -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Lista de produtos</h2>
-          <p class="text-muted" style="font-size:.7rem;">cadastro de produtos/medicamentos</p>
-        </div>
-        
-        <!-- barra de ações -->
-        <div class="action-bar">
-          <button id="btn-view" class="action-btn primary" disabled>👁️ Visualizar</button>
-          <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
-          <button id="btn-new" class="action-btn success" disabled>➕ Novo</button>
-          <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
+          <p class="text-muted small">
+            cadastro de produtos/medicamentos
+          </p>
         </div>
 
-        <!-- filtros -->
+        <!-- Barra de ações + filtros no mesmo bloco COR 2 -->
         <div class="list-filter">
-          <div class="list-filter-action">
-            <a href="/" class="btn-modern secondary small">◀ Menu</a>
+          <!-- Ações principais -->
+          <div class="action-bar">
+            <button
+              id="btn-view"
+              class="action-btn primary"
+              disabled
+            >
+              👁️ Visualizar
+            </button>
+
+            <button
+              id="btn-edit"
+              class="action-btn primary"
+              disabled
+            >
+              ✏️ Editar
+            </button>
+
+            <button
+              id="btn-new"
+              class="action-btn success"
+              disabled
+            >
+              ➕ Novo
+            </button>
+
+            <button
+              id="btn-delete"
+              class="action-btn danger"
+              disabled
+            >
+              🗑️ Excluir
+            </button>
           </div>
+
+          <!-- Voltar ao menu principal -->
+          <div class="list-filter-action">
+            <a href="/" class="btn-modern small">⬅️ Menu</a>
+          </div>
+
+          <!-- Seleção de coluna para filtro -->
           <div class="list-filter-field">
             <label for="filter-column">Procurar por</label>
             <select id="filter-column">
@@ -36,13 +72,20 @@
               <option value="descricao">Descrição</option>
             </select>
           </div>
+
+          <!-- Campo de texto para pesquisa -->
           <div class="list-filter-input">
             <label for="filter-text">Texto</label>
-            <input id="filter-text" type="text" placeholder="digite para filtrar..." />
+            <input
+              id="filter-text"
+              type="text"
+              placeholder="digite para filtrar..."
+            />
           </div>
         </div>
+        <!-- /list-filter -->
 
-        <!-- tabela -->
+        <!-- Tabela de produtos -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-produtos">
@@ -57,106 +100,232 @@
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="5" class="text-center text-muted">Carregando...</td>
+                  <td colspan="5" class="text-center text-muted">
+                    Carregando...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Paginação -->
           <div class="table-pager">
-            <div class="table-pager-info" id="produtos-pg-info">Mostrando 0-0 de 0</div>
+            <div
+              class="table-pager-info"
+              id="produtos-pg-info"
+            >
+              Mostrando 0-0 de 0
+            </div>
+
             <div class="table-pager-group">
-              <button class="pager-btn is-disabled" id="produtos-pg-prev">
-                <span>◀</span><span>Anterior</span>
+              <button
+                class="pager-btn is-disabled"
+                id="produtos-pg-prev"
+              >
+                <span>⬅️</span><span>Anterior</span>
               </button>
-              <button class="pager-btn is-disabled" id="produtos-pg-next">
-                <span>Próxima</span><span>▶</span>
+
+              <button
+                class="pager-btn is-disabled"
+                id="produtos-pg-next"
+              >
+                <span>Próxima</span><span>➡️</span>
               </button>
             </div>
           </div>
         </div>
+        <!-- /table-shell -->
       </div>
+      <!-- /list-shell -->
     </div>
+    <!-- /container -->
 
-    <!-- modal detalhes -->
+    <!-- MODAL: detalhes do produto -->
     <div class="app-modal-backdrop" id="produto-modal-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
-          <h2 class="h6 mb-0" id="modal-title">Detalhes do produto</h2>
-          <button type="button" class="app-modal-close" id="modal-close-btn">&times;</button>
+          <h2 class="h6 mb-0" id="modal-title">
+            Detalhes do produto
+          </h2>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="modal-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
           <dl class="app-modal-dl">
-            <div><dt>Código de Barras</dt><dd id="m-codigoBarras"></dd></div>
-            <div><dt>Código do Produto</dt><dd id="m-codigoProduto"></dd></div>
-            <div><dt>Descrição</dt><dd id="m-descricao"></dd></div>
-            <div><dt>Unidade de Medida</dt><dd id="m-unidadeMedida"></dd></div>
-            <div><dt>Preço de Compra</dt><dd id="m-precoCompra"></dd></div>
-            <div><dt>Preço de Venda</dt><dd id="m-precoVenda"></dd></div>
-            <div><dt>Localização</dt><dd id="m-localizacao"></dd></div>
-            <div><dt>Laboratório</dt><dd id="m-laboratorio"></dd></div>
-            <div><dt>Princípio</dt><dd id="m-principio"></dd></div>
-            <div><dt>Genérico</dt><dd id="m-generico"></dd></div>
-            <div><dt>Data de Cadastro</dt><dd id="m-dataCadastro"></dd></div>
-            <div><dt>Última Atualização</dt><dd id="m-dataUltimoRegistro"></dd></div>
+            <div>
+              <dt>Código de Barras</dt>
+              <dd id="m-codigoBarras"></dd>
+            </div>
+
+            <div>
+              <dt>Código do Produto</dt>
+              <dd id="m-codigoProduto"></dd>
+            </div>
+
+            <div>
+              <dt>Descrição</dt>
+              <dd id="m-descricao"></dd>
+            </div>
+
+            <div>
+              <dt>Unidade de Medida</dt>
+              <dd id="m-unidadeMedida"></dd>
+            </div>
+
+            <div>
+              <dt>Preço de Compra</dt>
+              <dd id="m-precoCompra"></dd>
+            </div>
+
+            <div>
+              <dt>Preço de Venda</dt>
+              <dd id="m-precoVenda"></dd>
+            </div>
+
+            <div>
+              <dt>Localização</dt>
+              <dd id="m-localizacao"></dd>
+            </div>
+
+            <div>
+              <dt>Laboratório</dt>
+              <dd id="m-laboratorio"></dd>
+            </div>
+
+            <div>
+              <dt>Princípio</dt>
+              <dd id="m-principio"></dd>
+            </div>
+
+            <div>
+              <dt>Genérico</dt>
+              <dd id="m-generico"></dd>
+            </div>
+
+            <div>
+              <dt>Data de Cadastro</dt>
+              <dd id="m-dataCadastro"></dd>
+            </div>
+
+            <div>
+              <dt>Última Atualização</dt>
+              <dd id="m-dataUltimoRegistro"></dd>
+            </div>
           </dl>
         </div>
       </div>
     </div>
+    <!-- /MODAL detalhes -->
 
-    <!-- modal editar -->
+    <!-- MODAL: editar produto -->
     <div class="app-modal-backdrop" id="produto-edit-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0">Editar produto</h2>
-          <button type="button" class="app-modal-close" id="edit-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="edit-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
           <form id="edit-form" class="edit-form-grid">
             <input type="hidden" id="e-id" />
 
             <label>
               <span>Código de Barras *</span>
-              <input type="text" id="e-codigoBarras" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="e-codigoBarras"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Descrição *</span>
-              <input type="text" id="e-descricao" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="e-descricao"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Unidade de Medida</span>
-              <input type="text" id="e-unidadeMedida" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-unidadeMedida"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Preço de Compra *</span>
-              <input type="number" step="0.01" id="e-precoCompra" class="form-control form-control-sm" required />
+              <input
+                type="number"
+                step="0.01"
+                id="e-precoCompra"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Preço de Venda *</span>
-              <input type="number" step="0.01" id="e-precoVenda" class="form-control form-control-sm" required />
+              <input
+                type="number"
+                step="0.01"
+                id="e-precoVenda"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Localização</span>
-              <input type="text" id="e-localizacao" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-localizacao"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Laboratório</span>
-              <input type="text" id="e-laboratorio" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-laboratorio"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Princípio</span>
-              <input type="text" id="e-principio" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-principio"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Genérico *</span>
-              <select id="e-generico" class="form-control form-control-sm" required>
+              <select
+                id="e-generico"
+                class="form-control form-control-sm"
+                required
+              >
                 <option value="">Selecione um valor</option>
                 <option value="SIM">SIM</option>
                 <option value="NAO">NAO</option>
@@ -165,70 +334,136 @@
 
             <label>
               <span>Código do Produto</span>
-              <input type="text" id="e-codigoProduto" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-codigoProduto"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <div class="modal-actions">
-              <button type="button" class="btn-modern secondary" id="edit-cancel-btn">Cancelar</button>
-              <button type="submit" class="btn-modern primary">Salvar</button>
+              <button
+                type="button"
+                class="btn-modern secondary"
+                id="edit-cancel-btn"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                class="btn-modern primary"
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+    <!-- /MODAL editar -->
 
-    <!-- modal novo -->
+    <!-- MODAL: novo produto -->
     <div class="app-modal-backdrop" id="produto-new-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0">Novo produto</h2>
-          <button type="button" class="app-modal-close" id="new-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="new-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
           <form id="new-form" class="edit-form-grid">
             <label>
               <span>Código de Barras *</span>
-              <input type="text" id="n-codigoBarras" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="n-codigoBarras"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Descrição *</span>
-              <input type="text" id="n-descricao" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="n-descricao"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Unidade de Medida</span>
-              <input type="text" id="n-unidadeMedida" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-unidadeMedida"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Preço de Compra *</span>
-              <input type="number" step="0.01" id="n-precoCompra" class="form-control form-control-sm" required />
+              <input
+                type="number"
+                step="0.01"
+                id="n-precoCompra"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Preço de Venda *</span>
-              <input type="number" step="0.01" id="n-precoVenda" class="form-control form-control-sm" required />
+              <input
+                type="number"
+                step="0.01"
+                id="n-precoVenda"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Localização</span>
-              <input type="text" id="n-localizacao" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-localizacao"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Laboratório</span>
-              <input type="text" id="n-laboratorio" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-laboratorio"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Princípio</span>
-              <input type="text" id="n-principio" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-principio"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Genérico *</span>
-              <select id="n-generico" class="form-control form-control-sm" required>
+              <select
+                id="n-generico"
+                class="form-control form-control-sm"
+                required
+              >
                 <option value="">Selecione um valor</option>
                 <option value="SIM">SIM</option>
                 <option value="NAO">NAO</option>
@@ -237,19 +472,37 @@
 
             <label>
               <span>Código do Produto</span>
-              <input type="text" id="n-codigoProduto" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-codigoProduto"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <div class="modal-actions">
-              <button type="button" class="btn-modern secondary" id="new-cancel-btn">Cancelar</button>
-              <button type="submit" class="btn-modern primary">Salvar</button>
+              <button
+                type="button"
+                class="btn-modern secondary"
+                id="new-cancel-btn"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                class="btn-modern primary"
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+    <!-- /MODAL novo produto -->
   </main>
 
+  <!-- Scripts da tela de produtos -->
   <script src="/js/crudList.js"></script>
   <script src="/js/produtos.js"></script>
 </body>

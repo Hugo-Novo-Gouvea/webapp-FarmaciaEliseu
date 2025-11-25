@@ -88,9 +88,12 @@ function wiringEventosContas() {
       atualizarTotalContas(0);
       return;
     }
+
+    // AGORA: nome precisa COMEÇAR com o texto digitado
     const filtrados = todosClientesCP
-      .filter(c => (c.nome || '').toLowerCase().includes(txt))
+      .filter(c => (c.nome || '').toLowerCase().startsWith(txt))
       .slice(0, 40);
+
     if (filtrados.length === 0) {
       sug.style.display = 'none';
       return;

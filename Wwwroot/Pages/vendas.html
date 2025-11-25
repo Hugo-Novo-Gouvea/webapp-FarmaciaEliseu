@@ -1,60 +1,35 @@
-﻿<!doctype html>
+﻿﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <title>Vendas - Farmácia Eliseu</title>
+
+  <!-- CSS base (Bootstrap) + tema do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
-  <style>
-    /* caixinha de sugestões que vamos usar pros clientes e pros produtos */
-    .suggest-box {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: var(--color-one);              /* mesma cor dos inputs da barra */
-      border: 1px solid var(--color-border-soft);
-      z-index: 50;
-      max-height: 220px;
-      overflow-y: auto;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
-    }
-
-    .suggest-list {
-      list-style: none;                           /* tira as bolinhas */
-      margin: 0;
-      padding: 0;
-    }
-
-    .suggest-item {
-      padding: .25rem .5rem;
-      cursor: pointer;
-      font-size: .75rem;
-      color: var(--color-text);
-    }
-
-    .suggest-item:hover {
-      background: var(--color-three);
-      color: var(--color-heading);
-    }
-  </style>
 </head>
+
 <body class="app-body app-body-gradient">
   <main class="app-main">
     <div class="container">
       <div class="list-shell" id="vendas-shell">
-        <!-- titulo -->
+        <!-- título -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Vendas</h2>
         </div>
 
-        <!-- barra de acoes -->
-        <div class="action-bar">
-          <button id="btn-sell" class="action-btn success" disabled>✏️ Realizar venda</button>
-        </div>
-
-        <!-- linha do menu (sem busca) -->
+        <!-- LINHA 0: barra de ações + link de menu (bloco COR 2) -->
         <div class="list-filter">
+          <div class="action-bar">
+            <button
+              id="btn-sell"
+              class="action-btn success"
+              disabled
+            >
+              ✏️ Realizar venda
+            </button>
+          </div>
+
           <div class="list-filter-action">
             <a href="/" class="btn-modern small">⬅️ Menu</a>
           </div>
@@ -62,6 +37,7 @@
 
         <!-- LINHA 1: Tipo de venda | Vendedor | Tipo de cliente | Tipo de produto | Tipo de desconto -->
         <div class="list-filter">
+          <!-- tipo de venda -->
           <div class="list-filter-field">
             <label for="tipo-venda">Tipo de venda *</label>
             <select id="tipo-venda">
@@ -70,12 +46,16 @@
               <option value="dinheiro">Dinheiro</option>
             </select>
           </div>
+
+          <!-- vendedor -->
           <div class="list-filter-field">
             <label for="vendedor">Vendedor *</label>
             <select id="vendedor">
               <option value="">Selecione o vendedor</option>
             </select>
           </div>
+
+          <!-- tipo de cliente -->
           <div class="list-filter-field">
             <label for="tipo-cliente">Tipo de cliente *</label>
             <select id="tipo-cliente">
@@ -84,6 +64,8 @@
               <option value="avulso">Avulso</option>
             </select>
           </div>
+
+          <!-- tipo de produto -->
           <div class="list-filter-field">
             <label for="tipo-produto">Tipo de produto *</label>
             <select id="tipo-produto">
@@ -92,7 +74,8 @@
               <option value="avulso">Outras Vendas</option>
             </select>
           </div>
-          <!-- NOVO: tipo de desconto -->
+
+          <!-- tipo de desconto -->
           <div class="list-filter-field">
             <label for="tipo-desconto">Tipo de desconto</label>
             <select id="tipo-desconto">
@@ -102,80 +85,194 @@
           </div>
         </div>
 
-        <!-- LINHA 2: cliente REGISTRADO (agora é só input + sugestões + total) -->
-        <div class="list-filter" id="cliente-registrado-block" style="display:none;">
-          <div class="list-filter-input" style="min-width:280px; position:relative;">
+        <!-- LINHA 2: cliente REGISTRADO (input + sugestões + total) -->
+        <div class="list-filter" id="cliente-registrado-block">
+          <div class="list-filter-input list-filter-input-suggest">
             <label for="cliente-registrado-input">Cliente *</label>
-            <input id="cliente-registrado-input" type="text" autocomplete="off" placeholder="digite para buscar..." />
-            <div id="cliente-registrado-suggest" class="suggest-box" style="display:none;"></div>
+            <input
+              id="cliente-registrado-input"
+              type="text"
+              autocomplete="off"
+              placeholder="digite para buscar..."
+            />
+            <div
+              id="cliente-registrado-suggest"
+              class="suggest-box"
+            ></div>
           </div>
+
           <div class="list-filter-total">
-            <!-- mesmo estilo do contas a receber -->
-            <div id="vendas-total-cliente" class="table-pager-info">Total: R$ 0,00</div>
+            <div
+              id="vendas-total-cliente"
+              class="table-pager-info"
+            >
+              Total: R$ 0,00
+            </div>
           </div>
         </div>
 
         <!-- LINHA 2 alternativa: cliente AVULSO -->
-        <div class="list-filter" id="cliente-avulso-block" style="display:none;">
-          <div class="list-filter-input" style="min-width:280px;">
+        <div class="list-filter" id="cliente-avulso-block">
+          <div class="list-filter-input list-filter-input-280">
             <label for="cliente-avulso">Cliente *</label>
-            <input id="cliente-avulso" type="text" placeholder="nome do cliente avulso..." />
+            <input
+              id="cliente-avulso"
+              type="text"
+              placeholder="nome do cliente avulso..."
+            />
           </div>
         </div>
 
-        <!-- LINHA 3: vendedor (oculta antiga) -->
-        <div class="list-filter" style="display:none;">
+        <!-- LINHA 3: vendedor (oculta antiga, mantida para compatibilidade JS) -->
+        <div class="list-filter hidden-row">
           <div class="list-filter-field">
-            <label for="vendedor">Vendedor *</label>
+            <label for="vendedor-old">Vendedor *</label>
             <select id="vendedor-old">
               <option value="">Selecione o vendedor</option>
             </select>
           </div>
         </div>
 
-        <!-- LINHA 4: produto + qtd + desconto + botão (produto registrado) -->
-        <div class="list-filter vendas-itens-row" id="produto-registrado-block" style="display:none;">
+        <!-- LINHA 4: produto REGISTRADO (produto + qtd + desconto + botão) -->
+        <div
+          class="list-filter vendas-itens-row"
+          id="produto-registrado-block"
+        >
           <div class="list-filter-input vendas-produto">
             <label for="produto">Código de barras / descrição *</label>
-            <input id="produto" type="text" placeholder="leia o código ou digite a descrição..." />
+            <input
+              id="produto"
+              type="text"
+              placeholder="leia o código ou digite a descrição..."
+            />
           </div>
+
           <div class="list-filter-input vendas-qtd">
             <label for="quantidade">Quantidade</label>
-            <input id="quantidade" type="number" min="1" value="1" />
+            <input
+              id="quantidade"
+              type="number"
+              min="1"
+              value="1"
+            />
           </div>
+
           <div class="list-filter-input vendas-desc">
-            <label for="desconto" id="label-desconto-reg">Desconto (%)</label>
-            <input id="desconto" type="number" min="0" step="0.01" value="0" />
+            <label for="desconto" id="label-desconto-reg">
+              Desconto (%)
+            </label>
+            <input
+              id="desconto"
+              type="number"
+              min="0"
+              step="0.01"
+              value="0"
+            />
           </div>
+
           <div class="list-filter-action vendas-add">
-            <button id="btn-add-item" class="action-btn primary">Adicionar</button>
+            <button
+              id="btn-add-item"
+              class="action-btn primary"
+            >
+              Adicionar
+            </button>
           </div>
         </div>
 
         <!-- LINHA 4 alternativa: produto AVULSO -->
-        <div class="list-filter vendas-itens-row" id="produto-avulso-block" style="display:none;">
-          <div class="list-filter-input vendas-produto" style="min-width:260px;">
+        <div
+          class="list-filter vendas-itens-row"
+          id="produto-avulso-block"
+        >
+          <div class="list-filter-input vendas-produto list-filter-input-260">
             <label for="produto-nome">Nome do produto *</label>
-            <input id="produto-nome" type="text" placeholder="descrição do item avulso..." />
+            <input
+              id="produto-nome"
+              type="text"
+              placeholder="descrição do item avulso..."
+            />
           </div>
+
           <div class="list-filter-input vendas-preco">
             <label for="produto-preco">Preço de venda *</label>
-            <input id="produto-preco" type="number" min="0" step="0.01" value="0" />
+            <input
+              id="produto-preco"
+              type="number"
+              min="0"
+              step="0.01"
+              value="0"
+            />
           </div>
+
           <div class="list-filter-input vendas-qtd">
             <label for="quantidade-avulso">Quantidade</label>
-            <input id="quantidade-avulso" type="number" min="1" value="1" />
+            <input
+              id="quantidade-avulso"
+              type="number"
+              min="1"
+              value="1"
+            />
           </div>
+
           <div class="list-filter-input vendas-desc">
-            <label for="desconto-avulso" id="label-desconto-avulso">Desconto (%)</label>
-            <input id="desconto-avulso" type="number" min="0" step="0.01" value="0" />
+            <label
+              for="desconto-avulso"
+              id="label-desconto-avulso"
+            >
+              Desconto (%)
+            </label>
+            <input
+              id="desconto-avulso"
+              type="number"
+              min="0"
+              step="0.01"
+              value="0"
+            />
           </div>
+
           <div class="list-filter-action vendas-add">
-            <button id="btn-add-item-avulso" class="action-btn primary">Adicionar</button>
+            <button
+              id="btn-add-item-avulso"
+              class="action-btn primary"
+            >
+              Adicionar
+            </button>
           </div>
         </div>
 
-        <!-- tabela de itens -->
+        <!-- PRÉ-VISUALIZAÇÃO DO ITEM -->
+        <div class="vendas-preview" id="vendas-preview-block">
+          <div class="table-shell">
+            <div class="table-responsive app-table-wrapper">
+              <table class="table-modern">
+                <thead>
+                  <tr>
+                    <th colspan="5">Pré-visualização do item</th>
+                  </tr>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Preço unit.</th>
+                    <th>Qtd</th>
+                    <th>Desconto</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td id="preview-produto">Nenhum item em edição...</td>
+                    <td id="preview-preco">R$ 0,00</td>
+                    <td id="preview-qtd">0</td>
+                    <td id="preview-desconto">R$ 0,00</td>
+                    <td id="preview-total">R$ 0,00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABELA DE ITENS DA VENDA -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-itens-venda">
@@ -191,54 +288,102 @@
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="6" class="text-center text-muted">Nenhum item adicionado...</td>
+                  <td colspan="6" class="text-center text-muted">
+                    Nenhum item adicionado...
+                  </td>
                 </tr>
               </tbody>
             </table>
+
+            <!-- Totalizador da venda -->
             <div class="vendas-total-bar">
-              <span id="vendas-total" class="vendas-total-label">
+              <span
+                id="vendas-total"
+                class="vendas-total-label"
+              >
                 Total: R$ 0,00
               </span>
             </div>
           </div>
         </div>
-
+        <!-- /table-shell -->
       </div>
+      <!-- /list-shell -->
     </div>
+    <!-- /container -->
   </main>
 
-  <!-- MODAL DE ESCOLHA DE PRODUTO POR DESCRIÇÃO -->
-  <div class="app-modal-backdrop" id="produto-lookup-backdrop" style="display:none;">
-    <div class="app-modal app-modal-xl">
+  <!-- MODAL: escolha de produto por descrição -->
+  <div
+    class="app-modal-backdrop"
+    id="produto-lookup-backdrop"
+  >
+    <div
+      class="app-modal app-modal-xl"
+      style="max-width: 1100px; width: 95%;"
+    >
       <div class="app-modal-header">
         <h2 class="h6 mb-0">Selecione o produto</h2>
-        <button type="button" class="app-modal-close" id="produto-lookup-close">&times;</button>
+        <button
+          type="button"
+          class="app-modal-close"
+          id="produto-lookup-close"
+        >
+          &times;
+        </button>
       </div>
+
       <div class="app-modal-body">
-        <p class="text-muted" style="font-size:.7rem;">Foram encontrados produtos com a descrição digitada. Escolha um.</p>
+        <p class="text-muted small">
+          Foram encontrados produtos com a descrição digitada. Escolha um.
+        </p>
+
         <div class="table-responsive app-table-wrapper">
-          <table class="table-modern" id="produto-lookup-table">
+          <table
+            class="table-modern"
+            id="produto-lookup-table"
+          >
             <thead>
               <tr>
                 <th>Descrição</th>
                 <th>Cód. Barras</th>
+                <th>Cód. Produto</th>
                 <th>Preço venda</th>
-                <th style="width:60px;"></th>
               </tr>
             </thead>
             <tbody id="produto-lookup-tbody">
-              <tr><td colspan="4" class="text-center text-muted">Carregando...</td></tr>
+              <tr>
+                <td
+                  colspan="4"
+                  class="text-center text-muted"
+                >
+                  Carregando...
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
+
         <div class="mt-3 text-end">
-          <button class="btn-modern secondary small" id="produto-lookup-cancel">Cancelar</button>
-          <button class="btn-modern primary small" id="produto-lookup-confirm">Confirmar</button>
+          <button
+            class="btn-modern secondary small"
+            id="produto-lookup-cancel"
+          >
+            Cancelar
+          </button>
+
+          <button
+            class="btn-modern primary small"
+            id="produto-lookup-confirm"
+          >
+            Confirmar
+          </button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- JS da tela de vendas -->
   <script src="/js/vendas.js"></script>
 </body>
 </html>

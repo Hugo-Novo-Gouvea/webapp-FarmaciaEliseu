@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   atualizarGridItens();
   atualizarTotalVenda();
   atualizarEstadoVenda();
+  atualizarPreviewItem();
 });
 
 function mapVendasElements() {
@@ -57,6 +58,14 @@ function mapVendasElements() {
   vendasEls.modalClose = document.getElementById('produto-lookup-close');
   vendasEls.modalCancel = document.getElementById('produto-lookup-cancel');
   vendasEls.modalConfirm = document.getElementById('produto-lookup-confirm');
+
+  // elementos da pré-visualização
+  vendasEls.previewBlock = document.getElementById('vendas-preview-block');
+  vendasEls.previewProduto = document.getElementById('preview-produto');
+  vendasEls.previewPreco = document.getElementById('preview-preco');
+  vendasEls.previewQtd = document.getElementById('preview-qtd');
+  vendasEls.previewDesconto = document.getElementById('preview-desconto');
+  vendasEls.previewTotal = document.getElementById('preview-total');
 }
 
 function bindVendasEvents() {
@@ -69,9 +78,13 @@ function bindVendasEvents() {
   vendasEls.tipoProduto?.addEventListener('change', () => {
     vendasState.produtoSelecionado = null;
     atualizarBlocoProduto();
+    atualizarPreviewItem();
   });
 
-  vendasEls.tipoDesconto?.addEventListener('change', atualizarLabelsDesconto);
+  vendasEls.tipoDesconto?.addEventListener('change', () => {
+    atualizarLabelsDesconto();
+    atualizarPreviewItem();
+  });
 
   vendasEls.tipoVenda?.addEventListener('change', atualizarEstadoVenda);
   vendasEls.vendedor?.addEventListener('change', atualizarEstadoVenda);
@@ -79,6 +92,7 @@ function bindVendasEvents() {
   vendasEls.clienteAvulso?.addEventListener('input', atualizarEstadoVenda);
   initAutocompleteClientes();
 
+  // PRODUTO REGISTRADO
   vendasEls.produtoInput?.addEventListener('keydown', async (ev) => {
     if (ev.key === 'Enter') {
       ev.preventDefault();
@@ -100,7 +114,45 @@ function bindVendasEvents() {
     }
   });
 
+  vendasEls.quantidade?.addEventListener('input', atualizarPreviewItem);
+  vendasEls.desconto?.addEventListener('input', atualizarPreviewItem);
+
   vendasEls.btnAddItem?.addEventListener('click', adicionarItemRegistrado);
+
+  // PRODUTO AVULSO - fluxo de Enter + preview
+  vendasEls.produtoNomeAvulso?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      vendasEls.produtoPrecoAvulso?.focus();
+    }
+  });
+
+  vendasEls.produtoPrecoAvulso?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      vendasEls.quantidadeAvulso?.focus();
+    }
+  });
+
+  vendasEls.quantidadeAvulso?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      vendasEls.descontoAvulso?.focus();
+    }
+  });
+
+  vendasEls.descontoAvulso?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      adicionarItemAvulso();
+    }
+  });
+
+  vendasEls.produtoNomeAvulso?.addEventListener('input', atualizarPreviewItem);
+  vendasEls.produtoPrecoAvulso?.addEventListener('input', atualizarPreviewItem);
+  vendasEls.quantidadeAvulso?.addEventListener('input', atualizarPreviewItem);
+  vendasEls.descontoAvulso?.addEventListener('input', atualizarPreviewItem);
+
   vendasEls.btnAddItemAvulso?.addEventListener('click', adicionarItemAvulso);
 
   vendasEls.btnSell?.addEventListener('click', realizarVenda);
@@ -164,7 +216,6 @@ async function carregarClientes() {
     vendasState.clientes = [];
   }
 }
-
 
 async function carregarVendedores() {
   try {
@@ -245,11 +296,21 @@ function initAutocompleteClientes() {
       return;
     }
 
-    const lista = vendasState.clientes.filter(c =>
-      (c.nome || '').toLowerCase().includes(termo) ||
-      (String(c.codigoFichario || '')).includes(termo) ||
-      (c.cpf || '').toLowerCase().includes(termo)
-    ).slice(0, 8);
+    // ANTES: includes em nome/codigoFichario/cpf
+    // AGORA: começa com (prefixo)
+    const lista = vendasState.clientes
+      .filter(c => {
+        const nome = (c.nome || '').toLowerCase();
+        const fich = String(c.codigoFichario || '').toLowerCase();
+        const cpf = (c.cpf || '').toLowerCase();
+
+        return (
+          nome.startsWith(termo) ||
+          fich.startsWith(termo) ||
+          cpf.startsWith(termo)
+        );
+      })
+      .slice(0, 8);
 
     renderSugestoesClientes(lista);
   });
@@ -398,6 +459,7 @@ function selecionarProduto(prod) {
   if (vendasEls.quantidade) vendasEls.quantidade.value = '1';
   if (vendasEls.desconto) vendasEls.desconto.value = '0';
   vendasEls.quantidade?.focus();
+  atualizarPreviewItem();
 }
 
 function adicionarItemRegistrado() {
@@ -470,6 +532,7 @@ function limparCamposProdutoRegistrado() {
   if (vendasEls.produtoInput) vendasEls.produtoInput.value = '';
   if (vendasEls.quantidade) vendasEls.quantidade.value = '1';
   if (vendasEls.desconto) vendasEls.desconto.value = '0';
+  atualizarPreviewItem();
 }
 
 function limparCamposProdutoAvulso() {
@@ -477,6 +540,7 @@ function limparCamposProdutoAvulso() {
   if (vendasEls.produtoPrecoAvulso) vendasEls.produtoPrecoAvulso.value = '0';
   if (vendasEls.quantidadeAvulso) vendasEls.quantidadeAvulso.value = '1';
   if (vendasEls.descontoAvulso) vendasEls.descontoAvulso.value = '0';
+  atualizarPreviewItem();
 }
 
 function atualizarGridItens() {
@@ -506,6 +570,7 @@ function atualizarGridItens() {
       atualizarGridItens();
       atualizarTotalVenda();
       atualizarEstadoVenda();
+      atualizarPreviewItem();
     });
     tbody.appendChild(tr);
   });
@@ -535,6 +600,48 @@ function atualizarEstadoVenda() {
   if (vendasEls.btnSell) vendasEls.btnSell.disabled = !pode;
 }
 
+function atualizarPreviewItem() {
+  const tipoProduto = vendasEls.tipoProduto?.value || '';
+
+  let nome = '';
+  let precoUnit = 0;
+  let qtd = 0;
+  let descontoDigitado = 0;
+  let descontoValor = 0;
+  let totalBruto = 0;
+  let totalLiquido = 0;
+
+  if (tipoProduto === 'registrado' && vendasState.produtoSelecionado) {
+    nome = vendasState.produtoSelecionado.descricao || '';
+    precoUnit = Number(vendasState.produtoSelecionado.precoVenda) || 0;
+    qtd = Math.max(1, parseInt(vendasEls.quantidade?.value || '1', 10) || 1);
+    descontoDigitado = parseMoeda(vendasEls.desconto?.value || '0');
+    descontoValor = calcularDesconto(descontoDigitado, qtd, precoUnit);
+  } else if (tipoProduto === 'avulso') {
+    nome = (vendasEls.produtoNomeAvulso?.value || '').trim();
+    precoUnit = parseMoeda(vendasEls.produtoPrecoAvulso?.value || '0');
+    qtd = Math.max(1, parseInt(vendasEls.quantidadeAvulso?.value || '1', 10) || 1);
+    descontoDigitado = parseMoeda(vendasEls.descontoAvulso?.value || '0');
+    descontoValor = calcularDesconto(descontoDigitado, qtd, precoUnit);
+  } else {
+    if (vendasEls.previewProduto) vendasEls.previewProduto.textContent = 'Nenhum item em edição...';
+    if (vendasEls.previewPreco) vendasEls.previewPreco.textContent = formatarMoeda(0);
+    if (vendasEls.previewQtd) vendasEls.previewQtd.textContent = '0';
+    if (vendasEls.previewDesconto) vendasEls.previewDesconto.textContent = formatarMoeda(0);
+    if (vendasEls.previewTotal) vendasEls.previewTotal.textContent = formatarMoeda(0);
+    return;
+  }
+
+  totalBruto = qtd * precoUnit;
+  totalLiquido = Math.max(0, totalBruto - descontoValor);
+
+  if (vendasEls.previewProduto) vendasEls.previewProduto.textContent = nome || '---';
+  if (vendasEls.previewPreco) vendasEls.previewPreco.textContent = formatarMoeda(precoUnit);
+  if (vendasEls.previewQtd) vendasEls.previewQtd.textContent = String(qtd);
+  if (vendasEls.previewDesconto) vendasEls.previewDesconto.textContent = formatarMoeda(descontoValor);
+  if (vendasEls.previewTotal) vendasEls.previewTotal.textContent = formatarMoeda(totalLiquido);
+}
+
 function calcularDesconto(valorDigitado, quantidade, precoUnit) {
   const tipo = vendasEls.tipoDesconto?.value || 'porcentagem';
   const totalBruto = quantidade * precoUnit;
@@ -547,117 +654,25 @@ function calcularDesconto(valorDigitado, quantidade, precoUnit) {
 
 function parseMoeda(v) {
   if (typeof v === 'number') return v;
-  const clean = (v || '').replace(/\./g, '').replace(',', '.');
-  return parseFloat(clean) || 0;
+  let s = (v || '').trim();
+  if (!s) return 0;
+
+  // Se tiver vírgula, assume formato brasileiro: 1.234,56
+  if (s.indexOf(',') >= 0) {
+    s = s.replace(/\./g, '').replace(',', '.');
+    return parseFloat(s) || 0;
+  }
+
+  // Sem vírgula → assume que o ponto já é decimal (type="number", por exemplo)
+  return parseFloat(s) || 0;
 }
 
 async function realizarVenda() {
-  const tipoVenda = vendasEls.tipoVenda?.value || '';
-  const tipoCliente = vendasEls.tipoCliente?.value || '';
-
-  let clienteId = null;
-  let clienteNome = null;
-  if (tipoCliente === 'registrado') {
-    if (!vendasState.clienteSelecionado) {
-      alert('Selecione um cliente registrado.');
-      return;
-    }
-    clienteId = vendasState.clienteSelecionado.clientesId;
-  } else {
-    const nome = (vendasEls.clienteAvulso?.value || '').trim();
-    if (!nome || nome.length < 3) {
-      alert('Informe o nome do cliente avulso.');
-      return;
-    }
-    clienteNome = nome;
-  }
-
-  const vendedorId = parseInt(vendasEls.vendedor?.value || '0', 10);
-  if (!vendedorId) {
-    alert('Selecione o vendedor.');
-    return;
-  }
-
-  if (!vendasState.itens.length) {
-    alert('Adicione pelo menos um item.');
-    return;
-  }
-
-  const payload = {
-    tipoVenda,
-    tipoCliente,
-    clienteId,
-    clienteNome,
-    vendedorId,
-    itens: vendasState.itens.map(it => ({
-      produtoId: it.produtoId,
-      descricao: it.descricao,
-      quantidade: it.quantidade,
-      precoUnit: it.precoUnit,
-      desconto: it.desconto
-    }))
-  };
-
-  try {
-    const resp = await fetch('/api/vendas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      console.error('Falha ao registrar venda', txt);
-      alert('Falha ao registrar venda.');
-      return;
-    }
-
-    const respCupom = await fetch('/api/vendas/imprimir', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (respCupom.ok) {
-      const { cupomBase64 } = await respCupom.json();
-      await enviarCupomParaPrintAgent(cupomBase64);
-    } else {
-      console.error('Venda salva, mas falha ao gerar cupom');
-      alert('Venda registrada, mas falhou ao gerar cupom.');
-    }
-
-    vendasState.itens = [];
-    vendasState.clienteSelecionado = null;
-    if (vendasEls.clienteRegistradoInput) vendasEls.clienteRegistradoInput.value = '';
-    if (vendasEls.clienteAvulso) vendasEls.clienteAvulso.value = '';
-    limparCamposProdutoRegistrado();
-    limparCamposProdutoAvulso();
-    atualizarGridItens();
-    atualizarTotalVenda();
-    atualizarEstadoVenda();
-  } catch (err) {
-    console.error('Erro ao realizar venda', err);
-    alert('Erro ao realizar venda.');
-  }
+  // (mantém igual ao seu arquivo atual)
 }
 
 async function enviarCupomParaPrintAgent(cupomBase64) {
-  if (!cupomBase64) return;
-  try {
-    const resp = await fetch('http://localhost:5005/print/cupom', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64: cupomBase64 })
-    });
-
-    if (!resp.ok) {
-      const txt = await resp.text();
-      console.error('Falha ao enviar para impressora local', txt);
-      alert('Cupom gerado, mas nao foi possivel enviar para impressora local.');
-    }
-  } catch (err) {
-    console.error('Erro ao enviar cupom para printAgent', err);
-    alert('Cupom gerado, mas nao foi possivel comunicar com a impressora local.');
-  }
+  // (mantém igual ao seu arquivo atual)
 }
 
 function formatarMoeda(valor) {

@@ -1,84 +1,79 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+  <!-- Metadados básicos da página -->
   <meta charset="utf-8" />
   <title>Contas a Receber - Farmácia Eliseu</title>
+
+  <!-- CSS base (Bootstrap) + tema visual do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
-  <style>
-    .suggest-box {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: var(--color-one);
-      border: 1px solid var(--color-border-soft);
-      z-index: 50;
-      max-height: 220px;
-      overflow-y: auto;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
-    }
-
-    .suggest-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .suggest-item {
-      padding: .25rem .5rem;
-      cursor: pointer;
-      font-size: .75rem;
-      color: var(--color-text);
-    }
-
-    .suggest-item:hover {
-      background: var(--color-three);
-      color: var(--color-heading);
-    }
-  </style>
 </head>
+
 <body class="app-body app-body-gradient">
+  <!-- Área principal da aplicação -->
   <main class="app-main">
     <div class="container">
+      <!-- Card de listagem: barra de ações + filtros + tabela -->
       <div class="list-shell" id="contas-pagar-shell">
-        <!-- título -->
+
+        <!-- Cabeçalho da tela -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Contas a receber</h2>
         </div>
 
-        <!-- barra de ações: só o botão verde -->
-        <div class="action-bar">
-          <button id="btn-pay" class="action-btn success" disabled>✅ Marcar como pago</button>
-        </div>
-
-        <!-- barra de filtro / busca -->
+        <!-- Barra de ações + filtros (fundo COR 2 via .list-filter) -->
         <div class="list-filter">
-          <!-- voltar pro menu -->
+          <!-- Ações da tela (por enquanto só o botão de marcar como pago) -->
+          <div class="action-bar">
+            <button
+              id="btn-pay"
+              class="action-btn success"
+              disabled
+            >
+              ✅ Marcar como pago
+            </button>
+          </div>
+
+          <!-- Atalho para voltar ao menu principal -->
           <div class="list-filter-action">
             <a href="/" class="btn-modern small">⬅️ Menu</a>
           </div>
 
-          <!-- AGORA: só um input que busca e mostra sugestões -->
-          <div class="list-filter-input" style="min-width:280px; position:relative;">
+          <!-- Filtro por cliente com autocomplete/sugestão -->
+          <div class="list-filter-input list-filter-input-suggest">
             <label for="filter-person-input">Cliente</label>
-            <input id="filter-person-input" type="text" placeholder="digite o nome..." autocomplete="off" />
-            <div id="contas-clientes-suggest" class="suggest-box" style="display:none;"></div>
+            <input
+              id="filter-person-input"
+              type="text"
+              placeholder="digite o nome..."
+              autocomplete="off"
+            />
+            <!-- Caixa de sugestões preenchida via JS (lista de clientes) -->
+            <div id="contas-clientes-suggest" class="suggest-box"></div>
           </div>
 
-          <!-- totalizador alinhado à direita -->
+          <!-- Totalizador do valor em aberto para o cliente selecionado -->
           <div class="list-filter-total">
-            <div id="contas-total-info" class="table-pager-info">Total: R$ 0,00</div>
+            <div
+              id="contas-total-info"
+              class="table-pager-info"
+            >
+              Total: R$ 0,00
+            </div>
           </div>
         </div>
 
-        <!-- tabela de contas -->
+        <!-- Tabela de movimentos em aberto do cliente -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-contas-pagar">
               <thead>
                 <tr>
-                  <th style="width:32px;"><input type="checkbox" id="select-all" /></th>
+                  <!-- Checkbox geral para seleção em massa dos itens -->
+                  <th style="width:32px;">
+                    <input type="checkbox" id="select-all" />
+                  </th>
                   <th>Produto/Descrição</th>
                   <th>Quantidade</th>
                   <th>Data venda</th>
@@ -86,29 +81,56 @@
                 </tr>
               </thead>
               <tbody>
+                <!-- Mensagem inicial antes de carregar qualquer dado -->
                 <tr>
-                  <td colspan="5" class="text-center text-muted">Digite o nome do cliente para carregar os movimentos...</td>
+                  <td colspan="5" class="text-center text-muted">
+                    Digite o nome do cliente para carregar os movimentos...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Paginação das contas (preenchida e habilitada via JS) -->
           <div class="table-pager">
-            <div class="table-pager-info" id="contas-pg-info">Mostrando 0-0 de 0</div>
+            <!-- Faixa de registros exibidos -->
+            <div
+              class="table-pager-info"
+              id="contas-pg-info"
+            >
+              Mostrando 0-0 de 0
+            </div>
+
+            <!-- Botões Anterior / Próxima página -->
             <div class="table-pager-group">
-              <button class="pager-btn is-disabled" id="contas-pg-prev">
-                <span>◀</span><span>Anterior</span>
+              <button
+                class="pager-btn is-disabled"
+                id="contas-pg-prev"
+              >
+                <span>⬅️</span><span>Anterior</span>
               </button>
-              <button class="pager-btn is-disabled" id="contas-pg-next">
-                <span>Próxima</span><span>▶</span>
+
+              <button
+                class="pager-btn is-disabled"
+                id="contas-pg-next"
+              >
+                <span>Próxima</span><span>➡️</span>
               </button>
             </div>
           </div>
         </div>
+        <!-- /tabela de contas -->
       </div>
+      <!-- /list-shell -->
     </div>
-
+    <!-- /container -->
   </main>
 
+  <!-- JS específico da tela de Contas a Receber:
+       - autocomplete de clientes
+       - carregamento de movimentos
+       - marcação de registros como pagos
+       - controle de paginação -->
   <script src="/js/contasPagar.js"></script>
 </body>
 </html>

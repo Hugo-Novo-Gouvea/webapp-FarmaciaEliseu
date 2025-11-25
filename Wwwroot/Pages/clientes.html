@@ -1,34 +1,46 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+  <!-- Metadados básicos da página -->
   <meta charset="utf-8" />
   <title>Clientes - Farmácia Eliseu</title>
+
+  <!-- CSS base (Bootstrap) + tema customizado do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
+
 <body class="app-body app-body-gradient">
+  <!-- Área principal da aplicação (corpo útil da tela) -->
   <main class="app-main">
     <div class="container">
+      <!-- Card de lista genérico (título + filtros + tabela) -->
       <div class="list-shell">
-        <!-- titulo -->
+
+        <!-- Cabeçalho da lista de clientes -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Lista de clientes</h2>
-          <p class="text-muted" style="font-size:.7rem;">cadastro de clientes para vincular vendas e contas</p>
+          <p class="text-muted list-subtitle">
+            cadastro de clientes para vincular vendas e contas
+          </p>
         </div>
 
-        <!-- barra de acoes -->
-        <div class="action-bar">
-          <button id="btn-view" class="action-btn primary" disabled>🔍 Visualizar</button>
-          <button id="btn-edit" class="action-btn primary" disabled>✏️ Editar</button>
-          <button id="btn-new" class="action-btn success" disabled>➕ Novo</button>
-          <button id="btn-delete" class="action-btn danger" disabled>🗑️ Excluir</button>
-        </div>
-
-        <!-- filtros -->
+        <!-- Barra de ações + filtros de pesquisa -->
         <div class="list-filter">
+          <!-- Ações da listagem (dependem da seleção na tabela) -->
+          <div class="action-bar">
+            <button id="btn-view"   class="action-btn primary" disabled>🔍 Visualizar</button>
+            <button id="btn-edit"   class="action-btn primary" disabled>✏️ Editar</button>
+            <button id="btn-new"    class="action-btn success" disabled>➕ Novo</button>
+            <button id="btn-delete" class="action-btn danger"  disabled>🗑️ Excluir</button>
+          </div>
+
+          <!-- Atalho para voltar ao menu principal -->
           <div class="list-filter-action">
             <a href="/" class="btn-modern small">⬅️ Menu</a>
           </div>
+
+          <!-- Filtro: seleção da coluna a ser filtrada -->
           <div class="list-filter-field">
             <label for="filter-column">Coluna</label>
             <select id="filter-column">
@@ -37,13 +49,19 @@
               <option value="codigoFichario">Código Fichário</option>
             </select>
           </div>
+
+          <!-- Filtro: texto de pesquisa -->
           <div class="list-filter-input">
             <label for="filter-text">Pesquisa</label>
-            <input id="filter-text" type="text" placeholder="Digite para filtrar..." />
+            <input
+              id="filter-text"
+              type="text"
+              placeholder="Digite para filtrar..."
+            />
           </div>
         </div>
 
-        <!-- tabela -->
+        <!-- Tabela de clientes -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-clientes">
@@ -56,187 +74,379 @@
                 </tr>
               </thead>
               <tbody>
+                <!-- Linha inicial padrão enquanto JS carrega os dados -->
                 <tr>
                   <td colspan="4" class="text-center text-muted">Carregando...</td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Paginação da listagem de clientes -->
           <div class="table-pager">
-            <div class="table-pager-info" id="clientes-pg-info">Mostrando 0-0 de 0</div>
+            <!-- Informações de faixa (atualizado via JS) -->
+            <div class="table-pager-info" id="clientes-pg-info">
+              Mostrando 0-0 de 0
+            </div>
+
+            <!-- Botões de navegação de página -->
             <div class="table-pager-group">
-              <button class="pager-btn is-disabled" id="clientes-pg-prev"><span>⬅️</span><span>Anterior</span></button>
-              <button class="pager-btn is-disabled" id="clientes-pg-next"><span>Próxima</span><span>➡️</span></button>
+              <button
+                class="pager-btn is-disabled"
+                id="clientes-pg-prev"
+              >
+                <span>⬅️</span><span>Anterior</span>
+              </button>
+
+              <button
+                class="pager-btn is-disabled"
+                id="clientes-pg-next"
+              >
+                <span>Próxima</span><span>➡️</span>
+              </button>
             </div>
           </div>
         </div>
+        <!-- /tabela + paginação -->
       </div>
+      <!-- /list-shell -->
     </div>
+    <!-- /container -->
 
-    <!-- modal visualizar -->
+    <!-- ===================================================================
+         MODAL: VISUALIZAÇÃO DE CLIENTE (somente leitura)
+         =================================================================== -->
     <div class="app-modal-backdrop" id="cliente-modal-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0" id="modal-title">Detalhes do cliente</h2>
-          <button type="button" class="app-modal-close" id="modal-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="modal-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
+          <!-- Lista de campos exibidos em modo leitura -->
           <dl class="app-modal-dl">
-            <div><dt>Nome</dt><dd id="m-nome"></dd></div>
-            <div><dt>Endereço</dt><dd id="m-endereco"></dd></div>
-            <div><dt>RG</dt><dd id="m-rg"></dd></div>
-            <div><dt>CPF</dt><dd id="m-cpf"></dd></div>
-            <div><dt>Telefone</dt><dd id="m-telefone"></dd></div>
-            <div><dt>Celular</dt><dd id="m-celular"></dd></div>
-            <div><dt>Data Nasc.</dt><dd id="m-data-nasc"></dd></div>
-            <div><dt>Cód. Fichário</dt><dd id="m-cod-fichario"></dd></div>
-            <div><dt>Data do Cadastro</dt><dd id="m-data-cadastro"></dd></div>
-            <div><dt>Último Registro</dt><dd id="m-ultimo-registro"></dd></div>
+            <div>
+              <dt>Nome</dt>
+              <dd id="m-nome"></dd>
+            </div>
+            <div>
+              <dt>Endereço</dt>
+              <dd id="m-endereco"></dd>
+            </div>
+            <div>
+              <dt>RG</dt>
+              <dd id="m-rg"></dd>
+            </div>
+            <div>
+              <dt>CPF</dt>
+              <dd id="m-cpf"></dd>
+            </div>
+            <div>
+              <dt>Telefone</dt>
+              <dd id="m-telefone"></dd>
+            </div>
+            <div>
+              <dt>Celular</dt>
+              <dd id="m-celular"></dd>
+            </div>
+            <div>
+              <dt>Data Nasc.</dt>
+              <dd id="m-data-nasc"></dd>
+            </div>
+            <div>
+              <dt>Cód. Fichário</dt>
+              <dd id="m-cod-fichario"></dd>
+            </div>
+            <div>
+              <dt>Data do Cadastro</dt>
+              <dd id="m-data-cadastro"></dd>
+            </div>
+            <div>
+              <dt>Último Registro</dt>
+              <dd id="m-ultimo-registro"></dd>
+            </div>
           </dl>
         </div>
       </div>
     </div>
 
-    <!-- modal editar -->
+    <!-- ===================================================================
+         MODAL: EDIÇÃO DE CLIENTE (alterar existente)
+         =================================================================== -->
     <div class="app-modal-backdrop" id="cliente-edit-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0">Editar cliente</h2>
-          <button type="button" class="app-modal-close" id="edit-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="edit-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
+          <!-- Formulário de edição (preenchido via JS ao escolher um cliente) -->
           <form id="edit-form" class="edit-form-grid">
             <input type="hidden" id="e-id" />
 
             <label>
               <span>Nome *</span>
-              <input type="text" id="e-nome" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="e-nome"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Logradouro</span>
-              <input type="text" id="e-logradouro" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-logradouro"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Número</span>
-              <input type="text" id="e-numero" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-numero"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Bairro</span>
-              <input type="text" id="e-bairro" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-bairro"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>RG</span>
-              <input type="text" id="e-rg" class="form-control form-control-sm mask-rg" />
+              <input
+                type="text"
+                id="e-rg"
+                class="form-control form-control-sm mask-rg"
+              />
             </label>
 
             <label>
               <span>CPF</span>
-              <input type="text" id="e-cpf" class="form-control form-control-sm mask-cpf" />
+              <input
+                type="text"
+                id="e-cpf"
+                class="form-control form-control-sm mask-cpf"
+              />
             </label>
 
             <label>
               <span>Telefone</span>
-              <input type="text" id="e-telefone" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-telefone"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Celular</span>
-              <input type="text" id="e-celular" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="e-celular"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Data Nasc.</span>
-              <input type="date" id="e-data-nasc" class="form-control form-control-sm" />
+              <input
+                type="date"
+                id="e-data-nasc"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Cód. Fichário</span>
-              <input type="number" id="e-cod-fichario" class="form-control form-control-sm" />
+              <input
+                type="number"
+                id="e-cod-fichario"
+                class="form-control form-control-sm"
+              />
             </label>
 
+            <!-- Ações do modal de edição -->
             <div class="modal-actions">
-              <button type="button" class="btn-modern secondary" id="edit-cancel-btn">Cancelar</button>
-              <button type="submit" class="btn-modern primary">Salvar</button>
+              <button
+                type="button"
+                class="btn-modern secondary"
+                id="edit-cancel-btn"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="btn-modern primary"
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- modal novo -->
+    <!-- ===================================================================
+         MODAL: NOVO CLIENTE (inclusão)
+         =================================================================== -->
     <div class="app-modal-backdrop" id="cliente-new-backdrop">
       <div class="app-modal">
         <div class="app-modal-header">
           <h2 class="h6 mb-0">Novo cliente</h2>
-          <button type="button" class="app-modal-close" id="new-close-btn">&times;</button>
+          <button
+            type="button"
+            class="app-modal-close"
+            id="new-close-btn"
+          >
+            &times;
+          </button>
         </div>
+
         <div class="app-modal-body">
+          <!-- Formulário de inclusão de novo cliente -->
           <form id="new-form" class="edit-form-grid">
             <label>
               <span>Nome *</span>
-              <input type="text" id="n-nome" class="form-control form-control-sm" required />
+              <input
+                type="text"
+                id="n-nome"
+                class="form-control form-control-sm"
+                required
+              />
             </label>
 
             <label>
               <span>Logradouro</span>
-              <input type="text" id="n-logradouro" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-logradouro"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Número</span>
-              <input type="text" id="n-numero" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-numero"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Bairro</span>
-              <input type="text" id="n-bairro" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-bairro"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>RG</span>
-              <input type="text" id="n-rg" class="form-control form-control-sm mask-rg" />
+              <input
+                type="text"
+                id="n-rg"
+                class="form-control form-control-sm mask-rg"
+              />
             </label>
 
             <label>
               <span>CPF</span>
-              <input type="text" id="n-cpf" class="form-control form-control-sm mask-cpf" />
+              <input
+                type="text"
+                id="n-cpf"
+                class="form-control form-control-sm mask-cpf"
+              />
             </label>
 
             <label>
               <span>Telefone</span>
-              <input type="text" id="n-telefone" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-telefone"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Celular</span>
-              <input type="text" id="n-celular" class="form-control form-control-sm" />
+              <input
+                type="text"
+                id="n-celular"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Data Nasc.</span>
-              <input type="date" id="n-data-nasc" class="form-control form-control-sm" />
+              <input
+                type="date"
+                id="n-data-nasc"
+                class="form-control form-control-sm"
+              />
             </label>
 
             <label>
               <span>Cód. Fichário</span>
-              <input type="number" id="n-cod-fichario" class="form-control form-control-sm" />
+              <input
+                type="number"
+                id="n-cod-fichario"
+                class="form-control form-control-sm"
+              />
             </label>
 
+            <!-- Ações do modal de novo cadastro -->
             <div class="modal-actions">
-              <button type="button" class="btn-modern secondary" id="new-cancel-btn">Cancelar</button>
-              <button type="submit" class="btn-modern primary">Salvar</button>
+              <button
+                type="button"
+                class="btn-modern secondary"
+                id="new-cancel-btn"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="btn-modern primary"
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+    <!-- /modais -->
   </main>
 
+  <!-- JS genérico para listas CRUD (seleção, paginação, etc.) -->
   <script src="/js/crudList.js"></script>
+
+  <!-- JS específico da tela de clientes (carrega dados, eventos, máscaras) -->
   <script src="/js/clientes.js"></script>
 </body>
 </html>
