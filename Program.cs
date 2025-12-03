@@ -2,40 +2,33 @@
 using Microsoft.Extensions.Hosting;
 using WebAppEstudo.Data;
 using WebAppEstudo.Endpoints;
+using WebAppEstudo.Services; // Namespace novo sugerido
 
 var builder = WebApplication.CreateBuilder(args);
 
-//
 // =========================================================
 // 1. HOST / EXECUÇÃO COMO SERVIÇO WINDOWS
 // =========================================================
-//
-// UseWindowsService permite que o app rode como serviço do Windows.
-// Em modo desenvolvimento (rodando via dotnet run) também funciona,
-// só muda o comportamento de logging/shutdown.
-//
 builder.Host.UseWindowsService();
 
-//
 // =========================================================
-// 2. CONFIGURAÇÃO DO BANCO DE DADOS
+// 2. INJEÇÃO DE DEPENDÊNCIAS (NOVOS SERVIÇOS)
 // =========================================================
-//
-// Estratégia:
-// - Tenta usar a connection string "DefaultConnection" do appsettings.
-// - Se existir arquivo dbconfig.json válido, ele SOBRESCREVE a string,
-//   permitindo apontar para outro servidor/banco sem recompilar.
-// - Suporte a dois modos: Windows Auth (Trusted_Connection) e SQL Auth.
-//
+// Serviço de fila de impressão (Singleton pois é compartilhado por toda a aplicação)
+builder.Services.AddSingleton<PrintQueue>();
+// Worker que fica rodando em segundo plano processando a fila de impressão
+builder.Services.AddHostedService<PrintWorker>();
+// Serviço de regras de negócio de vendas
+builder.Services.AddScoped<VendaService>();
+
+// =========================================================
+// 3. CONFIGURAÇÃO DO BANCO DE DADOS (COM RETRY)
+// =========================================================
 var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
-
-// Caminho físico do arquivo de configuração do banco (dbconfig.json)
 var dbConfigPath = Path.Combine(AppContext.BaseDirectory, "dbconfig.json");
-
-// Por padrão, usa a connection string do appsettings
 string finalConnectionString = defaultConn;
 
-// Tenta carregar o dbconfig.json; se for válido, monta a connection string por ele
+// Tenta carregar o dbconfig.json
 var cfgFromFile = DbConfig.Load(dbConfigPath);
 if (cfgFromFile is not null &&
     !string.IsNullOrWhiteSpace(cfgFromFile.server) &&
@@ -44,57 +37,41 @@ if (cfgFromFile is not null &&
     finalConnectionString = BuildConnectionString(cfgFromFile);
 }
 
-// Registra o AppDbContext usando a connection string final
+// Registra o AppDbContext com RESILIÊNCIA (Retry Pattern)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(finalConnectionString));
+    options.UseSqlServer(finalConnectionString, sqlOptions => 
+    {
+        // Tenta reconectar automaticamente até 5 vezes se o banco piscar
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+    }));
 
 var app = builder.Build();
 
-//
 // =========================================================
-// 3. ARQUIVOS ESTÁTICOS (FRONT-END)
+// 4. ARQUIVOS ESTÁTICOS (FRONT-END)
 // =========================================================
-//
-// UseDefaultFiles:
-//   - Procura por index.html, default.html, etc. na raiz wwwroot.
-// UseStaticFiles:
-//   - Serve qualquer arquivo estático em wwwroot (CSS, JS, imagens, páginas).
-//
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-//
 // =========================================================
-// 4. MAPEAMENTO DE ENDPOINTS (API REST)
+// 5. MAPEAMENTO DE ENDPOINTS (API REST)
 // =========================================================
-//
-// Cada grupo de endpoints foi extraído para uma classe estática
-// de extensão, deixando o Program.cs focado apenas em composição.
-//
-// Ordem aqui é mais "organizacional" do que técnica.
-//
-app.MapConfigEndpoints(dbConfigPath);   // /api/config
-app.MapClientesEndpoints();             // /api/clientes
-app.MapProdutosEndpoints();             // /api/produtos
-app.MapFuncionariosEndpoints();         // /api/funcionarios
-app.MapMovimentosEndpoints();           // /api/movimentos
-app.MapContasPagarEndpoints();          // /api/contas
-app.MapVendasEndpoints();               // /api/vendas
+app.MapConfigEndpoints(dbConfigPath);
+app.MapClientesEndpoints();
+app.MapProdutosEndpoints();
+app.MapFuncionariosEndpoints();
+app.MapMovimentosEndpoints();
+app.MapContasPagarEndpoints();
+app.MapVendasEndpoints(); // Esse arquivo foi refatorado abaixo
 
-//
-// =========================================================
-// 5. START DA APLICAÇÃO
-// =========================================================
 app.Run();
 
-//
 // =========================================================
 // 6. HELPER: MONTAGEM DE CONNECTION STRING
 // =========================================================
-//
-// Constrói a connection string a partir do DbConfig,
-// respeitando modo (windows / sql) e flags de segurança.
-//
 static string BuildConnectionString(DbConfig cfg)
 {
     var parts = new List<string>
@@ -103,23 +80,18 @@ static string BuildConnectionString(DbConfig cfg)
         $"Database={cfg.database};"
     };
 
-    // Autenticação integrada (Windows)
     if (cfg.mode == "windows")
     {
         parts.Add("Trusted_Connection=True;");
     }
     else
     {
-        // Autenticação SQL Server
         parts.Add($"User Id={cfg.username};");
         parts.Add($"Password={cfg.password};");
     }
 
-    // Opções de segurança extras
-    if (cfg.encrypt)
-        parts.Add("Encrypt=True;");
-    if (cfg.trustServerCertificate)
-        parts.Add("TrustServerCertificate=True;");
+    if (cfg.encrypt) parts.Add("Encrypt=True;");
+    if (cfg.trustServerCertificate) parts.Add("TrustServerCertificate=True;");
 
     return string.Concat(parts);
 }
