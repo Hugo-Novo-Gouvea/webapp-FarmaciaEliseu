@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using WebAppEstudo.Data;
 using WebAppEstudo.Endpoints;
-using WebAppEstudo.Services; // Namespace novo sugerido
+using WebAppEstudo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,14 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
 
 // =========================================================
-// 2. INJEÇÃO DE DEPENDÊNCIAS (NOVOS SERVIÇOS)
+// 2. INJEÇÃO DE DEPENDÊNCIAS
 // =========================================================
-// Serviço de fila de impressão (Singleton pois é compartilhado por toda a aplicação)
-builder.Services.AddSingleton<PrintQueue>();
-// Worker que fica rodando em segundo plano processando a fila de impressão
-builder.Services.AddHostedService<PrintWorker>();
 // Serviço de regras de negócio de vendas
 builder.Services.AddScoped<VendaService>();
+
+// OBS: Removemos PrintQueue e PrintWorker pois a impressão agora é no cliente (JS).
 
 // =========================================================
 // 3. CONFIGURAÇÃO DO BANCO DE DADOS (COM RETRY)
@@ -37,7 +35,7 @@ if (cfgFromFile is not null &&
     finalConnectionString = BuildConnectionString(cfgFromFile);
 }
 
-// Registra o AppDbContext com RESILIÊNCIA (Retry Pattern)
+// Registra o AppDbContext com RESILIÊNCIA (Retry Pattern) para evitar queda de conexão
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(finalConnectionString, sqlOptions => 
     {
@@ -65,7 +63,7 @@ app.MapProdutosEndpoints();
 app.MapFuncionariosEndpoints();
 app.MapMovimentosEndpoints();
 app.MapContasPagarEndpoints();
-app.MapVendasEndpoints(); // Esse arquivo foi refatorado abaixo
+app.MapVendasEndpoints();
 
 app.Run();
 

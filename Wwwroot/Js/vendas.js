@@ -170,8 +170,6 @@ function bindVendasEvents() {
 async function carregarClientes() {
   try {
     let carregado = false;
-
-    // 1) tenta usar o endpoint de contas, que já traz todos os clientes não deletados
     try {
       const respContas = await fetch('/api/contas/clientes');
       if (respContas.ok) {
@@ -187,21 +185,16 @@ async function carregarClientes() {
           .filter(c => c.clientesId && c.nome);
         carregado = true;
       }
-    } catch (_) {
-      // se der erro, cai pro fallback abaixo
-    }
+    } catch (_) { }
 
-    // 2) fallback para /api/clientes caso o endpoint acima falhe
     if (!carregado) {
       const resp = await fetch('/api/clientes?pageSize=100000');
       if (!resp.ok) {
         vendasState.clientes = [];
         return;
       }
-
       const data = await resp.json();
       const arr = Array.isArray(data) ? data : (data.items || []);
-
       vendasState.clientes = (arr || [])
         .map(c => ({
           clientesId: c.clientesId ?? c.ClientesId ?? c.id ?? c.Id ?? 0,
@@ -238,7 +231,6 @@ async function carregarVendedores() {
 
 function atualizarBlocoCliente() {
   const tipo = vendasEls.tipoCliente?.value || '';
-
   if (tipo === 'registrado') {
     vendasEls.blocoClienteRegistrado?.setAttribute('style', 'display:flex;');
     vendasEls.blocoClienteAvulso?.setAttribute('style', 'display:none;');
@@ -246,31 +238,24 @@ function atualizarBlocoCliente() {
     vendasEls.blocoClienteRegistrado?.setAttribute('style', 'display:none;');
     vendasEls.blocoClienteAvulso?.setAttribute('style', 'display:flex;');
   } else {
-    // "Selecione" → some tudo
     vendasEls.blocoClienteRegistrado?.setAttribute('style', 'display:none;');
     vendasEls.blocoClienteAvulso?.setAttribute('style', 'display:none;');
   }
-
   atualizarTotalCliente();
 }
 
 function atualizarBlocoProduto() {
   const tipo = vendasEls.tipoProduto?.value || '';
-
   if (tipo === 'registrado') {
-    // mostra só os campos de produto registrado
     vendasEls.blocoProdutoRegistrado?.setAttribute('style', 'display:flex;');
     vendasEls.blocoProdutoAvulso?.setAttribute('style', 'display:none;');
   } else if (tipo === 'avulso') {
-    // mostra só os campos de produto avulso
     vendasEls.blocoProdutoRegistrado?.setAttribute('style', 'display:none;');
     vendasEls.blocoProdutoAvulso?.setAttribute('style', 'display:flex;');
   } else {
-    // enquanto estiver em "Selecione", esconde tudo
     vendasEls.blocoProdutoRegistrado?.setAttribute('style', 'display:none;');
     vendasEls.blocoProdutoAvulso?.setAttribute('style', 'display:none;');
   }
-
   atualizarLabelsDesconto();
 }
 
@@ -295,21 +280,14 @@ function initAutocompleteClientes() {
       atualizarEstadoVenda();
       return;
     }
-
     const lista = vendasState.clientes
       .filter(c => {
         const nome = (c.nome || '').toLowerCase();
         const fich = String(c.codigoFichario || '').toLowerCase();
         const cpf = (c.cpf || '').toLowerCase();
-
-        return (
-          nome.startsWith(termo) ||
-          fich.startsWith(termo) ||
-          cpf.startsWith(termo)
-        );
+        return (nome.startsWith(termo) || fich.startsWith(termo) || cpf.startsWith(termo));
       })
       .slice(0, 8);
-
     renderSugestoesClientes(lista);
   });
 
@@ -329,10 +307,8 @@ function renderSugestoesClientes(lista) {
     suggest.style.display = 'none';
     return;
   }
-
   const ul = document.createElement('ul');
   ul.className = 'suggest-list';
-
   lista.forEach(cli => {
     const li = document.createElement('li');
     li.className = 'suggest-item';
@@ -349,7 +325,6 @@ function renderSugestoesClientes(lista) {
     });
     ul.appendChild(li);
   });
-
   suggest.appendChild(ul);
   suggest.style.display = 'block';
 }
@@ -360,7 +335,6 @@ async function atualizarTotalCliente() {
     if (vendasEls.totalCliente) vendasEls.totalCliente.textContent = 'Total: R$ 0,00';
     return;
   }
-
   try {
     const id = vendasState.clienteSelecionado.clientesId;
     const resp = await fetch(`/api/contas/total-cliente/${id}`);
@@ -377,23 +351,19 @@ async function atualizarTotalCliente() {
 async function buscarProdutoRegistrado() {
   const valor = (vendasEls.produtoInput?.value || '').trim();
   if (!valor) return;
-
   let produto = null;
   if (/^\d+$/.test(valor)) {
     produto = await fetchProdutoPorCodigo(valor);
   }
-
   if (produto) {
     selecionarProduto(produto);
     return;
   }
-
   const lista = await fetchProdutosPorDescricao(valor);
   if (!lista || lista.length === 0) {
     alert('Produto nao encontrado.');
     return;
   }
-
   abrirModalProdutos(lista);
 }
 
@@ -420,10 +390,8 @@ async function fetchProdutosPorDescricao(filtro) {
 
 function abrirModalProdutos(lista) {
   if (!vendasEls.modalBackdrop || !vendasEls.modalTbody) return;
-
   vendasEls.modalTbody.innerHTML = '';
   vendasState.produtoSelecionado = null;
-
   lista.forEach((p, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -443,7 +411,6 @@ function abrirModalProdutos(lista) {
     }
     vendasEls.modalTbody.appendChild(tr);
   });
-
   vendasEls.modalBackdrop.style.display = 'flex';
 }
 
@@ -466,7 +433,6 @@ function adicionarItemRegistrado() {
     alert('Selecione ou busque um produto.');
     return;
   }
-
   const qtd = Math.max(1, parseInt(vendasEls.quantidade?.value || '1', 10) || 1);
   const descontoInput = parseMoeda(vendasEls.desconto?.value || '0');
   const precoUnit = Number(vendasState.produtoSelecionado.precoVenda) || 0;
@@ -482,7 +448,6 @@ function adicionarItemRegistrado() {
     desconto: descontoValor,
     total: totalLiquido
   });
-
   limparCamposProdutoRegistrado();
   atualizarGridItens();
   atualizarTotalVenda();
@@ -491,19 +456,16 @@ function adicionarItemRegistrado() {
 
 function adicionarItemAvulso() {
   if ((vendasEls.tipoProduto?.value || '') !== 'avulso') return;
-
   const nome = (vendasEls.produtoNomeAvulso?.value || '').trim();
   if (!nome || nome.length < 3) {
     alert('Informe o nome do produto avulso.');
     return;
   }
-
   const preco = parseMoeda(vendasEls.produtoPrecoAvulso?.value || '0');
   if (preco <= 0) {
     alert('Informe um preco valido.');
     return;
   }
-
   const qtd = Math.max(1, parseInt(vendasEls.quantidadeAvulso?.value || '1', 10) || 1);
   const descontoInput = parseMoeda(vendasEls.descontoAvulso?.value || '0');
   const descontoValor = calcularDesconto(descontoInput, qtd, preco);
@@ -518,7 +480,6 @@ function adicionarItemAvulso() {
     desconto: descontoValor,
     total: totalLiquido
   });
-
   limparCamposProdutoAvulso();
   atualizarGridItens();
   atualizarTotalVenda();
@@ -545,14 +506,12 @@ function atualizarGridItens() {
   const tbody = vendasEls.tabelaItensBody;
   if (!tbody) return;
   tbody.innerHTML = '';
-
   if (!vendasState.itens.length) {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td colspan="6" class="text-center text-muted">Nenhum item adicionado...</td>';
     tbody.appendChild(tr);
     return;
   }
-
   vendasState.itens.forEach((it, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -585,7 +544,6 @@ function atualizarEstadoVenda() {
   const tipoVenda = vendasEls.tipoVenda?.value || '';
   const vendedorOk = !!(vendasEls.vendedor?.value);
   const temItens = vendasState.itens.length > 0;
-
   let clienteOk = false;
   if (tipoCliente === 'registrado') {
     clienteOk = !!vendasState.clienteSelecionado;
@@ -593,14 +551,12 @@ function atualizarEstadoVenda() {
     const nome = (vendasEls.clienteAvulso?.value || '').trim();
     clienteOk = nome.length >= 3;
   }
-
   const pode = clienteOk && tipoVenda && vendedorOk && temItens;
   if (vendasEls.btnSell) vendasEls.btnSell.disabled = !pode;
 }
 
 function atualizarPreviewItem() {
   const tipoProduto = vendasEls.tipoProduto?.value || '';
-
   let nome = '';
   let precoUnit = 0;
   let qtd = 0;
@@ -629,7 +585,6 @@ function atualizarPreviewItem() {
     if (vendasEls.previewTotal) vendasEls.previewTotal.textContent = formatarMoeda(0);
     return;
   }
-
   totalBruto = qtd * precoUnit;
   totalLiquido = Math.max(0, totalBruto - descontoValor);
 
@@ -654,14 +609,10 @@ function parseMoeda(v) {
   if (typeof v === 'number') return v;
   let s = (v || '').trim();
   if (!s) return 0;
-
-  // Se tiver vírgula, assume formato brasileiro: 1.234,56
   if (s.indexOf(',') >= 0) {
     s = s.replace(/\./g, '').replace(',', '.');
     return parseFloat(s) || 0;
   }
-
-  // Sem vírgula → assume que o ponto já é decimal (type="number", por exemplo)
   return parseFloat(s) || 0;
 }
 
@@ -674,17 +625,14 @@ async function realizarVenda() {
     alert('Selecione um tipo de venda válido.');
     return;
   }
-
   if (!tipoCliente || (tipoCliente !== 'registrado' && tipoCliente !== 'avulso')) {
     alert('Selecione um tipo de cliente válido.');
     return;
   }
-
   if (!vendedorId) {
     alert('Selecione o vendedor.');
     return;
   }
-
   if (!vendasState.itens.length) {
     alert('Adicione ao menos um item à venda.');
     return;
@@ -753,6 +701,7 @@ async function realizarVenda() {
     let desejaImprimir = confirm('Deseja imprimir o cupom desta venda agora?');
 
     while (desejaImprimir) {
+      // Pede o Base64 pro servidor (backend)
       const respImp = await fetch('/api/vendas/imprimir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -772,6 +721,7 @@ async function realizarVenda() {
         break;
       }
 
+      // Envia o Base64 para o Agente Local (localhost:5005)
       const okPrint = await enviarCupomParaPrintAgent(base64);
       if (!okPrint) break;
 
@@ -798,10 +748,11 @@ async function realizarVenda() {
 
 async function enviarCupomParaPrintAgent(cupomBase64) {
   try {
-    const resp = await fetch('http://localhost:5005/print', {
+    // Usando o endpoint dedicado /print/cupom que definimos no PrintAgent
+    const resp = await fetch('http://localhost:5005/print/cupom', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: cupomBase64 })
+      body: JSON.stringify({ base64: cupomBase64, printerName: null })
     });
 
     if (!resp.ok) {
@@ -809,11 +760,10 @@ async function enviarCupomParaPrintAgent(cupomBase64) {
       alert('Erro ao enviar cupom para impressora local.\n' + (txt || ''));
       return false;
     }
-
     return true;
   } catch (err) {
     console.error('Erro ao conectar com PrintAgent', err);
-    alert('Erro ao conectar com o serviço de impressão (PrintAgent).\nVerifique se o serviço está rodando na porta 5005.');
+    alert('Erro ao conectar com o serviço de impressão local (PrintAgent).\nVerifique se o serviço está rodando na porta 5005 deste computador.');
     return false;
   }
 }
