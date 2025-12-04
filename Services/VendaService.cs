@@ -194,7 +194,8 @@ public class VendaService
         decimal totalDesconto = 0;
         decimal totalFinal = 0;
 
-        foreach (var it in payload.Itens ?? new List<ItemPayload>())
+        // CORREÇÃO AQUI: Trocado 'ItemPayload' por 'VendaItemDto'
+        foreach (var it in payload.Itens ?? new List<VendaItemDto>())
         {
             var isAvulso = it.produtoId <= 0;
             Produto? prod = null;
