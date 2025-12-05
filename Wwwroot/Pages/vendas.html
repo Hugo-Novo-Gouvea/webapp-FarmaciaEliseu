@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <title>Vendas - Farmácia Eliseu</title>
 
-  <!-- CSS base (Bootstrap) + tema do sistema -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
@@ -13,12 +12,10 @@
   <main class="app-main">
     <div class="container">
       <div class="list-shell" id="vendas-shell">
-        <!-- título -->
         <div class="mb-3">
           <h2 class="h5 mb-1">Vendas</h2>
         </div>
 
-        <!-- LINHA 0: barra de ações + link de menu (bloco COR 2) -->
         <div class="list-filter">
           <div class="action-bar">
             <button
@@ -26,7 +23,7 @@
               class="action-btn success"
               disabled
             >
-              ✏️ Realizar venda
+              <span style="margin-right: 8px; font-size: 1.1em;">✅</span> Finalizar Venda
             </button>
           </div>
 
@@ -35,9 +32,7 @@
           </div>
         </div>
 
-        <!-- LINHA 1: Tipo de venda | Vendedor | Tipo de cliente | Tipo de produto | Tipo de desconto -->
         <div class="list-filter">
-          <!-- tipo de venda -->
           <div class="list-filter-field">
             <label for="tipo-venda">Tipo de venda *</label>
             <select id="tipo-venda">
@@ -47,7 +42,6 @@
             </select>
           </div>
 
-          <!-- vendedor -->
           <div class="list-filter-field">
             <label for="vendedor">Vendedor *</label>
             <select id="vendedor">
@@ -55,7 +49,6 @@
             </select>
           </div>
 
-          <!-- tipo de cliente -->
           <div class="list-filter-field">
             <label for="tipo-cliente">Tipo de cliente *</label>
             <select id="tipo-cliente">
@@ -65,7 +58,6 @@
             </select>
           </div>
 
-          <!-- tipo de produto -->
           <div class="list-filter-field">
             <label for="tipo-produto">Tipo de produto *</label>
             <select id="tipo-produto">
@@ -75,7 +67,6 @@
             </select>
           </div>
 
-          <!-- tipo de desconto -->
           <div class="list-filter-field">
             <label for="tipo-desconto">Tipo de desconto</label>
             <select id="tipo-desconto">
@@ -85,7 +76,6 @@
           </div>
         </div>
 
-        <!-- LINHA 2: cliente REGISTRADO (input + sugestões + total) -->
         <div class="list-filter" id="cliente-registrado-block">
           <div class="list-filter-input list-filter-input-suggest">
             <label for="cliente-registrado-input">Cliente *</label>
@@ -111,7 +101,6 @@
           </div>
         </div>
 
-        <!-- LINHA 2 alternativa: cliente AVULSO -->
         <div class="list-filter" id="cliente-avulso-block">
           <div class="list-filter-input list-filter-input-280">
             <label for="cliente-avulso">Cliente *</label>
@@ -123,7 +112,6 @@
           </div>
         </div>
 
-        <!-- LINHA 3: vendedor (oculta antiga, mantida para compatibilidade JS) -->
         <div class="list-filter hidden-row">
           <div class="list-filter-field">
             <label for="vendedor-old">Vendedor *</label>
@@ -133,7 +121,6 @@
           </div>
         </div>
 
-        <!-- LINHA 4: produto REGISTRADO (produto + qtd + desconto + botão) -->
         <div
           class="list-filter vendas-itens-row"
           id="produto-registrado-block"
@@ -180,7 +167,6 @@
           </div>
         </div>
 
-        <!-- LINHA 4 alternativa: produto AVULSO -->
         <div
           class="list-filter vendas-itens-row"
           id="produto-avulso-block"
@@ -241,7 +227,6 @@
           </div>
         </div>
 
-        <!-- PRÉ-VISUALIZAÇÃO DO ITEM -->
         <div class="vendas-preview" id="vendas-preview-block">
           <div class="table-shell">
             <div class="table-responsive app-table-wrapper">
@@ -272,7 +257,6 @@
           </div>
         </div>
 
-        <!-- TABELA DE ITENS DA VENDA -->
         <div class="table-shell">
           <div class="table-responsive app-table-wrapper">
             <table class="table-modern" id="tb-itens-venda">
@@ -295,7 +279,6 @@
               </tbody>
             </table>
 
-            <!-- Totalizador da venda -->
             <div class="vendas-total-bar">
               <span
                 id="vendas-total"
@@ -306,14 +289,10 @@
             </div>
           </div>
         </div>
-        <!-- /table-shell -->
+        </div>
       </div>
-      <!-- /list-shell -->
-    </div>
-    <!-- /container -->
-  </main>
+    </main>
 
-  <!-- MODAL: escolha de produto por descrição -->
   <div
     class="app-modal-backdrop"
     id="produto-lookup-backdrop"
@@ -383,7 +362,6 @@
     </div>
   </div>
 
-  <!-- JS da tela de vendas -->
   <script src="/js/vendas.js"></script>
 </body>
 </html>
